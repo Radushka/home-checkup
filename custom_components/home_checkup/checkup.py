@@ -18,6 +18,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
+from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
 from .checks import Finding, Item, integration_name, read_corpus, run_checks
@@ -219,6 +220,14 @@ class Checkup:
         return lambda: self._listeners.remove(listener)
 
     @property
+    def version(self) -> str:
+        """This version of Home Checkup, for the page ("Ask for a fix" names it)."""
+        try:
+            return str(async_get_loaded_integration(self.hass, DOMAIN).version or "")
+        except Exception:  # noqa: BLE001 - not loaded through the loader (some tests)
+            return ""
+
+    @property
     def count(self) -> int:
         """Things that need a look: one number for the page, the sensor, the Studio card and the Repairs note.
 
@@ -250,6 +259,7 @@ class Checkup:
             "status": "healthy" if self.count == 0 else "attention",
             "count": self.count,
             "watch": self.watch_count,
+            "version": self.version,
             "headline": self.headline,
             "summary": self.summary(),
             "scanned_at": self.scanned_at.isoformat() if self.scanned_at else None,

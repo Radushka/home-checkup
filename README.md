@@ -70,6 +70,19 @@ Home Checkup then appears in the sidebar. The first checkup runs about five minu
 
 Needs Home Assistant 2025.11 or newer.
 
+## Ask for a fix
+
+Some lines have no fix button yet. On those you can press "Ask" to tell us that you want a fix.
+
+1. Nothing is sent by itself. A small sheet shows every word first, and it is sent only when you press Send.
+2. What is sent: the kind of problem, the name of the integration, the error text as you see and can edit it,
+   the versions of Home Checkup and Home Assistant, and your language. A note and an email address are optional.
+3. What is never sent: names of devices, people or places, addresses, tokens, or anything about your account.
+4. The request goes to lukaps.com, to the makers of Home Checkup. The server keeps no IP address.
+5. We count how many homes ask for the same fix, and build the most wanted ones first.
+
+This is the only time Home Checkup sends anything outside your home, and only on your tap.
+
 ## Works with Home Assistant's own Repairs
 
 Home Checkup adds to Home Assistant; it does not replace or change any part of it.

@@ -108,6 +108,29 @@ const WORDS = {
     "Its device was removed": "Son appareil a été supprimé",
     "No longer exists": "N’existe plus",
     "Use the new one": "Utiliser le nouveau",
+    "Ask": "Demander",
+    "Ask sends us a request for a fix. You read it first.": "Demander nous envoie une demande de correctif. Vous la lisez d’abord.",
+    "Ask for a fix": "Demander un correctif",
+    "Asked": "Demandé",
+    "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Ceci est envoyé aux créateurs de Home Checkup. Seul ce que vous voyez ici est envoyé, et seulement quand vous appuyez sur Envoyer.",
+    "Problem": "Problème",
+    "Integration": "Intégration",
+    "Versions": "Versions",
+    "Log error": "Erreur du journal",
+    "The error text. Remove anything you do not want to share.": "Le texte de l’erreur. Retirez tout ce que vous ne voulez pas partager.",
+    "Add a note (optional)": "Ajouter une note (facultatif)",
+    "Your email, only if you want an answer (optional)": "Votre e-mail, seulement si vous voulez une réponse (facultatif)",
+    "No device names, no addresses and no account are sent.": "Aucun nom d’appareil, aucune adresse et aucun compte ne sont envoyés.",
+    "Send": "Envoyer",
+    "Sending…": "Envoi…",
+    "Done": "Terminé",
+    "Thank you. Your request was received.": "Merci. Votre demande a été reçue.",
+    "We read every request and build the most wanted fixes first.": "Nous lisons chaque demande et créons d’abord les correctifs les plus demandés.",
+    "A fix for this is already planned.": "Un correctif est déjà prévu.",
+    "Good news: this is fixed in version {version}.": "Bonne nouvelle : c’est corrigé dans la version {version}.",
+    "Too many requests. Please try again in an hour.": "Trop de demandes. Réessayez dans une heure.",
+    "The email address does not look right.": "L’adresse e-mail ne semble pas correcte.",
+    "Could not send. Please try again later.": "Envoi impossible. Réessayez plus tard.",
     "{n} to watch": "{n} à surveiller",
     "To watch": "À surveiller",
     "Seen only briefly. These count when they keep coming back.": "Vus brièvement. Ils comptent s’ils reviennent souvent.",
@@ -249,6 +272,29 @@ const WORDS = {
     "Its device was removed": "Sein Gerät wurde entfernt",
     "No longer exists": "Gibt es nicht mehr",
     "Use the new one": "Die neue nutzen",
+    "Ask": "Anfragen",
+    "Ask sends us a request for a fix. You read it first.": "Anfragen sendet uns eine Bitte um eine Lösung. Sie lesen sie zuerst.",
+    "Ask for a fix": "Um eine Lösung bitten",
+    "Asked": "Angefragt",
+    "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Das geht an die Macher von Home Checkup. Nur was Sie hier sehen, wird gesendet, und nur wenn Sie auf Senden drücken.",
+    "Problem": "Problem",
+    "Integration": "Integration",
+    "Versions": "Versionen",
+    "Log error": "Protokollfehler",
+    "The error text. Remove anything you do not want to share.": "Der Fehlertext. Entfernen Sie alles, was Sie nicht teilen möchten.",
+    "Add a note (optional)": "Notiz hinzufügen (optional)",
+    "Your email, only if you want an answer (optional)": "Ihre E-Mail, nur wenn Sie eine Antwort möchten (optional)",
+    "No device names, no addresses and no account are sent.": "Es werden keine Gerätenamen, keine Adressen und kein Konto gesendet.",
+    "Send": "Senden",
+    "Sending…": "Wird gesendet…",
+    "Done": "Fertig",
+    "Thank you. Your request was received.": "Danke. Ihre Anfrage ist angekommen.",
+    "We read every request and build the most wanted fixes first.": "Wir lesen jede Anfrage und bauen die meistgewünschten Lösungen zuerst.",
+    "A fix for this is already planned.": "Eine Lösung dafür ist bereits geplant.",
+    "Good news: this is fixed in version {version}.": "Gute Nachricht: Das ist in Version {version} behoben.",
+    "Too many requests. Please try again in an hour.": "Zu viele Anfragen. Bitte versuchen Sie es in einer Stunde erneut.",
+    "The email address does not look right.": "Die E-Mail-Adresse sieht nicht richtig aus.",
+    "Could not send. Please try again later.": "Senden nicht möglich. Bitte versuchen Sie es später erneut.",
     "{n} to watch": "{n} zum Beobachten",
     "To watch": "Beobachten",
     "Seen only briefly. These count when they keep coming back.": "Nur kurz gesehen. Sie zählen, wenn sie immer wieder auftreten.",
@@ -390,6 +436,29 @@ const WORDS = {
     "Its device was removed": "Se quitó su dispositivo",
     "No longer exists": "Ya no existe",
     "Use the new one": "Usar el nuevo",
+    "Ask": "Pedir",
+    "Ask sends us a request for a fix. You read it first.": "Pedir nos envía una solicitud de solución. Usted la lee primero.",
+    "Ask for a fix": "Pedir una solución",
+    "Asked": "Pedido",
+    "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Esto se envía a los creadores de Home Checkup. Solo se envía lo que ve aquí, y solo cuando pulsa Enviar.",
+    "Problem": "Problema",
+    "Integration": "Integración",
+    "Versions": "Versiones",
+    "Log error": "Error del registro",
+    "The error text. Remove anything you do not want to share.": "El texto del error. Quite todo lo que no quiera compartir.",
+    "Add a note (optional)": "Añadir una nota (opcional)",
+    "Your email, only if you want an answer (optional)": "Su correo, solo si quiere una respuesta (opcional)",
+    "No device names, no addresses and no account are sent.": "No se envían nombres de dispositivos, direcciones ni cuentas.",
+    "Send": "Enviar",
+    "Sending…": "Enviando…",
+    "Done": "Listo",
+    "Thank you. Your request was received.": "Gracias. Hemos recibido su solicitud.",
+    "We read every request and build the most wanted fixes first.": "Leemos cada solicitud y creamos primero las soluciones más pedidas.",
+    "A fix for this is already planned.": "Ya hay una solución prevista.",
+    "Good news: this is fixed in version {version}.": "Buenas noticias: está resuelto en la versión {version}.",
+    "Too many requests. Please try again in an hour.": "Demasiadas solicitudes. Inténtelo de nuevo en una hora.",
+    "The email address does not look right.": "La dirección de correo no parece correcta.",
+    "Could not send. Please try again later.": "No se pudo enviar. Inténtelo más tarde.",
     "{n} to watch": "{n} para vigilar",
     "To watch": "Para vigilar",
     "Seen only briefly. These count when they keep coming back.": "Vistos solo un momento. Cuentan si siguen volviendo.",
@@ -518,6 +587,10 @@ const mark = (level) => `
     <path d="M8 25h9l3-7 5 15 4-12 2 4h9" />
   </svg>`;
 
+// "Ask for a fix": where a request goes when someone presses Send, and which kinds of line offer it.
+const ASK_URL = "https://lukaps.com/homecheckup/api/ask.php";
+const ASK_KINDS = ["log_errors", "broken_references", "failed_integrations"];
+
 class HomeCheckupPanel extends HTMLElement {
   constructor() {
     super();
@@ -529,6 +602,7 @@ class HomeCheckupPanel extends HTMLElement {
     this._toast = null;
     this._keptOpen = false;
     this._sheet = null;
+    this._ask = null;
     this._undoing = null;
     this._seen = "";
   }
@@ -863,6 +937,138 @@ class HomeCheckupPanel extends HTMLElement {
     this._render();
   }
 
+  // ---- ask for a fix ------------------------------------------------------------------------------------------
+
+  /** Lines this browser already asked about, so the button says "Asked". Kept in the browser only. */
+  _asked() {
+    try {
+      return JSON.parse(localStorage.getItem("home_checkup.asked") || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  /** What would be sent for one line. No names of devices, people or places: only the kind of problem. */
+  _openAsk(kind, key) {
+    const finding = (this._report?.findings ?? []).find((f) => f.kind === kind && (f.items ?? []).some((it) => it.key === key));
+    const it = finding?.items.find((i) => i.key === key);
+    if (!it) return;
+    let integration = finding.integration || "";
+    let item = "";
+    let text = it.name || "";
+    if (kind === "broken_references") {
+      const [, source = "", ...rest] = key.split(":");
+      const target = rest.join(":");
+      item = source.startsWith("script.") ? "script" : "automation";
+      const what = target.startsWith("a removed device") ? "a removed device" : `a missing ${target.split(".")[0]}`;
+      text = `A step points to ${what}.`;
+    } else if (kind === "failed_integrations") {
+      integration = (it.link || "").split("/integration/")[1] || "";
+      text = it.info || "Did not start";
+    }
+    if (!/^[a-z0-9_]*$/.test(integration)) integration = "";
+    this._ask = { key, kind, integration, item, text: text.slice(0, 600), note: "", email: "", busy: false, error: "", done: null };
+    this._paintAsk();
+  }
+
+  _paintAsk() {
+    if (this._ask) this._ask.paint = true;
+    this._render();
+    if (this._ask) this._ask.paint = false;
+  }
+
+  async _sendAsk() {
+    const a = this._ask;
+    if (!a || a.busy) return;
+    a.busy = true;
+    a.error = "";
+    this._paintAsk();
+    try {
+      const res = await fetch(ASK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        body: JSON.stringify({
+          v: 1,
+          kind: a.kind,
+          integration: a.integration,
+          item: a.item,
+          text: a.text.trim().slice(0, 600),
+          note: a.note.trim().slice(0, 500),
+          email: a.email.trim().slice(0, 200),
+          hc: this._report?.version || "",
+          ha: this._hass?.config?.version || "",
+          lang: this._lang(),
+        }),
+      });
+      const reply = await res.json().catch(() => ({}));
+      if (!res.ok || !reply.ok) {
+        a.error =
+          res.status === 429
+            ? this._t("Too many requests. Please try again in an hour.")
+            : reply.error === "bad_email"
+              ? this._t("The email address does not look right.")
+              : this._t("Could not send. Please try again later.");
+      } else {
+        a.done = reply;
+        try {
+          localStorage.setItem("home_checkup.asked", JSON.stringify([...new Set([...this._asked(), a.key])].slice(-200)));
+        } catch {
+          // a private window: the button will simply offer to ask again
+        }
+      }
+    } catch {
+      a.error = this._t("Could not send. Please try again later.");
+    }
+    a.busy = false;
+    this._paintAsk();
+  }
+
+  _askHtml() {
+    const a = this._ask;
+    if (!a) return "";
+    const title = this._t("Ask for a fix");
+    if (a.done) {
+      const more =
+        a.done.status === "fixed" && a.done.fixed_in
+          ? this._t("Good news: this is fixed in version {version}.", { version: a.done.fixed_in })
+          : a.done.status === "planned"
+            ? this._t("A fix for this is already planned.")
+            : this._t("We read every request and build the most wanted fixes first.");
+      return `<div class="scrim" data-act="askclose"></div>
+        <div class="sheet asksheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+          <div class="askdone">${mark("good")}<div><div class="stitle">${esc(this._t("Thank you. Your request was received."))}</div><div class="stext">${esc(more)}</div></div></div>
+          <div class="sbuttons"><button type="button" class="send" data-act="askclose">${esc(this._t("Done"))}</button></div>
+        </div>`;
+    }
+    const kindWords = this._tn(1, (TITLES[a.kind] ?? ["", ""])[0], (TITLES[a.kind] ?? ["", ""])[1]).replace(/^1\s+/, "");
+    const what = a.kind === "log_errors" ? this._t("Log error") : kindWords.replace(/^./, (c) => c.toUpperCase());
+    const facts = [
+      [this._t("Problem"), what + (a.item ? ` · ${a.item}` : "")],
+      a.integration ? [this._t("Integration"), a.integration] : null,
+      [this._t("Versions"), `Home Checkup ${this._report?.version || "?"} · Home Assistant ${this._hass?.config?.version || "?"}`],
+    ].filter(Boolean);
+    return `<div class="scrim" data-act="askclose"></div>
+      <div class="sheet asksheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="stitle">${esc(title)}</div>
+        <div class="stext">${esc(this._t("This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send."))}</div>
+        <dl class="askfacts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
+        <label class="asklabel" for="asktext">${esc(this._t("The error text. Remove anything you do not want to share."))}</label>
+        <textarea id="asktext" data-ask="text" maxlength="600" rows="3" ${a.busy ? "disabled" : ""}>${esc(a.text)}</textarea>
+        <label class="asklabel" for="asknote">${esc(this._t("Add a note (optional)"))}</label>
+        <textarea id="asknote" data-ask="note" maxlength="500" rows="2" ${a.busy ? "disabled" : ""}>${esc(a.note)}</textarea>
+        <label class="asklabel" for="askmail">${esc(this._t("Your email, only if you want an answer (optional)"))}</label>
+        <input id="askmail" type="email" data-ask="email" maxlength="200" autocomplete="email" value="${esc(a.email)}" ${a.busy ? "disabled" : ""}>
+        <div class="safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 9.5C8 19.3 5 15.5 5 11V6l7-3z"/></svg>${esc(this._t("No device names, no addresses and no account are sent."))}</div>
+        ${a.error ? `<div class="serror">${esc(a.error)}</div>` : ""}
+        <div class="sbuttons">
+          <button type="button" class="ghost big" data-act="askclose" ${a.busy ? "disabled" : ""}>${esc(this._t("Cancel"))}</button>
+          <button type="button" class="send" data-act="asksend" ${a.busy ? "disabled" : ""}>${esc(a.busy ? this._t("Sending…") : this._t("Send"))}</button>
+        </div>
+      </div>`;
+  }
+
   _sheetHtml() {
     const s = this._sheet;
     if (!s) return "";
@@ -944,6 +1150,11 @@ class HomeCheckupPanel extends HTMLElement {
 
   _render() {
     const root = this.shadowRoot;
+    // While someone types in the "Ask for a fix" sheet, a background refresh must not wipe the words or the cursor.
+    if (this._ask && !this._ask.paint && root.querySelector(".asksheet")) {
+      this._ask.stale = true;
+      return;
+    }
     if (!root.querySelector(".page")) {
       root.innerHTML = `<style>${STYLE}</style>
         <div class="page">
@@ -961,6 +1172,10 @@ class HomeCheckupPanel extends HTMLElement {
       root.querySelector(".scan").addEventListener("click", () => this._scan(true));
       root.querySelector(".content").addEventListener("click", (e) => this._click(e));
       root.querySelector(".content").addEventListener("change", (e) => this._click(e));
+      root.querySelector(".content").addEventListener("input", (e) => {
+        const field = e.target?.dataset?.ask;
+        if (field && this._ask) this._ask[field] = e.target.value;
+      });
     }
     root.querySelector(".name").textContent = this._t("Home Checkup");
     const scan = root.querySelector(".scan");
@@ -1011,7 +1226,12 @@ class HomeCheckupPanel extends HTMLElement {
         <div class="checked">${esc(checked)}</div>
       </div>
       <div class="chips">${chips}</div>`;
-    if (findings.length) html += `<div class="keephint">${esc(this._t("Keep means this is fine. It will not show again."))}</div>`;
+    if (findings.length) {
+      // "Ask" is explained only when a line on the page offers it.
+      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix));
+      const askHint = canAsk ? ` ${this._t("Ask sends us a request for a fix. You read it first.")}` : "";
+      html += `<div class="keephint">${esc(this._t("Keep means this is fine. It will not show again.") + askHint)}</div>`;
+    }
     if (warnings.length) html += `<div class="grid">${warnings.map((f) => this._finding(f, false)).join("")}</div>`;
     if (watch.length) {
       html += `<div class="section">${esc(this._t("To watch"))}</div><div class="keephint">${esc(this._t("Seen only briefly. These count when they keep coming back."))}</div><div class="grid">${watch.map((f) => this._finding(f, false)).join("")}</div>`;
@@ -1034,6 +1254,7 @@ class HomeCheckupPanel extends HTMLElement {
       html += `<div class="toast" role="status">${esc(t.text)}${t.act ? `<button type="button" data-act="${t.act}" data-key="${esc(t.data)}">${esc(this._t("Undo"))}</button>` : ""}</div>`;
     }
     html += this._sheetHtml();
+    html += this._askHtml();
     return html;
   }
 
@@ -1070,7 +1291,14 @@ class HomeCheckupPanel extends HTMLElement {
         const fixBtn = fixLabel
           ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : this._t(fixLabel))}</button>`
           : "";
-        return `<li class="${fixBtn ? "hasfix" : ""}">${label}<span class="rowacts">${fixBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Keep"))}</button></span></li>`;
+        // No safe fix for this line yet: the person can ask us for one. Nothing is sent before they read it and press Send.
+        const askBtn =
+          !fixBtn && ASK_KINDS.includes(f.kind)
+            ? this._asked().includes(it.key)
+              ? `<span class="asked">${esc(this._t("Asked"))}</span>`
+              : `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
+            : "";
+        return `<li class="${fixBtn || askBtn ? "hasfix" : ""}">${label}<span class="rowacts">${fixBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Keep"))}</button></span></li>`;
       })
       .join("");
     const more =
@@ -1147,6 +1375,16 @@ class HomeCheckupPanel extends HTMLElement {
       const all = ready.every((it) => it.on);
       ready.forEach((it) => (it.on = !all));
       this._render();
+    } else if (act === "ask") {
+      this._openAsk(el.dataset.kind, el.dataset.key);
+    } else if (act === "askclose") {
+      if (!this._ask?.busy) {
+        const stale = this._ask?.stale;
+        this._ask = null;
+        stale ? this._load() : this._render();
+      }
+    } else if (act === "asksend") {
+      this._sendAsk();
     } else if (act === "runfix") {
       this._runFix();
     } else if (act === "autofix") {
@@ -1264,6 +1502,21 @@ const STYLE = `
   ul.pick input { width: 18px; height: 18px; flex: none; accent-color: var(--primary-color); }
   ul.pick li.off { opacity: .55; }
   ul.pick .info.code { font-family: var(--ha-font-family-code, ui-monospace, monospace); font-size: 12px; }
+  .asksheet { max-height: calc(100% - 32px); overflow-y: auto; }
+  .askfacts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0 0; font-size: 14px; }
+  .askfacts dt { color: var(--dim); }
+  .askfacts dd { margin: 0; overflow-wrap: anywhere; }
+  .asklabel { display: block; margin: 14px 0 6px; font-size: 13px; color: var(--dim); }
+  .asksheet textarea, .asksheet input { width: 100%; box-sizing: border-box; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--primary-background-color); color: var(--primary-text-color); font: inherit; font-size: 14px; resize: vertical; }
+  .asksheet textarea:focus, .asksheet input:focus { outline: 2px solid color-mix(in srgb, var(--primary-color) 60%, transparent); outline-offset: 1px; }
+  .askdone { display: flex; align-items: center; gap: 16px; }
+  .askdone > svg, .askdone > .mark { width: 52px; height: 52px; flex: none; }
+  .send { height: 36px; padding: 0 20px; border-radius: 18px; border: 0; background: var(--primary-color); color: var(--text-primary-color, #fff);
+    font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+  .send:disabled { opacity: .45; cursor: default; }
+  .ghost.ask { color: var(--primary-text-color); }
+  .asked { font-size: 13px; color: var(--dim); padding: 0 6px; white-space: nowrap; }
   .serror { margin-top: 10px; font-size: 14px; color: var(--error-color, #db4437); }
   .sbuttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
   .ghost.big { height: 36px; padding: 0 16px; border-radius: 18px; font-size: 14px; }
