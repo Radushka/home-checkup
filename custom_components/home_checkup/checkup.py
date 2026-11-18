@@ -54,6 +54,9 @@ class Checkup:
         # The error history (counts and redacted samples only), so it survives a restart.
         self._log_store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.log")
         self.watching_since: float = 0.0
+        # When this run of Home Assistant began. Start-up errors from before it belong to an earlier start.
+        # After a reload the start is a guess, so some minutes are allowed before it.
+        self.run_start: float = started_at.timestamp() - 3 * STARTUP_GRACE if started_at else 0.0
         # "Did it work?": the log next steps someone took, by integration ("" is Home Assistant itself).
         self._acted: dict[str, dict[str, Any]] = {}
         self._listeners: list[Callable[[], None]] = []
@@ -73,6 +76,10 @@ class Checkup:
         self.watching_since = float(log.get("since") or time.time())
         self._acted = log.get("acted", {})
         self.watch.load(log.get("groups", []))
+        if self.started_at is None:
+            # Home Assistant is starting now. The history was last saved when the run before this one ended, so
+            # everything after that moment belongs to this start (also the errors from before we were loaded).
+            self.run_start = float(log.get("saved_at") or 0) or time.time() - STARTUP_GRACE
         if self.started_at is not None:  # Home Assistant was already running (a reload or a new install)
             self.watch.startup_until = self.started_at.timestamp() + STARTUP_GRACE
         logging.getLogger().addHandler(self.watch)
@@ -124,7 +131,8 @@ class Checkup:
     def refresh(self) -> None:
         now = time.time()
         self.findings = run_checks(
-            self.hass, self.watch, self.corpus, self.started_at, self.keep, now, watching_since=self.watching_since
+            self.hass, self.watch, self.corpus, self.started_at, self.keep, now,
+            watching_since=self.watching_since, run_start=self.run_start,
         )
         self.findings += self._stopped(now)
         self._mark_new(now)

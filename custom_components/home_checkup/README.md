@@ -21,7 +21,8 @@ For log errors it does more than count them:
 2. It offers one next step: "See the update" when an update that may fix it is ready, "Sign in again",
    "Open the devices", or "Open dashboards" for a template that reads something missing.
 3. It tells start-up noise (errors only in the first minutes after a restart) from real, ongoing problems.
-   Start-up noise is shown, but not counted. When a later restart is clean, it leaves the page at once.
+   Start-up noise is shown, but not counted. A start-up error from an earlier start leaves the page as soon as
+   Home Assistant starts again, and it returns only if it happens again.
 4. It keeps its own short error history, so it still sees errors that keep coming back after a restart.
 5. After you take the next step, it looks again later and tells you when the errors stopped.
 
@@ -35,6 +36,8 @@ offers a one-tap fix where the answer is clear:
 2. "Remove this step" when one step acts on something that no longer exists and the rest of the automation
    still works. Only that step is taken out.
 3. "Turn off" when the integration or device it needs was removed, so it can never work again.
+4. "Choose another" when there is no clear answer. You pick what the step should use now, from a list of the
+   same kind (a light for a light). This works for automations and for scripts made in the UI.
 
 It never changes, removes or restarts anything by itself. For a few clear cases (leftover entities, helpers
 made in the UI that nothing uses, and the automation fixes above) it offers a safe fix on its page. A fix happens only when an admin taps it.
@@ -54,7 +57,12 @@ Some lines have no fix button yet. On those you can press "Ask" to tell us that 
 4. The request goes to lukaps.com, to the makers of Home Checkup. The server keeps no IP address.
 5. We count how many homes ask for the same fix, and build the most wanted ones first.
 
-This is the only time Home Checkup sends anything outside your home, and only on your tap.
+After you asked, the page can tell you what happened: "A fix is planned" or "A fix arrived in version X".
+For this, the page sends only the codes of your own requests to lukaps.com, at most once every few hours and
+only while the page is open. A code says nothing about your home. If you never press Send, nothing is ever
+sent.
+
+These are the only times Home Checkup sends anything outside your home.
 
 ## Works with Home Assistant's own Repairs
 

@@ -271,41 +271,50 @@ class Fixes:
 
     # ---- 5. broken automation steps (changed by the page with Home Assistant's own automation editor) ------
 
-    async def async_record_automation(self, findings: list, key: str, before: dict[str, Any] | None) -> dict[str, Any]:
+    async def async_record_automation(
+        self, findings: list, key: str, before: dict[str, Any] | None, new: str | None = None
+    ) -> dict[str, Any]:
         """Before the page changes an automation: check the step is still in the list, back up, keep the record.
+
+        choose (`new` is given): the person chose another entity for the missing one, in an automation or a script.
 
         use_new: the page swaps the missing entity for its new name; `before` is the automation as it is now.
         remove_step: Home Checkup works out the automation without the broken step; the page saves it.
         turn_off: the page switches the automation off.
         """
         item = next((i for f in findings if f.kind == "broken_references" for i in f.items if i.key == key), None)
-        if item is None or item.fix not in AUTOMATION_FIXES:
+        if item is None or (item.fix not in AUTOMATION_FIXES if new is None else not item.choose):
             raise FixError("The list changed. Open it again to see the latest list.")
+        kind = item.fix if new is None else "choose"
+        if new is not None:
+            # Only a real entity of the same kind (a light for a light), so the step keeps its meaning.
+            if new == item.old or new.split(".")[0] != item.old.split(".")[0] or self.hass.states.get(new) is None:
+                raise FixError("Choose an entity of the same kind that exists.")
         after = None
-        if item.fix in ("use_new", "remove_step"):
+        if kind in ("use_new", "remove_step", "choose"):
             if not isinstance(before, dict) or item.old not in json.dumps(before):
                 raise FixError("This automation changed. Open it again to see the latest list.")
-        if item.fix == "remove_step":
+        if kind == "remove_step":
             after = without_entity(before, item.old)
             if after is None:
                 raise FixError("This step cannot be removed cleanly. Open the automation to change it.")
         fix_id = secrets.token_hex(6)
         record = {
             "id": fix_id,
-            "kind": item.fix,
+            "kind": kind,
             "at": dt_util.utcnow().isoformat(),
             "asked": 1,
             "items": [{"name": item.name, "id": item.id}],
             "automation": item.id,
             "old": item.old,
-            "new": item.to,
-            "before": before if item.fix != "turn_off" else None,
+            "new": new if new is not None else item.to,
+            "before": before if kind != "turn_off" else None,
             "status": "started",
         }
         record["backup"] = await self._backup(fix_id, record, copy_registry=False)
         self.records.insert(0, record)
         await self._save()
-        return _public(record) | {"old": item.old, "new": item.to, "automation": item.id, "after": after}
+        return _public(record) | {"old": item.old, "new": record["new"], "automation": item.id, "after": after}
 
     async def async_finish_automation(self, fix_id: str, undo: bool = False) -> dict[str, Any]:
         """After the page changed (or put back) the automation: check that it really did."""
@@ -332,9 +341,14 @@ class Fixes:
         state = self.hass.states.get(record["automation"])
         if record["kind"] == "turn_off":
             return state is not None and state.state == ("on" if undo else "off")
-        from homeassistant.components.automation import entities_in_automation
+        if record["automation"].startswith("script."):
+            from homeassistant.components.script import entities_in_script
 
-        entities = set(entities_in_automation(self.hass, record["automation"]))
+            entities = set(entities_in_script(self.hass, record["automation"]))
+        else:
+            from homeassistant.components.automation import entities_in_automation
+
+            entities = set(entities_in_automation(self.hass, record["automation"]))
         if undo:
             return record["old"] in entities
         if record["kind"] == "remove_step":

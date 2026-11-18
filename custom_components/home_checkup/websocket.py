@@ -184,6 +184,7 @@ def ws_fix_helpers_saved(hass: HomeAssistant, connection: websocket_api.ActiveCo
         vol.Required("type"): f"{DOMAIN}/fix_automation_start",
         vol.Required("key"): vol.All(str, vol.Length(min=1, max=500)),
         vol.Optional("before"): dict,
+        vol.Optional("new"): str,
     }
 )
 @websocket_api.async_response
@@ -192,7 +193,9 @@ async def ws_fix_automation_start(hass: HomeAssistant, connection: websocket_api
     if not (checkup := _checkup(hass, connection, msg)):
         return
     try:
-        fix = await checkup.fixes.async_record_automation(checkup.findings, msg["key"], msg.get("before"))
+        fix = await checkup.fixes.async_record_automation(
+            checkup.findings, msg["key"], msg.get("before"), msg.get("new")
+        )
     except FixError as err:
         connection.send_error(msg["id"], "fix_failed", str(err))
         return

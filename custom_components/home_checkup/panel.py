@@ -20,7 +20,13 @@ _STATIC_DONE = f"{DOMAIN}_static_registered"
 
 
 def _version() -> str:
-    return json.loads((Path(__file__).parent / "manifest.json").read_text())["version"]
+    """The version, plus when the page file last changed, so a browser never keeps an old copy of the page."""
+    here = Path(__file__).parent
+    version = json.loads((here / "manifest.json").read_text())["version"]
+    try:
+        return f"{version}-{int((here / 'frontend' / 'home-checkup-panel.js').stat().st_mtime)}"
+    except OSError:
+        return version
 
 
 async def async_add_panel(hass: HomeAssistant) -> bool:

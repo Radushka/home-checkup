@@ -108,10 +108,19 @@ const WORDS = {
     "Its device was removed": "Son appareil a été supprimé",
     "No longer exists": "N’existe plus",
     "Use the new one": "Utiliser le nouveau",
+    "Choose another": "Choisir un autre",
+    "Choose what this step should use": "Choisissez ce que cette étape doit utiliser",
+    "{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.": "{name} pointe vers {old}, qui n’existe plus. Choisissez ce qu’elle doit utiliser maintenant. Une sauvegarde est faite d’abord.",
+    "Search": "Rechercher",
+    "Nothing of the same kind was found.": "Rien du même type n’a été trouvé.",
+    "This script lives in a YAML file. Open it to change it.": "Ce script se trouve dans un fichier YAML. Ouvrez-le pour le modifier.",
+    "Showing the first {n}. Search to find more.": "Les {n} premiers sont affichés. Recherchez pour en trouver d’autres.",
     "Ask": "Demander",
     "Ask sends us a request for a fix. You read it first.": "Demander nous envoie une demande de correctif. Vous la lisez d’abord.",
     "Ask for a fix": "Demander un correctif",
     "Asked": "Demandé",
+    "A fix arrived in version {version}. Update to get it.": "Un correctif est arrivé dans la version {version}. Mettez à jour pour l’obtenir.",
+    "A fix is planned.": "Un correctif est prévu.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Ceci est envoyé aux créateurs de Home Checkup. Seul ce que vous voyez ici est envoyé, et seulement quand vous appuyez sur Envoyer.",
     "Problem": "Problème",
     "Integration": "Intégration",
@@ -272,10 +281,19 @@ const WORDS = {
     "Its device was removed": "Sein Gerät wurde entfernt",
     "No longer exists": "Gibt es nicht mehr",
     "Use the new one": "Die neue nutzen",
+    "Choose another": "Anderes wählen",
+    "Choose what this step should use": "Wählen Sie, was dieser Schritt nutzen soll",
+    "{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.": "{name} zeigt auf {old}, das es nicht mehr gibt. Wählen Sie, was jetzt genutzt werden soll. Zuerst wird eine Sicherung erstellt.",
+    "Search": "Suchen",
+    "Nothing of the same kind was found.": "Nichts von derselben Art gefunden.",
+    "This script lives in a YAML file. Open it to change it.": "Dieses Skript liegt in einer YAML-Datei. Öffnen Sie es, um es zu ändern.",
+    "Showing the first {n}. Search to find more.": "Die ersten {n} werden gezeigt. Suchen Sie, um mehr zu finden.",
     "Ask": "Anfragen",
     "Ask sends us a request for a fix. You read it first.": "Anfragen sendet uns eine Bitte um eine Lösung. Sie lesen sie zuerst.",
     "Ask for a fix": "Um eine Lösung bitten",
     "Asked": "Angefragt",
+    "A fix arrived in version {version}. Update to get it.": "Eine Lösung ist in Version {version} angekommen. Aktualisieren Sie, um sie zu erhalten.",
+    "A fix is planned.": "Eine Lösung ist geplant.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Das geht an die Macher von Home Checkup. Nur was Sie hier sehen, wird gesendet, und nur wenn Sie auf Senden drücken.",
     "Problem": "Problem",
     "Integration": "Integration",
@@ -436,10 +454,19 @@ const WORDS = {
     "Its device was removed": "Se quitó su dispositivo",
     "No longer exists": "Ya no existe",
     "Use the new one": "Usar el nuevo",
+    "Choose another": "Elegir otro",
+    "Choose what this step should use": "Elija lo que este paso debe usar",
+    "{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.": "{name} apunta a {old}, que ya no existe. Elija lo que debe usar ahora. Primero se hace una copia de seguridad.",
+    "Search": "Buscar",
+    "Nothing of the same kind was found.": "No se encontró nada del mismo tipo.",
+    "This script lives in a YAML file. Open it to change it.": "Este script está en un archivo YAML. Ábralo para cambiarlo.",
+    "Showing the first {n}. Search to find more.": "Se muestran los primeros {n}. Busque para encontrar más.",
     "Ask": "Pedir",
     "Ask sends us a request for a fix. You read it first.": "Pedir nos envía una solicitud de solución. Usted la lee primero.",
     "Ask for a fix": "Pedir una solución",
     "Asked": "Pedido",
+    "A fix arrived in version {version}. Update to get it.": "Llegó una solución en la versión {version}. Actualice para obtenerla.",
+    "A fix is planned.": "Hay una solución prevista.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Esto se envía a los creadores de Home Checkup. Solo se envía lo que ve aquí, y solo cuando pulsa Enviar.",
     "Problem": "Problema",
     "Integration": "Integración",
@@ -587,8 +614,22 @@ const mark = (level) => `
     <path d="M8 25h9l3-7 5 15 4-12 2 4h9" />
   </svg>`;
 
+/** True when version `a` is newer than version `b` ("0.6.10" is newer than "0.6.9"). An unknown `b` counts as old. */
+function newerVersion(a, b) {
+  const parts = (v) => String(v).split(/[.\-+]/).map((p) => parseInt(p, 10) || 0);
+  const x = parts(a);
+  const y = parts(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  }
+  return false;
+}
+
 // "Ask for a fix": where a request goes when someone presses Send, and which kinds of line offer it.
 const ASK_URL = "https://lukaps.com/homecheckup/api/ask.php";
+const STATUS_URL = "https://lukaps.com/homecheckup/api/status.php";
+const CHOOSE_SHOWN = 40; // choices shown at once in "Choose another"
+const NEWS_EVERY = 6 * 3600 * 1000; // how often the page asks what happened to the requests of this browser
 const ASK_KINDS = ["log_errors", "broken_references", "failed_integrations"];
 
 class HomeCheckupPanel extends HTMLElement {
@@ -603,6 +644,7 @@ class HomeCheckupPanel extends HTMLElement {
     this._keptOpen = false;
     this._sheet = null;
     this._ask = null;
+    this._choose = null;
     this._undoing = null;
     this._seen = "";
   }
@@ -708,6 +750,7 @@ class HomeCheckupPanel extends HTMLElement {
     try {
       this._report = await this._hass.callWS(msg);
       this._error = "";
+      this._checkNews();
     } catch (err) {
       this._error = err?.code === "not_loaded" ? "not_loaded" : "failed";
     }
@@ -898,6 +941,112 @@ class HomeCheckupPanel extends HTMLElement {
     this._render();
   }
 
+  // ---- choose another entity for a broken step ----------------------------------------------------------------
+
+  /** Where Home Assistant keeps this automation or script, for its own editor API. Null when it is in YAML. */
+  _ownerPath(item) {
+    if ((item.id || "").startsWith("script.")) return `config/script/config/${encodeURIComponent(item.id.split(".")[1])}`;
+    const autoId = this._autoId(item);
+    return autoId ? `config/automation/config/${encodeURIComponent(autoId)}` : null;
+  }
+
+  _openChoose(key) {
+    const item = (this._report?.findings || []).flatMap((f) => f.items || []).find((i) => i.key === key);
+    if (!item?.choose || !item.old) return;
+    // Plain words where we have them: the name the missing thing had, not its raw id.
+    this._choose = { key, name: item.name, old: item.old, oldName: this._target(item) || item.old, q: "", busy: false };
+    this._paintChoose();
+  }
+
+  _paintChoose() {
+    if (this._choose) this._choose.paint = true;
+    this._render();
+    if (this._choose) this._choose.paint = false;
+  }
+
+  /** Entities of the same kind as the missing one, by name. */
+  _candidates() {
+    const c = this._choose;
+    const domain = c.old.split(".")[0];
+    const q = c.q.trim().toLowerCase();
+    // The closest names come first: the ones that share words with the missing one ("bedroom", "alexa").
+    const words = [...new Set(`${c.old.split(".")[1] || ""} ${c.oldName || ""}`.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length >= 3))];
+    return Object.entries(this._hass?.states || {})
+      .filter(([id]) => id.startsWith(domain + ".") && id !== c.old)
+      .map(([id, st]) => ({ id, name: String(st?.attributes?.friendly_name || id) }))
+      .filter((e) => !q || e.name.toLowerCase().includes(q) || e.id.includes(q))
+      .map((e) => ({ ...e, near: words.filter((w) => `${e.name} ${e.id}`.toLowerCase().includes(w)).length }))
+      .sort((a, b) => b.near - a.near || a.name.localeCompare(b.name));
+  }
+
+  _chooseListHtml() {
+    const all = this._candidates();
+    const shown = all.slice(0, CHOOSE_SHOWN);
+    if (!shown.length) return `<div class="stext">${esc(this._t("Nothing of the same kind was found."))}</div>`;
+    const more = all.length > shown.length ? `<div class="stext">${esc(this._t("Showing the first {n}. Search to find more.", { n: shown.length }))}</div>` : "";
+    return (
+      shown
+        .map(
+          (e) =>
+            `<button type="button" class="pick" data-act="choosepick" data-key="${esc(e.id)}" ${this._choose.busy ? "disabled" : ""}><span class="nm">${esc(e.name)}</span><span class="info">${esc(e.id)}</span></button>`,
+        )
+        .join("") + more
+    );
+  }
+
+  _chooseHtml() {
+    const c = this._choose;
+    if (!c) return "";
+    const title = this._t("Choose what this step should use");
+    const text = this._t("{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.", { name: c.name, old: c.oldName });
+    return `<div class="scrim" data-act="chooseclose"></div>
+      <div class="sheet choosesheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="stitle">${esc(title)}</div>
+        <div class="stext">${esc(text)}</div>
+        <input class="choosesearch" type="search" data-choose="q" placeholder="${esc(this._t("Search"))}" aria-label="${esc(this._t("Search"))}" value="${esc(c.q)}" ${c.busy ? "disabled" : ""}>
+        <div class="picks">${this._chooseListHtml()}</div>
+        <div class="sbuttons"><button type="button" class="ghost" data-act="chooseclose" ${c.busy ? "disabled" : ""}>${esc(this._t("Cancel"))}</button></div>
+      </div>`;
+  }
+
+  async _chooseFix(newId) {
+    const c = this._choose;
+    if (!c || c.busy) return;
+    const item = (this._report?.findings || []).flatMap((f) => f.items || []).find((i) => i.key === c.key);
+    if (!item) return;
+    c.busy = true;
+    this._paintChoose();
+    let say;
+    try {
+      const path = this._ownerPath(item);
+      const yaml = item.id.startsWith("script.")
+        ? this._t("This script lives in a YAML file. Open it to change it.")
+        : this._t("This automation lives in a YAML file. Open it to change it.");
+      if (!path) throw new Error(yaml);
+      let before;
+      try {
+        before = await this._hass.callApi("GET", path);
+      } catch {
+        throw new Error(yaml);
+      }
+      const start = await this._hass.callWS({ type: "home_checkup/fix_automation_start", key: c.key, before, new: newId });
+      const fix = start.fix;
+      await this._hass.callApi("POST", path, swapEntity(before, fix.old, fix.new));
+      const result = await this._hass.callWS({ type: "home_checkup/fix_automation_finish", fix_id: fix.id });
+      this._report = result.report;
+      say = {
+        text: result.fix.status !== "done" ? this._t("It did not fully change. You can undo it.") : this._t("Updated. A backup was made."),
+        act: "fixundo",
+        data: fix.id,
+      };
+    } catch (err) {
+      say = { text: err?.message || this._t("Something went wrong. Nothing was changed.") };
+    }
+    this._choose = null;
+    this._say(say);
+    this._render();
+  }
+
   async _undoFix(id) {
     const fix = (this._report?.fixes || []).find((f) => f.id === id);
     if (!fix || this._undoing) return;
@@ -907,10 +1056,12 @@ class HomeCheckupPanel extends HTMLElement {
       let result;
       if (fix.kind === "leftover_entities") {
         result = await this._hass.callWS({ type: "home_checkup/fix_undo", fix_id: id });
-      } else if (fix.kind === "use_new" || fix.kind === "remove_step" || fix.kind === "turn_off") {
+      } else if (["use_new", "remove_step", "turn_off", "choose"].includes(fix.kind)) {
         const saved = await this._hass.callWS({ type: "home_checkup/fix_automation_saved", fix_id: id });
         if (fix.kind === "turn_off") {
           await this._hass.callService("automation", "turn_on", { entity_id: saved.automation });
+        } else if ((saved.automation || "").startsWith("script.") && saved.before) {
+          await this._hass.callApi("POST", `config/script/config/${encodeURIComponent(saved.automation.split(".")[1])}`, saved.before);
         } else if (saved.before?.id) {
           await this._hass.callApi("POST", `config/automation/config/${encodeURIComponent(saved.before.id)}`, saved.before);
         }
@@ -946,6 +1097,64 @@ class HomeCheckupPanel extends HTMLElement {
     } catch {
       return [];
     }
+  }
+
+  /** The code our server gave for each request, by line. Kept in the browser only. */
+  _askCodes() {
+    try {
+      return JSON.parse(localStorage.getItem("home_checkup.askcodes") || "{}") || {};
+    } catch {
+      return {};
+    }
+  }
+
+  /**
+   * What happened to the requests of this browser: "planned" or "fixed in version X". The page sends only the
+   * codes it got when the person pressed Send. Nothing about the home is sent. At most once every few hours.
+   */
+  async _checkNews() {
+    if (this._newsAsked) return;
+    this._newsAsked = true;
+    const codes = [...new Set(Object.values(this._askCodes()))].filter((c) => /^[0-9a-f]{64}$/.test(c)).slice(-50);
+    if (!codes.length) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem("home_checkup.asknews") || "null");
+      if (saved && typeof saved.status === "object") this._newsStatus = saved.status;
+      if (saved && Date.now() - saved.at < NEWS_EVERY) return this._render();
+    } catch {
+      // no saved answer: ask
+    }
+    try {
+      const res = await fetch(STATUS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "omit",
+        referrerPolicy: "no-referrer",
+        body: JSON.stringify({ v: 1, codes }),
+      });
+      const reply = await res.json();
+      if (!res.ok || !reply.ok || typeof reply.status !== "object") return;
+      this._newsStatus = reply.status;
+      try {
+        localStorage.setItem("home_checkup.asknews", JSON.stringify({ at: Date.now(), status: reply.status }));
+      } catch {
+        // a private window: asked again next time
+      }
+      if (!this._ask) this._render();
+    } catch {
+      // offline or blocked: the page works the same without it
+    }
+  }
+
+  /** The news for one line: { text } to show, and whether the person may ask again. */
+  _news(key) {
+    const news = (this._newsStatus || {})[this._askCodes()[key]];
+    if (!news) return null;
+    if (news.status === "planned") return { text: this._t("A fix is planned."), again: false };
+    if (news.status !== "fixed" || !/^[0-9][0-9A-Za-z.\-+]{0,19}$/.test(news.fixed_in || "")) return null;
+    // The fix is in a version this home already has, and the line is still here: let the person ask again.
+    if (!newerVersion(news.fixed_in, this._report?.version || "")) return { text: "", again: true };
+    return { text: this._t("A fix arrived in version {version}. Update to get it.", { version: news.fixed_in }), again: false };
   }
 
   /** What would be sent for one line. No names of devices, people or places: only the kind of problem. */
@@ -1014,6 +1223,10 @@ class HomeCheckupPanel extends HTMLElement {
         a.done = reply;
         try {
           localStorage.setItem("home_checkup.asked", JSON.stringify([...new Set([...this._asked(), a.key])].slice(-200)));
+          if (/^[0-9a-f]{64}$/.test(reply.code || "")) {
+            const codes = Object.entries({ ...this._askCodes(), [a.key]: reply.code }).slice(-200);
+            localStorage.setItem("home_checkup.askcodes", JSON.stringify(Object.fromEntries(codes)));
+          }
         } catch {
           // a private window: the button will simply offer to ask again
         }
@@ -1113,7 +1326,7 @@ class HomeCheckupPanel extends HTMLElement {
         const what =
           f.kind === "leftover_entities"
             ? this._tn(f.removed, "Removed {n} leftover entity", "Removed {n} leftover entities")
-            : f.kind === "use_new"
+            : f.kind === "use_new" || f.kind === "choose"
               ? this._t("Updated {name}", { name: auto })
               : f.kind === "remove_step"
                 ? this._t("Removed a step from {name}", { name: auto })
@@ -1155,6 +1368,11 @@ class HomeCheckupPanel extends HTMLElement {
       this._ask.stale = true;
       return;
     }
+    // The same for the list of choices: the search words and the place in the list stay.
+    if (this._choose && !this._choose.paint && root.querySelector(".choosesheet")) {
+      this._choose.stale = true;
+      return;
+    }
     if (!root.querySelector(".page")) {
       root.innerHTML = `<style>${STYLE}</style>
         <div class="page">
@@ -1175,6 +1393,12 @@ class HomeCheckupPanel extends HTMLElement {
       root.querySelector(".content").addEventListener("input", (e) => {
         const field = e.target?.dataset?.ask;
         if (field && this._ask) this._ask[field] = e.target.value;
+        if (e.target?.dataset?.choose === "q" && this._choose) {
+          // Only the list is drawn again, so the cursor stays in the search box.
+          this._choose.q = e.target.value;
+          const picks = root.querySelector(".picks");
+          if (picks) picks.innerHTML = this._chooseListHtml();
+        }
       });
     }
     root.querySelector(".name").textContent = this._t("Home Checkup");
@@ -1228,7 +1452,7 @@ class HomeCheckupPanel extends HTMLElement {
       <div class="chips">${chips}</div>`;
     if (findings.length) {
       // "Ask" is explained only when a line on the page offers it.
-      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix));
+      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix && !it.choose));
       const askHint = canAsk ? ` ${this._t("Ask sends us a request for a fix. You read it first.")}` : "";
       html += `<div class="keephint">${esc(this._t("Keep means this is fine. It will not show again.") + askHint)}</div>`;
     }
@@ -1255,6 +1479,7 @@ class HomeCheckupPanel extends HTMLElement {
     }
     html += this._sheetHtml();
     html += this._askHtml();
+    html += this._chooseHtml();
     return html;
   }
 
@@ -1283,7 +1508,9 @@ class HomeCheckupPanel extends HTMLElement {
                   : this._t("No longer exists");
           infoText = `${why} · ${this._lastRan(it.last_ran)}`;
         }
-        const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean;
+        const news = this._asked().includes(it.key) ? this._news(it.key) : null;
+        const newsLine = news?.text ? `<span class="fixnews">${esc(news.text)}</span>` : "";
+        const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + newsLine;
         const label = it.link
           ? `<a class="what" href="${esc(it.link)}" data-act="go" data-link="${esc(it.link)}">${name}${info}</a>`
           : `<span class="what">${name}${info}</span>`;
@@ -1292,13 +1519,18 @@ class HomeCheckupPanel extends HTMLElement {
           ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : this._t(fixLabel))}</button>`
           : "";
         // No safe fix for this line yet: the person can ask us for one. Nothing is sent before they read it and press Send.
+        // No fix by itself, but the person can choose what the step should use now.
+        const chooseBtn =
+          !fixBtn && it.choose
+            ? `<button type="button" class="fixbtn" data-act="choose" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._t("Choose another"))}</button>`
+            : "";
         const askBtn =
-          !fixBtn && ASK_KINDS.includes(f.kind)
-            ? this._asked().includes(it.key)
+          !fixBtn && !chooseBtn && ASK_KINDS.includes(f.kind)
+            ? this._asked().includes(it.key) && !news?.again
               ? `<span class="asked">${esc(this._t("Asked"))}</span>`
               : `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
             : "";
-        return `<li class="${fixBtn || askBtn ? "hasfix" : ""}">${label}<span class="rowacts">${fixBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Keep"))}</button></span></li>`;
+        return `<li class="${fixBtn || chooseBtn || askBtn ? "hasfix" : ""}">${label}<span class="rowacts">${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Keep"))}</button></span></li>`;
       })
       .join("");
     const more =
@@ -1383,6 +1615,16 @@ class HomeCheckupPanel extends HTMLElement {
         this._ask = null;
         stale ? this._load() : this._render();
       }
+    } else if (act === "choose") {
+      this._openChoose(el.dataset.key);
+    } else if (act === "chooseclose") {
+      if (!this._choose?.busy) {
+        const stale = this._choose?.stale;
+        this._choose = null;
+        stale ? this._load() : this._render();
+      }
+    } else if (act === "choosepick") {
+      this._chooseFix(el.dataset.key);
     } else if (act === "asksend") {
       this._sendAsk();
     } else if (act === "runfix") {
@@ -1463,6 +1705,7 @@ const STYLE = `
   .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .to, .info { color: var(--dim); }
   .info { font-size: 13px; }
+  .fixnews { display: block; font-size: 13px; color: var(--good); margin-top: 2px; }
   .mean { font-size: 13px; color: var(--primary-text-color); margin-top: 2px; }
   .step { font-size: 14px; color: var(--primary-text-color); margin: -2px 0 2px; }
   .newpill { display: inline-block; vertical-align: 1px; margin-right: 6px; padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 700;
@@ -1503,6 +1746,17 @@ const STYLE = `
   ul.pick li.off { opacity: .55; }
   ul.pick .info.code { font-family: var(--ha-font-family-code, ui-monospace, monospace); font-size: 12px; }
   .asksheet { max-height: calc(100% - 32px); overflow-y: auto; }
+  .choosesheet { max-height: calc(100% - 32px); display: flex; flex-direction: column; }
+  .choosesearch { width: 100%; box-sizing: border-box; margin-top: 14px; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); color: inherit; font: inherit; font-size: 15px; }
+  .choosesearch:focus { outline: 2px solid color-mix(in srgb, var(--primary-color) 60%, transparent); outline-offset: 1px; }
+  .picks { overflow-y: auto; margin-top: 8px; min-height: 80px; display: flex; flex-direction: column; gap: 2px; }
+  .pick { display: flex; flex: none; flex-direction: column; align-items: flex-start; gap: 2px; width: 100%; box-sizing: border-box; text-align: left;
+    padding: 9px 11px; min-height: 48px; line-height: 1.3;
+    border: 0; border-radius: 10px; background: transparent; color: inherit; font: inherit; font-size: 15px; cursor: pointer; }
+  .pick:hover, .pick:focus-visible { background: color-mix(in srgb, var(--primary-color) 12%, transparent); outline: none; }
+  .pick .nm, .pick .info { display: block; max-width: 100%; overflow-wrap: anywhere; }
+  .choosesheet .stitle, .choosesheet .stext, .choosesearch, .choosesheet .sbuttons { flex: none; }
   .askfacts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 14px 0 0; font-size: 14px; }
   .askfacts dt { color: var(--dim); }
   .askfacts dd { margin: 0; overflow-wrap: anywhere; }

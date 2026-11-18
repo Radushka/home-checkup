@@ -30,7 +30,6 @@ from .const import (
     LOG_WINDOW,
     NEW_ERROR_AFTER,
     NOTE_HOURS,
-    STARTUP_GRACE,
     CORPUS_MAX_BYTES,
     CORPUS_SKIP_DIRS,
     CORPUS_SKIP_NAME_PARTS,
@@ -73,6 +72,7 @@ class Item:
     old: str = ""  # the missing entity id
     to: str = ""  # use_new: the entity that looks like its new name
     to_name: str = ""
+    choose: bool = False  # no new name was found: the person can choose another entity of the same kind
     gone: str = ""  # turn_off: the integration that was removed ("Roomba")
     gone_at: str = ""  # turn_off: when, ISO date
     last_ran: str = ""  # ISO time, "" when it never ran
@@ -194,7 +194,7 @@ def check_log(
     now: float | None = None,
     keep: frozenset[str] = frozenset(),
     watching_since: float = 0.0,
-    started_at: datetime | None = None,
+    run_start: float = 0.0,
 ) -> list[Finding]:
     """One finding per integration and level. What goes in the Repairs note:
 
@@ -205,13 +205,12 @@ def check_log(
     now = now if now is not None else time.time()
     since = now - LOG_WINDOW.total_seconds()
     knows_normal = watching_since and now - watching_since >= NEW_ERROR_AFTER.total_seconds()
-    # A start-up error that did not come back at the latest restart is fixed: it leaves the page at once, and does
-    # not stay for the rest of the 24 hours. It is judged only when the start-up minutes of that restart are over.
-    started = started_at.timestamp() if started_at else 0.0
-    clean_restart = bool(started) and now > started + STARTUP_GRACE
+    # A start-up error is about one start. Errors from an earlier start leave the page as soon as Home Assistant
+    # starts again (`run_start`: when this run began). If the error comes back at this start, it is shown again,
+    # with the new time. So an old line never returns for a few minutes after a restart.
     by_domain: dict[str | None, list] = defaultdict(list)
     for group, count in watch.groups(now):
-        if clean_restart and group.last_seen < started and group.startup_only(since):
+        if run_start and group.last_seen < run_start and group.startup_only(since):
             continue
         if count and f"log:{group.domain}:{group.template}" not in keep:
             by_domain[group.domain].append((group, count))
@@ -678,6 +677,9 @@ def check_broken_references(hass: HomeAssistant, keep: frozenset[str] = frozense
                             item.fix = "remove_step"
                         elif gone and domain == "automation":
                             item.fix = "turn_off"
+                        # No safe fix by itself: the person can choose what the step should use now. Scripts too.
+                        if not item.fix and (can_fix or domain == "script") and "." in target:
+                            item.choose = True
                 else:
                     device_id = target.rsplit("(", 1)[-1].rstrip(")")
                     deleted_dev = next((d for i, d in dev_reg.deleted_devices.items() if i.startswith(device_id)), None)
@@ -887,12 +889,13 @@ def run_checks(
     keep: set[str],
     now: float | None = None,
     watching_since: float = 0.0,
+    run_start: float = 0.0,
 ) -> list[Finding]:
     kept = frozenset(keep)
     findings: list[Finding] = []
     for number, check in enumerate((
         lambda: check_failed_integrations(hass, kept),
-        lambda: check_log(hass, watch, now or time.time(), kept, watching_since, started_at),
+        lambda: check_log(hass, watch, now or time.time(), kept, watching_since, run_start),
         lambda: check_broken_references(hass, kept),
         lambda: check_leftovers(hass, kept, started_at),
         lambda: check_unavailable(hass, started_at, kept),
