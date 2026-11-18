@@ -108,6 +108,8 @@ const WORDS = {
     "Its device was removed": "Son appareil a été supprimé",
     "No longer exists": "N’existe plus",
     "Use the new one": "Utiliser le nouveau",
+    "{n} of these is written in a YAML file. The button cannot remove it.": "{n} de ces éléments est écrit dans un fichier YAML. Le bouton ne peut pas le supprimer.",
+    "{n} of these are written in YAML files. The button cannot remove them.": "{n} de ces éléments sont écrits dans des fichiers YAML. Le bouton ne peut pas les supprimer.",
     "Remove this step": "Retirer cette étape",
     "Removed a step from {name}": "Étape retirée de {name}",
     "Step removed. A backup was made.": "Étape retirée. Une sauvegarde a été faite.",
@@ -244,6 +246,8 @@ const WORDS = {
     "Its device was removed": "Sein Gerät wurde entfernt",
     "No longer exists": "Gibt es nicht mehr",
     "Use the new one": "Die neue nutzen",
+    "{n} of these is written in a YAML file. The button cannot remove it.": "{n} davon steht in einer YAML-Datei. Die Schaltfläche kann ihn nicht entfernen.",
+    "{n} of these are written in YAML files. The button cannot remove them.": "{n} davon stehen in YAML-Dateien. Die Schaltfläche kann sie nicht entfernen.",
     "Remove this step": "Diesen Schritt entfernen",
     "Removed a step from {name}": "Schritt aus {name} entfernt",
     "Step removed. A backup was made.": "Schritt entfernt. Eine Sicherung wurde erstellt.",
@@ -380,6 +384,8 @@ const WORDS = {
     "Its device was removed": "Se quitó su dispositivo",
     "No longer exists": "Ya no existe",
     "Use the new one": "Usar el nuevo",
+    "{n} of these is written in a YAML file. The button cannot remove it.": "{n} de estos está escrito en un archivo YAML. El botón no puede quitarlo.",
+    "{n} of these are written in YAML files. The button cannot remove them.": "{n} de estos están escritos en archivos YAML. El botón no puede quitarlos.",
     "Remove this step": "Quitar este paso",
     "Removed a step from {name}": "Paso quitado de {name}",
     "Step removed. A backup was made.": "Paso quitado. Se hizo una copia de seguridad.",
@@ -872,6 +878,7 @@ class HomeCheckupPanel extends HTMLElement {
         <div class="stitle">${esc(title)}</div>
         <div class="stext">${esc(text)}</div>
         <div class="safe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 9.5C8 19.3 5 15.5 5 11V6l7-3z"/></svg>${esc(this._t("A backup is made first. You can undo this for 30 days."))}</div>
+        ${s.items.length > ready.length && s.kind !== "leftover_entities" ? `<div class="stext yamlnote">${esc(this._tn(s.items.length - ready.length, "{n} of these is written in a YAML file. The button cannot remove it.", "{n} of these are written in YAML files. The button cannot remove them."))}</div>` : ""}
         ${ready.length > 1 ? `<div class="allrow"><button type="button" class="link" data-act="tickall">${esc(on === ready.length ? this._t("Untick all") : this._t("Tick all"))}</button></div>` : ""}
         <ul class="pick">${rows || `<li class="off">${esc(s.busy ? "…" : this._t("Nothing to remove."))}</li>`}</ul>
         ${s.error ? `<div class="serror">${esc(s.error)}</div>` : ""}
