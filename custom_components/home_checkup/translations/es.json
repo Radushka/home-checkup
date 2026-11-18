@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home Checkup",
+        "description": "Revisa su casa una vez al día y le dice, con palabras sencillas, qué necesita atención. Solo lee. Nunca cambia ni quita nada por sí mismo.\n\nFunciona con las Reparaciones de Home Assistant: añade allí una sola nota como máximo, solo incluye errores del registro que se repiten, nunca cuenta lo que Home Assistant ya muestra y nunca cambia las reparaciones de Home Assistant.\n\nEstá hecho pensando en su privacidad. Todo se queda en su casa: no se envía nada a ningún servidor. Nunca abre secrets.yaml ni los archivos donde Home Assistant guarda contraseñas, claves e inicios de sesión. Las contraseñas, claves, tokens y direcciones de correo en los mensajes del registro se ocultan antes de mostrarse."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Home Checkup ya está configurado."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "checkup": {
+        "name": "Puntos para revisar"
+      }
+    }
+  },
+  "issues": {
+    "thing_to_look_at": {
+      "title": "Home Checkup: 1 punto para revisar",
+      "description": "Home Checkup encontró algo que necesita atención. Nada cambia hasta que usted lo decida.\n\n{list}\n\nPulse **Más información** abajo, o abra **Home Checkup** en la barra lateral, para ver los detalles."
+    },
+    "things_to_look_at": {
+      "title": "Home Checkup: {count} puntos para revisar",
+      "description": "Home Checkup encontró {count} puntos que necesitan atención. Nada cambia hasta que usted lo decida.\n\n{list}\n\nPulse **Más información** abajo, o abra **Home Checkup** en la barra lateral, para ver los detalles."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Home Checkup",
+        "description": "La lista completa está siempre en la página Home Checkup de la barra lateral.",
+        "data": {
+          "repairs_note": "Mostrar una nota en Reparaciones cuando algo necesita atención"
+        },
+        "data_description": {
+          "repairs_note": "Una sola nota, nunca una por problema. Desaparece sola cuando todo está bien."
+        }
+      }
+    }
+  }
+}

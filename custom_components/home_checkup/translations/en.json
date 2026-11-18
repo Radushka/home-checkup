@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home Checkup",
+        "description": "Checks your home once a day and tells you, in plain words, what needs a look. It only reads. It never changes or removes anything by itself.\n\nIt works with Home Assistant's own Repairs: it adds at most one note there, lists only log errors that keep coming back, never counts what Home Assistant already shows, and never changes Home Assistant's own repairs.\n\nIt is built with your privacy in mind. Everything stays in your home: nothing is sent to any server. It never opens secrets.yaml or the files where Home Assistant keeps passwords, keys and sign-ins. Passwords, keys, tokens and email addresses in log messages are hidden before they are shown."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Home Checkup is already set up."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "checkup": {
+        "name": "Things to look at"
+      }
+    }
+  },
+  "issues": {
+    "thing_to_look_at": {
+      "title": "Home Checkup: 1 thing needs a look",
+      "description": "Home Checkup found something that needs a look. Nothing changes until you choose to.\n\n{list}\n\nPress **Learn more** below, or open **Home Checkup** in the sidebar, to see the details."
+    },
+    "things_to_look_at": {
+      "title": "Home Checkup: {count} things need a look",
+      "description": "Home Checkup found {count} things that need a look. Nothing changes until you choose to.\n\n{list}\n\nPress **Learn more** below, or open **Home Checkup** in the sidebar, to see the details."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Home Checkup",
+        "description": "The full list is always on the Home Checkup page in the sidebar.",
+        "data": {
+          "repairs_note": "Show a note in Repairs when something needs a look"
+        },
+        "data_description": {
+          "repairs_note": "One note only, never one per problem. It goes away by itself when all is well."
+        }
+      }
+    }
+  }
+}

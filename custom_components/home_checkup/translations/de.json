@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home Checkup",
+        "description": "Prüft dein Zuhause einmal am Tag und sagt dir in einfachen Worten, was einen Blick braucht. Es liest nur. Es ändert oder entfernt nie etwas von selbst.\n\nEs arbeitet mit den Reparaturen von Home Assistant zusammen: Es fügt dort höchstens einen Hinweis hinzu, nennt nur Protokollfehler, die immer wiederkommen, zählt nie, was Home Assistant schon zeigt, und ändert nie die Reparaturen von Home Assistant.\n\nEs wurde mit Blick auf deine Privatsphäre gebaut. Alles bleibt bei dir zu Hause: Nichts wird an einen Server gesendet. Es öffnet nie secrets.yaml oder die Dateien, in denen Home Assistant Passwörter, Schlüssel und Anmeldungen speichert. Passwörter, Schlüssel, Tokens und E-Mail-Adressen in Protokollmeldungen werden verborgen, bevor sie angezeigt werden."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Home Checkup ist bereits eingerichtet."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "checkup": {
+        "name": "Punkte zum Ansehen"
+      }
+    }
+  },
+  "issues": {
+    "thing_to_look_at": {
+      "title": "Home Checkup: 1 Punkt braucht einen Blick",
+      "description": "Home Checkup hat etwas gefunden, das einen Blick braucht. Nichts ändert sich, bis du es entscheidest.\n\n{list}\n\nDrücke unten auf **Mehr erfahren** oder öffne **Home Checkup** in der Seitenleiste, um die Details zu sehen."
+    },
+    "things_to_look_at": {
+      "title": "Home Checkup: {count} Punkte brauchen einen Blick",
+      "description": "Home Checkup hat {count} Punkte gefunden, die einen Blick brauchen. Nichts ändert sich, bis du es entscheidest.\n\n{list}\n\nDrücke unten auf **Mehr erfahren** oder öffne **Home Checkup** in der Seitenleiste, um die Details zu sehen."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Home Checkup",
+        "description": "Die ganze Liste steht immer auf der Seite Home Checkup in der Seitenleiste.",
+        "data": {
+          "repairs_note": "Einen Hinweis in Reparaturen zeigen, wenn etwas einen Blick braucht"
+        },
+        "data_description": {
+          "repairs_note": "Nur ein Hinweis, nie einer pro Problem. Er verschwindet von selbst, wenn alles gut ist."
+        }
+      }
+    }
+  }
+}

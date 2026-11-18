@@ -1,0 +1,44 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Home Checkup",
+        "description": "Vérifie votre maison une fois par jour et vous dit, en mots simples, ce qui mérite un coup d’œil. Il ne fait que lire. Il ne modifie et ne supprime jamais rien de lui-même.\n\nIl fonctionne avec les Réparations de Home Assistant : il y ajoute une seule note au plus, n’y liste que les erreurs du journal qui reviennent, ne compte jamais ce que Home Assistant montre déjà et ne modifie jamais les réparations de Home Assistant.\n\nIl est conçu en pensant à votre vie privée. Tout reste chez vous : rien n’est envoyé à un serveur. Il n’ouvre jamais secrets.yaml ni les fichiers où Home Assistant garde les mots de passe, les clés et les connexions. Les mots de passe, clés, jetons et adresses e-mail dans les messages du journal sont masqués avant d’être affichés."
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Home Checkup est déjà configuré."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "checkup": {
+        "name": "Points à vérifier"
+      }
+    }
+  },
+  "issues": {
+    "thing_to_look_at": {
+      "title": "Home Checkup : 1 point à vérifier",
+      "description": "Home Checkup a trouvé un point à vérifier. Rien ne change sans votre accord.\n\n{list}\n\nAppuyez sur **En savoir plus** ci-dessous, ou ouvrez **Home Checkup** dans la barre latérale, pour voir les détails."
+    },
+    "things_to_look_at": {
+      "title": "Home Checkup : {count} points à vérifier",
+      "description": "Home Checkup a trouvé {count} points à vérifier. Rien ne change sans votre accord.\n\n{list}\n\nAppuyez sur **En savoir plus** ci-dessous, ou ouvrez **Home Checkup** dans la barre latérale, pour voir les détails."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Home Checkup",
+        "description": "La liste complète est toujours sur la page Home Checkup dans la barre latérale.",
+        "data": {
+          "repairs_note": "Afficher une note dans Réparations quand un point est à vérifier"
+        },
+        "data_description": {
+          "repairs_note": "Une seule note, jamais une par problème. Elle disparaît d’elle-même quand tout va bien."
+        }
+      }
+    }
+  }
+}
