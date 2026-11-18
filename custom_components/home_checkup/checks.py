@@ -41,7 +41,7 @@ from .const import (
     TEMPLATE_HELPER_DOMAINS,
     UNAVAILABLE_SINCE_START_AFTER,
 )
-from .logwatch import LogWatch
+from .logwatch import LogWatch, is_wrapper
 from .meanings import meaning_of
 
 _LOGGER = logging.getLogger(__name__)
@@ -240,7 +240,7 @@ def check_log(
                 detail = "One cause, repeated."
             else:
                 detail = f"{causes} different causes."
-            hints = [meaning_of(f"{g.template} {g.sample}") for g, _ in level_groups]
+            hints = [meaning_of(f"{g.template} {g.sample} {g.cause}") for g, _ in level_groups]
             action, action_link, action_info = next_step(hass, domain, hints) if is_error else ("", "", "")
             findings.append(
                 Finding(
@@ -258,14 +258,15 @@ def check_log(
                     items=[
                         Item(
                             key=f"log:{domain}:{g.template}",
-                            name=g.sample,
+                            # A wrapper line ("Error doing job…") says nothing: the real error is the title.
+                            name=g.cause if g.cause and is_wrapper(g.sample) else g.sample,
                             id=g.logger,
                             info=(
                                 f"{_plural(n, 'time')}, only right after a restart, last at {_clock(g.last_seen)}"
                                 if g.startup_only(since)
                                 else f"{_plural(n, 'time')}, last at {_clock(g.last_seen)}"
                             ),
-                            hint=meaning_of(f"{g.template} {g.sample}"),
+                            hint=meaning_of(f"{g.template} {g.sample} {g.cause}"),
                             startup=g.startup_only(since),
                         )
                         for g, n in level_groups
@@ -886,7 +887,7 @@ def check_unused_helpers(hass: HomeAssistant, corpus: set[str] | None, keep: fro
         Finding(
             kind="unused_helpers",
             title=f"{_plural(len(items), 'helper')} nothing seems to use",
-            detail="Something outside Home Assistant (like Node-RED) may still use them. Mark those as Keep.",
+            detail="Something outside Home Assistant (like Node-RED) may still use them. Mark those as Ignore.",
             severity="info",
             link="/config/helpers",
             items=items,
@@ -986,6 +987,30 @@ def check_batteries(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> 
 
 
 # ---- All together ---------------------------------------------------------------------------------------------
+
+
+def checked_counts(hass: HomeAssistant) -> dict[str, int]:
+    """How much each check looked at, so a green mark on the page can say what stands behind it. Only counts."""
+    ent_reg = er.async_get(hass)
+    batteries = 0
+    for state in hass.states.async_all(("sensor", "binary_sensor")):
+        if state.attributes.get("device_class") != "battery":
+            continue
+        if state.domain == "sensor" and state.attributes.get("unit_of_measurement") != "%":
+            continue
+        entry = ent_reg.async_get(state.entity_id)
+        if entry and entry.platform in _CHARGED_DEVICE_PLATFORMS:
+            continue
+        batteries += 1
+    return {
+        "integrations": len(hass.config_entries.async_entries()),
+        "automations": len(hass.states.async_entity_ids(("automation", "script"))),
+        "entities": len(ent_reg.entities),
+        "devices": len(_all_devices(dr.async_get(hass))),
+        "states": len(hass.states.async_entity_ids()),
+        "helpers": len(hass.states.async_entity_ids(HELPER_DOMAINS)),
+        "batteries": batteries,
+    }
 
 
 def run_checks(

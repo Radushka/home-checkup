@@ -20,7 +20,7 @@ const WORDS = {
     "Log": "Journal",
     "Automations": "Automatisations",
     "Leftovers": "Restes",
-    "Offline devices": "Appareils hors ligne",
+    "Offline": "Hors ligne",
     "Helpers": "Entrées",
     "{n} integration did not start": "{n} intégration n’a pas démarré",
     "{n} integrations did not start": "{n} intégrations n’ont pas démarré",
@@ -46,13 +46,34 @@ const WORDS = {
     "Shown, not counted. Something outside may still use them.": "Affichées, non comptées. Un outil externe peut encore s’en servir.",
     "a removed device": "un appareil supprimé",
     "Open": "Ouvrir",
-    "Keep": "Garder",
-    "Keep means this is fine. It will not show again.": "Garder veut dire que c’est normal. Cela ne s’affichera plus.",
+    "Ignore": "Ignorer",
+    "Ignore means this is fine. It will not show again.": "Ignorer veut dire que c’est normal. Cela ne s’affichera plus.",
     "Show all {n}": "Tout afficher ({n})",
     "Show fewer": "Afficher moins",
-    "Kept. It will not show again.": "Gardé. Cela ne s’affichera plus.",
+    "Show the full error": "Afficher l’erreur complète",
+    "Show all lines": "Afficher toutes les lignes",
+    "Copy": "Copier",
+    "Copied": "Copié",
+    "First seen {when}": "Vue pour la première fois : {when}",
+    "{n} integrations checked. All started.": "{n} intégrations vérifiées. Toutes ont démarré.",
+    "The log of the last 24 hours was read. No error keeps coming back.": "Le journal des dernières 24 heures a été lu. Aucune erreur ne revient.",
+    "{n} automations and scripts checked. No broken steps.": "{n} automatisations et scripts vérifiés. Aucune étape cassée.",
+    "{n} entities and {m} devices checked. No leftovers.": "{n} entités et {m} appareils vérifiés. Aucun reste.",
+    "{n} entities checked. None was offline for a long time.": "{n} entités vérifiées. Aucune n’est restée hors ligne longtemps.",
+    "{n} helpers checked. All are in use.": "{n} entrées vérifiées. Toutes sont utilisées.",
+    "{n} batteries checked. None is low.": "{n} piles vérifiées. Aucune n’est faible.",
+    "Helpers are checked with the next full check.": "Les entrées sont vérifiées au prochain contrôle complet.",
+    "Likely from {name}": "Vient sans doute de {name}",
+    "Last seen {when}": "Vue pour la dernière fois : {when}",
+    "{n} times in 24 hours": "{n} fois en 24 heures",
+    "Known issues": "Problèmes connus",
+    "Debug logging": "Journal de débogage",
+    "The integration page has the debug logging switch.": "La page de l’intégration contient l’interrupteur du journal de débogage.",
+    "Copies a report you can paste into a bug report.": "Copie un rapport à coller dans un signalement de bogue.",
+    "Could not read the full error.": "Impossible de lire l’erreur complète.",
+    "Ignored. It will not show again.": "Ignoré. Cela ne s’affichera plus.",
     "Undo": "Annuler",
-    "Kept items ({n})": "Éléments gardés ({n})",
+    "Ignored items ({n})": "Éléments ignorés ({n})",
     "Show again": "Afficher de nouveau",
     "Home Checkup only reads. It never changes, removes or restarts anything by itself.": "Le bilan ne fait que lire. Il ne change, ne supprime et ne redémarre rien par lui-même.",
     "Home Checkup is not set up.": "Le bilan de la maison n’est pas configuré.",
@@ -85,18 +106,51 @@ const WORDS = {
     "Undone": "Annulé",
     "Some did not change": "Certains n’ont pas changé",
     "Home Checkup never changes anything by itself. A fix happens only when you tap it.": "Le bilan ne change rien par lui-même. Une correction se fait seulement quand vous la touchez.",
-    "It did not answer in time. It may be off, busy or far from Wi-Fi.": "Il n’a pas répondu à temps. Il est peut-être éteint, occupé ou loin du Wi-Fi.",
-    "Home Assistant could not reach it. Check that it is on and on the network.": "Home Assistant n’a pas pu le joindre. Vérifiez qu’il est allumé et sur le réseau.",
-    "Its sign-in no longer works. Open the integration and sign in again.": "Sa connexion ne marche plus. Ouvrez l’intégration et reconnectez-vous.",
-    "The service asked Home Assistant to slow down. This usually fixes itself.": "Le service a demandé à Home Assistant de ralentir. Cela se règle souvent tout seul.",
-    "A secure connection failed. Check the address and the certificate.": "Une connexion sécurisée a échoué. Vérifiez l’adresse et le certificat.",
-    "The device is offline. Check its power and Wi-Fi.": "L’appareil est hors ligne. Vérifiez son alimentation et son Wi-Fi.",
-    "It asked for something that does not exist. An update of the integration may fix it.": "Il a demandé quelque chose qui n’existe pas. Une mise à jour de l’intégration peut régler cela.",
-    "The integration works in a way Home Assistant warns about. An update usually fixes it.": "L’intégration fonctionne d’une façon que Home Assistant signale. Une mise à jour règle souvent cela.",
-    "It uses something Home Assistant will remove. An update usually fixes it.": "Il utilise quelque chose que Home Assistant va retirer. Une mise à jour règle souvent cela.",
-    "A template reads something that is missing. Check the template.": "Un modèle lit quelque chose qui manque. Vérifiez le modèle.",
     "Something points to an entity that no longer exists.": "Quelque chose pointe vers une entité qui n’existe plus.",
     "It starts slowly. Usually harmless.": "Il démarre lentement. Souvent sans gravité.",
+    "Try: {text}": "À essayer : {text}",
+    "A dashboard card had a fault in the browser.": "Une carte du tableau de bord a eu un défaut dans le navigateur.",
+    "Update that card, then reload the page.": "Mettez cette carte à jour, puis rechargez la page.",
+    "It did not answer in time.": "Pas de réponse à temps.",
+    "Check that it is on and close to Wi-Fi.": "Vérifiez qu’il est allumé et proche du Wi-Fi.",
+    "Home Assistant could not reach it.": "Home Assistant n’a pas pu le joindre.",
+    "Check that it is on and on the network.": "Vérifiez qu’il est allumé et sur le réseau.",
+    "Its sign-in no longer works.": "Sa connexion ne fonctionne plus.",
+    "Open the integration and sign in again.": "Ouvrez l’intégration et connectez-vous à nouveau.",
+    "The service asked Home Assistant to slow down.": "Le service a demandé à Home Assistant de ralentir.",
+    "Wait. This usually fixes itself.": "Attendez. Cela se règle souvent tout seul.",
+    "A secure connection failed.": "Une connexion sécurisée a échoué.",
+    "Check the address and the certificate.": "Vérifiez l’adresse et le certificat.",
+    "It was asked to start something that was already running. Usually harmless.": "On lui a demandé de démarrer quelque chose qui tournait déjà. Souvent sans gravité.",
+    "The storage is full.": "Le stockage est plein.",
+    "Free some space, for example old backups.": "Libérez de la place, par exemple d’anciennes sauvegardes.",
+    "Home Assistant ran out of memory.": "Home Assistant a manqué de mémoire.",
+    "Restart Home Assistant.": "Redémarrez Home Assistant.",
+    "Home Assistant is not allowed to open a file.": "Home Assistant n’a pas le droit d’ouvrir un fichier.",
+    "Check the permissions of that file.": "Vérifiez les droits de ce fichier.",
+    "An address could not be found.": "Une adresse est introuvable.",
+    "Check the internet connection.": "Vérifiez la connexion Internet.",
+    "The connection dropped. It usually comes back by itself.": "La connexion a été coupée. Elle revient souvent toute seule.",
+    "The device is offline.": "L’appareil est hors ligne.",
+    "Check its power and Wi-Fi.": "Vérifiez son alimentation et le Wi-Fi.",
+    "The service itself had a problem.": "Le service lui-même a eu un problème.",
+    "Something calls an action that does not exist.": "Quelque chose appelle une action qui n’existe pas.",
+    "Check your automations and cards.": "Vérifiez vos automatisations et vos cartes.",
+    "It asked for something that does not exist.": "Il a demandé quelque chose qui n’existe pas.",
+    "Update the integration.": "Mettez l’intégration à jour.",
+    "The integration works in a way Home Assistant warns about.": "L’intégration travaille d’une façon que Home Assistant signale.",
+    "It uses something Home Assistant will remove.": "Il utilise quelque chose que Home Assistant va retirer.",
+    "A template reads something that is missing.": "Un modèle lit quelque chose qui manque.",
+    "Check the template.": "Vérifiez le modèle.",
+    "Something points to an entity that no longer exists.": "Quelque chose pointe vers une entité qui n’existe plus.",
+    "Change it to an entity that exists.": "Remplacez-la par une entité qui existe.",
+    "The device cannot do what was asked.": "L’appareil ne peut pas faire ce qui a été demandé.",
+    "Check the automation or card that asked for it.": "Vérifiez l’automatisation ou la carte qui l’a demandé.",
+    "It got an answer it could not read.": "Il a reçu une réponse qu’il n’a pas pu lire.",
+    "It got a value it cannot use.": "Il a reçu une valeur qu’il ne peut pas utiliser.",
+    "Check the automation or card that sent it.": "Vérifiez l’automatisation ou la carte qui l’a envoyée.",
+    "This is a fault in its code.": "C’est un défaut dans son code.",
+    "Update it. If the error stays, report it to its makers.": "Mettez-le à jour. Si l’erreur reste, signalez-la à ses auteurs.",
     "The history database had a problem. Your history may have a gap.": "La base d’historique a eu un problème. Votre historique peut avoir un trou.",
     "Batteries": "Piles",
     "{n} battery running low": "{n} pile presque vide",
@@ -121,6 +175,7 @@ const WORDS = {
     "Ask for a fix": "Demander un correctif",
     "Asked": "Demandé",
     "A fix arrived in version {version}. Update to get it.": "Un correctif est arrivé dans la version {version}. Mettez à jour pour l’obtenir.",
+    "A fix arrived.": "Un correctif est arrivé.",
     "A fix is planned.": "Un correctif est prévu.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Ceci est envoyé aux créateurs de Home Checkup. Seul ce que vous voyez ici est envoyé, et seulement quand vous appuyez sur Envoyer.",
     "Problem": "Problème",
@@ -165,11 +220,13 @@ const WORDS = {
     "Checked. {n} new things to look at.": "Vérifié. {n} nouveaux points à vérifier.",
     "Checked. Nothing changed.": "Vérifié. Rien n’a changé.",
     "An update is ready ({version}). Updates often fix errors like these.": "Une mise à jour est prête ({version}). Elle corrige souvent ce genre d’erreur.",
-    "See the update": "Voir la mise à jour",
-    "Sign in again": "Se reconnecter",
-    "Open the devices": "Ouvrir les appareils",
-    "Open dashboards": "Ouvrir les tableaux de bord",
-    "Open the log": "Ouvrir le journal",
+    "Devices": "Appareils",
+    "Device": "Appareil",
+    "Dashboards": "Tableaux de bord",
+    "Entities": "Entités",
+    "Scripts": "Scripts",
+    "Update": "Mise à jour",
+    "Sign in": "Se connecter",
     "The errors stopped": "Les erreurs ont cessé",
     "No errors since the update.": "Plus d’erreur depuis la mise à jour.",
     "No errors since you signed in again.": "Plus d’erreur depuis votre reconnexion.",
@@ -194,7 +251,7 @@ const WORDS = {
     "Log": "Protokoll",
     "Automations": "Automatisierungen",
     "Leftovers": "Reste",
-    "Offline devices": "Offline-Geräte",
+    "Offline": "Offline",
     "Helpers": "Helfer",
     "{n} integration did not start": "{n} Integration ist nicht gestartet",
     "{n} integrations did not start": "{n} Integrationen sind nicht gestartet",
@@ -220,13 +277,34 @@ const WORDS = {
     "Shown, not counted. Something outside may still use them.": "Angezeigt, nicht gezählt. Etwas außerhalb nutzt sie vielleicht noch.",
     "a removed device": "ein entferntes Gerät",
     "Open": "Öffnen",
-    "Keep": "Behalten",
-    "Keep means this is fine. It will not show again.": "Behalten heißt: Das ist in Ordnung. Es wird nicht mehr angezeigt.",
+    "Ignore": "Ignorieren",
+    "Ignore means this is fine. It will not show again.": "Ignorieren heißt: Das ist in Ordnung. Es wird nicht mehr angezeigt.",
     "Show all {n}": "Alle {n} zeigen",
     "Show fewer": "Weniger zeigen",
-    "Kept. It will not show again.": "Behalten. Es wird nicht mehr angezeigt.",
+    "Show the full error": "Vollständigen Fehler zeigen",
+    "Show all lines": "Alle Zeilen zeigen",
+    "Copy": "Kopieren",
+    "Copied": "Kopiert",
+    "First seen {when}": "Zuerst gesehen: {when}",
+    "{n} integrations checked. All started.": "{n} Integrationen geprüft. Alle sind gestartet.",
+    "The log of the last 24 hours was read. No error keeps coming back.": "Das Protokoll der letzten 24 Stunden wurde gelesen. Kein Fehler kommt immer wieder.",
+    "{n} automations and scripts checked. No broken steps.": "{n} Automationen und Skripte geprüft. Keine defekten Schritte.",
+    "{n} entities and {m} devices checked. No leftovers.": "{n} Entitäten und {m} Geräte geprüft. Keine Überreste.",
+    "{n} entities checked. None was offline for a long time.": "{n} Entitäten geprüft. Keine war lange offline.",
+    "{n} helpers checked. All are in use.": "{n} Helfer geprüft. Alle werden genutzt.",
+    "{n} batteries checked. None is low.": "{n} Batterien geprüft. Keine ist schwach.",
+    "Helpers are checked with the next full check.": "Helfer werden bei der nächsten vollen Prüfung geprüft.",
+    "Likely from {name}": "Wahrscheinlich von {name}",
+    "Last seen {when}": "Zuletzt gesehen: {when}",
+    "{n} times in 24 hours": "{n}-mal in 24 Stunden",
+    "Known issues": "Bekannte Probleme",
+    "Debug logging": "Debug-Protokoll",
+    "The integration page has the debug logging switch.": "Die Seite der Integration hat den Schalter für das Debug-Protokoll.",
+    "Copies a report you can paste into a bug report.": "Kopiert einen Bericht zum Einfügen in eine Fehlermeldung.",
+    "Could not read the full error.": "Der vollständige Fehler konnte nicht gelesen werden.",
+    "Ignored. It will not show again.": "Ignoriert. Es wird nicht mehr angezeigt.",
     "Undo": "Rückgängig",
-    "Kept items ({n})": "Behaltene Einträge ({n})",
+    "Ignored items ({n})": "Ignorierte Einträge ({n})",
     "Show again": "Wieder zeigen",
     "Home Checkup only reads. It never changes, removes or restarts anything by itself.": "Der Zuhause-Check liest nur. Er ändert, entfernt oder startet nichts von selbst neu.",
     "Home Checkup is not set up.": "Der Zuhause-Check ist nicht eingerichtet.",
@@ -259,18 +337,51 @@ const WORDS = {
     "Undone": "Rückgängig gemacht",
     "Some did not change": "Manche haben sich nicht geändert",
     "Home Checkup never changes anything by itself. A fix happens only when you tap it.": "Der Zuhause-Check ändert nichts von selbst. Eine Korrektur geschieht nur, wenn Sie sie antippen.",
-    "It did not answer in time. It may be off, busy or far from Wi-Fi.": "Es hat nicht rechtzeitig geantwortet. Es ist vielleicht aus, beschäftigt oder weit vom WLAN.",
-    "Home Assistant could not reach it. Check that it is on and on the network.": "Home Assistant konnte es nicht erreichen. Prüfen Sie, ob es an und im Netzwerk ist.",
-    "Its sign-in no longer works. Open the integration and sign in again.": "Die Anmeldung funktioniert nicht mehr. Öffnen Sie die Integration und melden Sie sich neu an.",
-    "The service asked Home Assistant to slow down. This usually fixes itself.": "Der Dienst hat Home Assistant gebeten, langsamer zu machen. Das löst sich meist von selbst.",
-    "A secure connection failed. Check the address and the certificate.": "Eine sichere Verbindung ist fehlgeschlagen. Prüfen Sie Adresse und Zertifikat.",
-    "The device is offline. Check its power and Wi-Fi.": "Das Gerät ist offline. Prüfen Sie Strom und WLAN.",
-    "It asked for something that does not exist. An update of the integration may fix it.": "Es hat etwas angefragt, das es nicht gibt. Ein Update der Integration kann helfen.",
-    "The integration works in a way Home Assistant warns about. An update usually fixes it.": "Die Integration arbeitet auf eine Art, vor der Home Assistant warnt. Ein Update hilft meist.",
-    "It uses something Home Assistant will remove. An update usually fixes it.": "Es nutzt etwas, das Home Assistant entfernen wird. Ein Update hilft meist.",
-    "A template reads something that is missing. Check the template.": "Eine Vorlage liest etwas, das fehlt. Prüfen Sie die Vorlage.",
     "Something points to an entity that no longer exists.": "Etwas verweist auf eine Entität, die es nicht mehr gibt.",
     "It starts slowly. Usually harmless.": "Es startet langsam. Meist harmlos.",
+    "Try: {text}": "Versuch: {text}",
+    "A dashboard card had a fault in the browser.": "Eine Dashboard-Karte hatte einen Fehler im Browser.",
+    "Update that card, then reload the page.": "Aktualisieren Sie diese Karte und laden Sie die Seite neu.",
+    "It did not answer in time.": "Es hat nicht rechtzeitig geantwortet.",
+    "Check that it is on and close to Wi-Fi.": "Prüfen Sie, ob es an ist und nah am WLAN.",
+    "Home Assistant could not reach it.": "Home Assistant konnte es nicht erreichen.",
+    "Check that it is on and on the network.": "Prüfen Sie, ob es an ist und im Netzwerk.",
+    "Its sign-in no longer works.": "Die Anmeldung funktioniert nicht mehr.",
+    "Open the integration and sign in again.": "Öffnen Sie die Integration und melden Sie sich neu an.",
+    "The service asked Home Assistant to slow down.": "Der Dienst hat Home Assistant gebeten, langsamer zu werden.",
+    "Wait. This usually fixes itself.": "Warten Sie. Das behebt sich meist von selbst.",
+    "A secure connection failed.": "Eine sichere Verbindung ist fehlgeschlagen.",
+    "Check the address and the certificate.": "Prüfen Sie die Adresse und das Zertifikat.",
+    "It was asked to start something that was already running. Usually harmless.": "Es sollte etwas starten, das schon lief. Meist harmlos.",
+    "The storage is full.": "Der Speicher ist voll.",
+    "Free some space, for example old backups.": "Schaffen Sie Platz, zum Beispiel alte Backups.",
+    "Home Assistant ran out of memory.": "Home Assistant hatte keinen freien Arbeitsspeicher mehr.",
+    "Restart Home Assistant.": "Starten Sie Home Assistant neu.",
+    "Home Assistant is not allowed to open a file.": "Home Assistant darf eine Datei nicht öffnen.",
+    "Check the permissions of that file.": "Prüfen Sie die Rechte dieser Datei.",
+    "An address could not be found.": "Eine Adresse wurde nicht gefunden.",
+    "Check the internet connection.": "Prüfen Sie die Internetverbindung.",
+    "The connection dropped. It usually comes back by itself.": "Die Verbindung wurde getrennt. Sie kommt meist von selbst zurück.",
+    "The device is offline.": "Das Gerät ist offline.",
+    "Check its power and Wi-Fi.": "Prüfen Sie Strom und WLAN.",
+    "The service itself had a problem.": "Der Dienst selbst hatte ein Problem.",
+    "Something calls an action that does not exist.": "Etwas ruft eine Aktion auf, die es nicht gibt.",
+    "Check your automations and cards.": "Prüfen Sie Ihre Automationen und Karten.",
+    "It asked for something that does not exist.": "Es hat etwas angefragt, das es nicht gibt.",
+    "Update the integration.": "Aktualisieren Sie die Integration.",
+    "The integration works in a way Home Assistant warns about.": "Die Integration arbeitet auf eine Art, vor der Home Assistant warnt.",
+    "It uses something Home Assistant will remove.": "Es nutzt etwas, das Home Assistant entfernen wird.",
+    "A template reads something that is missing.": "Ein Template liest etwas, das fehlt.",
+    "Check the template.": "Prüfen Sie das Template.",
+    "Something points to an entity that no longer exists.": "Etwas zeigt auf eine Entität, die es nicht mehr gibt.",
+    "Change it to an entity that exists.": "Ändern Sie es auf eine Entität, die es gibt.",
+    "The device cannot do what was asked.": "Das Gerät kann nicht tun, was verlangt wurde.",
+    "Check the automation or card that asked for it.": "Prüfen Sie die Automation oder Karte, die es verlangt hat.",
+    "It got an answer it could not read.": "Es bekam eine Antwort, die es nicht lesen konnte.",
+    "It got a value it cannot use.": "Es bekam einen Wert, den es nicht nutzen kann.",
+    "Check the automation or card that sent it.": "Prüfen Sie die Automation oder Karte, die ihn gesendet hat.",
+    "This is a fault in its code.": "Das ist ein Fehler in seinem Code.",
+    "Update it. If the error stays, report it to its makers.": "Aktualisieren Sie es. Bleibt der Fehler, melden Sie ihn den Entwicklern.",
     "The history database had a problem. Your history may have a gap.": "Die Verlaufsdatenbank hatte ein Problem. Im Verlauf kann eine Lücke sein.",
     "Batteries": "Batterien",
     "{n} battery running low": "{n} Batterie fast leer",
@@ -295,6 +406,7 @@ const WORDS = {
     "Ask for a fix": "Um eine Lösung bitten",
     "Asked": "Angefragt",
     "A fix arrived in version {version}. Update to get it.": "Eine Lösung ist in Version {version} angekommen. Aktualisieren Sie, um sie zu erhalten.",
+    "A fix arrived.": "Eine Korrektur ist da.",
     "A fix is planned.": "Eine Lösung ist geplant.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Das geht an die Macher von Home Checkup. Nur was Sie hier sehen, wird gesendet, und nur wenn Sie auf Senden drücken.",
     "Problem": "Problem",
@@ -339,11 +451,13 @@ const WORDS = {
     "Checked. {n} new things to look at.": "Geprüft. {n} neue Punkte zum Ansehen.",
     "Checked. Nothing changed.": "Geprüft. Nichts hat sich geändert.",
     "An update is ready ({version}). Updates often fix errors like these.": "Ein Update ist bereit ({version}). Updates beheben solche Fehler oft.",
-    "See the update": "Update ansehen",
-    "Sign in again": "Neu anmelden",
-    "Open the devices": "Geräte öffnen",
-    "Open dashboards": "Dashboards öffnen",
-    "Open the log": "Protokoll öffnen",
+    "Devices": "Geräte",
+    "Device": "Gerät",
+    "Dashboards": "Dashboards",
+    "Entities": "Entitäten",
+    "Scripts": "Skripte",
+    "Update": "Update",
+    "Sign in": "Anmelden",
     "The errors stopped": "Die Fehler haben aufgehört",
     "No errors since the update.": "Keine Fehler seit dem Update.",
     "No errors since you signed in again.": "Keine Fehler, seit du dich neu angemeldet hast.",
@@ -368,7 +482,7 @@ const WORDS = {
     "Log": "Registro",
     "Automations": "Automatizaciones",
     "Leftovers": "Sobrantes",
-    "Offline devices": "Sin conexión",
+    "Offline": "Sin conexión",
     "Helpers": "Ayudantes",
     "{n} integration did not start": "{n} integración no arrancó",
     "{n} integrations did not start": "{n} integraciones no arrancaron",
@@ -394,13 +508,34 @@ const WORDS = {
     "Shown, not counted. Something outside may still use them.": "Se muestran, no se cuentan. Algo externo puede usarlos aún.",
     "a removed device": "un dispositivo eliminado",
     "Open": "Abrir",
-    "Keep": "Conservar",
-    "Keep means this is fine. It will not show again.": "Conservar significa que está bien. No volverá a mostrarse.",
+    "Ignore": "Ignorar",
+    "Ignore means this is fine. It will not show again.": "Ignorar significa que está bien. No volverá a mostrarse.",
     "Show all {n}": "Mostrar los {n}",
     "Show fewer": "Mostrar menos",
-    "Kept. It will not show again.": "Conservado. No volverá a mostrarse.",
+    "Show the full error": "Mostrar el error completo",
+    "Show all lines": "Mostrar todas las líneas",
+    "Copy": "Copiar",
+    "Copied": "Copiado",
+    "First seen {when}": "Visto por primera vez: {when}",
+    "{n} integrations checked. All started.": "{n} integraciones comprobadas. Todas se iniciaron.",
+    "The log of the last 24 hours was read. No error keeps coming back.": "Se leyó el registro de las últimas 24 horas. Ningún error se repite.",
+    "{n} automations and scripts checked. No broken steps.": "{n} automatizaciones y scripts comprobados. Ningún paso roto.",
+    "{n} entities and {m} devices checked. No leftovers.": "{n} entidades y {m} dispositivos comprobados. Sin restos.",
+    "{n} entities checked. None was offline for a long time.": "{n} entidades comprobadas. Ninguna estuvo mucho tiempo sin conexión.",
+    "{n} helpers checked. All are in use.": "{n} ayudantes comprobados. Todos se usan.",
+    "{n} batteries checked. None is low.": "{n} baterías comprobadas. Ninguna está baja.",
+    "Helpers are checked with the next full check.": "Los ayudantes se comprueban en la próxima comprobación completa.",
+    "Likely from {name}": "Probablemente de {name}",
+    "Last seen {when}": "Visto por última vez: {when}",
+    "{n} times in 24 hours": "{n} veces en 24 horas",
+    "Known issues": "Problemas conocidos",
+    "Debug logging": "Registro de depuración",
+    "The integration page has the debug logging switch.": "La página de la integración tiene el interruptor del registro de depuración.",
+    "Copies a report you can paste into a bug report.": "Copia un informe para pegar en un aviso de error.",
+    "Could not read the full error.": "No se pudo leer el error completo.",
+    "Ignored. It will not show again.": "Ignorado. No volverá a mostrarse.",
     "Undo": "Deshacer",
-    "Kept items ({n})": "Elementos conservados ({n})",
+    "Ignored items ({n})": "Elementos ignorados ({n})",
     "Show again": "Mostrar de nuevo",
     "Home Checkup only reads. It never changes, removes or restarts anything by itself.": "El chequeo solo lee. Nunca cambia, elimina ni reinicia nada por sí mismo.",
     "Home Checkup is not set up.": "El chequeo del hogar no está configurado.",
@@ -433,18 +568,51 @@ const WORDS = {
     "Undone": "Deshecho",
     "Some did not change": "Algunos no cambiaron",
     "Home Checkup never changes anything by itself. A fix happens only when you tap it.": "El chequeo no cambia nada por sí mismo. Un arreglo solo ocurre cuando usted lo toca.",
-    "It did not answer in time. It may be off, busy or far from Wi-Fi.": "No respondió a tiempo. Puede estar apagado, ocupado o lejos del Wi-Fi.",
-    "Home Assistant could not reach it. Check that it is on and on the network.": "Home Assistant no pudo alcanzarlo. Compruebe que está encendido y en la red.",
-    "Its sign-in no longer works. Open the integration and sign in again.": "Su inicio de sesión ya no funciona. Abra la integración e inicie sesión de nuevo.",
-    "The service asked Home Assistant to slow down. This usually fixes itself.": "El servicio pidió a Home Assistant ir más despacio. Suele arreglarse solo.",
-    "A secure connection failed. Check the address and the certificate.": "Falló una conexión segura. Compruebe la dirección y el certificado.",
-    "The device is offline. Check its power and Wi-Fi.": "El dispositivo está sin conexión. Compruebe su corriente y su Wi-Fi.",
-    "It asked for something that does not exist. An update of the integration may fix it.": "Pidió algo que no existe. Una actualización de la integración puede arreglarlo.",
-    "The integration works in a way Home Assistant warns about. An update usually fixes it.": "La integración funciona de un modo que Home Assistant avisa. Una actualización suele arreglarlo.",
-    "It uses something Home Assistant will remove. An update usually fixes it.": "Usa algo que Home Assistant va a quitar. Una actualización suele arreglarlo.",
-    "A template reads something that is missing. Check the template.": "Una plantilla lee algo que falta. Revise la plantilla.",
     "Something points to an entity that no longer exists.": "Algo apunta a una entidad que ya no existe.",
     "It starts slowly. Usually harmless.": "Arranca despacio. Suele ser inofensivo.",
+    "Try: {text}": "Pruebe: {text}",
+    "A dashboard card had a fault in the browser.": "Una tarjeta del panel tuvo un fallo en el navegador.",
+    "Update that card, then reload the page.": "Actualice esa tarjeta y recargue la página.",
+    "It did not answer in time.": "No respondió a tiempo.",
+    "Check that it is on and close to Wi-Fi.": "Compruebe que está encendido y cerca del Wi-Fi.",
+    "Home Assistant could not reach it.": "Home Assistant no pudo conectar con él.",
+    "Check that it is on and on the network.": "Compruebe que está encendido y en la red.",
+    "Its sign-in no longer works.": "Su inicio de sesión ya no funciona.",
+    "Open the integration and sign in again.": "Abra la integración e inicie sesión de nuevo.",
+    "The service asked Home Assistant to slow down.": "El servicio pidió a Home Assistant que vaya más despacio.",
+    "Wait. This usually fixes itself.": "Espere. Suele arreglarse solo.",
+    "A secure connection failed.": "Falló una conexión segura.",
+    "Check the address and the certificate.": "Compruebe la dirección y el certificado.",
+    "It was asked to start something that was already running. Usually harmless.": "Se le pidió iniciar algo que ya estaba en marcha. Suele ser inofensivo.",
+    "The storage is full.": "El almacenamiento está lleno.",
+    "Free some space, for example old backups.": "Libere espacio, por ejemplo copias de seguridad antiguas.",
+    "Home Assistant ran out of memory.": "Home Assistant se quedó sin memoria.",
+    "Restart Home Assistant.": "Reinicie Home Assistant.",
+    "Home Assistant is not allowed to open a file.": "Home Assistant no tiene permiso para abrir un archivo.",
+    "Check the permissions of that file.": "Compruebe los permisos de ese archivo.",
+    "An address could not be found.": "No se encontró una dirección.",
+    "Check the internet connection.": "Compruebe la conexión a Internet.",
+    "The connection dropped. It usually comes back by itself.": "La conexión se cortó. Suele volver sola.",
+    "The device is offline.": "El dispositivo está sin conexión.",
+    "Check its power and Wi-Fi.": "Compruebe su alimentación y el Wi-Fi.",
+    "The service itself had a problem.": "El propio servicio tuvo un problema.",
+    "Something calls an action that does not exist.": "Algo llama a una acción que no existe.",
+    "Check your automations and cards.": "Compruebe sus automatizaciones y tarjetas.",
+    "It asked for something that does not exist.": "Pidió algo que no existe.",
+    "Update the integration.": "Actualice la integración.",
+    "The integration works in a way Home Assistant warns about.": "La integración trabaja de una forma sobre la que Home Assistant avisa.",
+    "It uses something Home Assistant will remove.": "Usa algo que Home Assistant va a retirar.",
+    "A template reads something that is missing.": "Una plantilla lee algo que falta.",
+    "Check the template.": "Compruebe la plantilla.",
+    "Something points to an entity that no longer exists.": "Algo apunta a una entidad que ya no existe.",
+    "Change it to an entity that exists.": "Cámbielo por una entidad que exista.",
+    "The device cannot do what was asked.": "El dispositivo no puede hacer lo que se pidió.",
+    "Check the automation or card that asked for it.": "Compruebe la automatización o la tarjeta que lo pidió.",
+    "It got an answer it could not read.": "Recibió una respuesta que no pudo leer.",
+    "It got a value it cannot use.": "Recibió un valor que no puede usar.",
+    "Check the automation or card that sent it.": "Compruebe la automatización o la tarjeta que lo envió.",
+    "This is a fault in its code.": "Es un fallo en su código.",
+    "Update it. If the error stays, report it to its makers.": "Actualícelo. Si el error sigue, avise a sus autores.",
     "The history database had a problem. Your history may have a gap.": "La base de datos del historial tuvo un problema. Puede haber un hueco en el historial.",
     "Batteries": "Pilas",
     "{n} battery running low": "{n} pila casi agotada",
@@ -469,6 +637,7 @@ const WORDS = {
     "Ask for a fix": "Pedir una solución",
     "Asked": "Pedido",
     "A fix arrived in version {version}. Update to get it.": "Llegó una solución en la versión {version}. Actualice para obtenerla.",
+    "A fix arrived.": "Llegó una corrección.",
     "A fix is planned.": "Hay una solución prevista.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Esto se envía a los creadores de Home Checkup. Solo se envía lo que ve aquí, y solo cuando pulsa Enviar.",
     "Problem": "Problema",
@@ -513,11 +682,13 @@ const WORDS = {
     "Checked. {n} new things to look at.": "Revisado. {n} puntos nuevos para revisar.",
     "Checked. Nothing changed.": "Revisado. Nada cambió.",
     "An update is ready ({version}). Updates often fix errors like these.": "Hay una actualización lista ({version}). Suele corregir errores como estos.",
-    "See the update": "Ver la actualización",
-    "Sign in again": "Iniciar sesión de nuevo",
-    "Open the devices": "Abrir los dispositivos",
-    "Open dashboards": "Abrir paneles",
-    "Open the log": "Abrir el registro",
+    "Devices": "Dispositivos",
+    "Device": "Dispositivo",
+    "Dashboards": "Paneles",
+    "Entities": "Entidades",
+    "Scripts": "Scripts",
+    "Update": "Actualización",
+    "Sign in": "Iniciar sesión",
     "The errors stopped": "Los errores pararon",
     "No errors since the update.": "Sin errores desde la actualización.",
     "No errors since you signed in again.": "Sin errores desde que volvió a iniciar sesión.",
@@ -533,26 +704,76 @@ const CHECKS = [
   ["Log", ["log_errors", "log_warnings", "log_stopped"]],
   ["Automations", ["broken_references"]],
   ["Leftovers", ["leftover_entities", "leftover_devices"]],
-  ["Offline devices", ["unavailable"]],
+  ["Offline", ["unavailable"]],
   ["Helpers", ["unused_helpers"]],
   ["Batteries", ["low_batteries"]],
 ];
 
 /** What a log error means, by the code Home Checkup gives it. */
 const MEANINGS = {
-  timeout: "It did not answer in time. It may be off, busy or far from Wi-Fi.",
-  unreachable: "Home Assistant could not reach it. Check that it is on and on the network.",
-  signin: "Its sign-in no longer works. Open the integration and sign in again.",
-  slowdown: "The service asked Home Assistant to slow down. This usually fixes itself.",
-  certificate: "A secure connection failed. Check the address and the certificate.",
-  offline: "The device is offline. Check its power and Wi-Fi.",
-  notfound: "It asked for something that does not exist. An update of the integration may fix it.",
-  blocking: "The integration works in a way Home Assistant warns about. An update usually fixes it.",
-  deprecated: "It uses something Home Assistant will remove. An update usually fixes it.",
-  template: "A template reads something that is missing. Check the template.",
+  card: "A dashboard card had a fault in the browser.",
+  timeout: "It did not answer in time.",
+  unreachable: "Home Assistant could not reach it.",
+  signin: "Its sign-in no longer works.",
+  slowdown: "The service asked Home Assistant to slow down.",
+  certificate: "A secure connection failed.",
+  already: "It was asked to start something that was already running. Usually harmless.",
+  storage: "The storage is full.",
+  memory: "Home Assistant ran out of memory.",
+  permission: "Home Assistant is not allowed to open a file.",
+  dns: "An address could not be found.",
+  dropped: "The connection dropped. It usually comes back by itself.",
+  offline: "The device is offline.",
+  server: "The service itself had a problem.",
+  noaction: "Something calls an action that does not exist.",
+  notfound: "It asked for something that does not exist.",
+  blocking: "The integration works in a way Home Assistant warns about.",
+  deprecated: "It uses something Home Assistant will remove.",
+  template: "A template reads something that is missing.",
   missing: "Something points to an entity that no longer exists.",
   slowstart: "It starts slowly. Usually harmless.",
+  unsupported: "The device cannot do what was asked.",
+  baddata: "It got an answer it could not read.",
+  badvalue: "It got a value it cannot use.",
   database: "The history database had a problem. Your history may have a gap.",
+  bug: "This is a fault in its code.",
+};
+
+/** One safe thing to try, for the meanings that have one. */
+const TRY = {
+  card: "Update that card, then reload the page.",
+  timeout: "Check that it is on and close to Wi-Fi.",
+  unreachable: "Check that it is on and on the network.",
+  signin: "Open the integration and sign in again.",
+  slowdown: "Wait. This usually fixes itself.",
+  certificate: "Check the address and the certificate.",
+  storage: "Free some space, for example old backups.",
+  memory: "Restart Home Assistant.",
+  permission: "Check the permissions of that file.",
+  dns: "Check the internet connection.",
+  offline: "Check its power and Wi-Fi.",
+  server: "Wait. This usually fixes itself.",
+  noaction: "Check your automations and cards.",
+  notfound: "Update the integration.",
+  blocking: "Update the integration.",
+  deprecated: "Update the integration.",
+  template: "Check the template.",
+  missing: "Change it to an entity that exists.",
+  unsupported: "Check the automation or card that asked for it.",
+  baddata: "Update the integration.",
+  badvalue: "Check the automation or card that sent it.",
+  bug: "Update it. If the error stays, report it to its makers.",
+};
+
+/** What a green chip says when tapped: the words, then the counts it uses ({n}, then {m}). */
+const CHECKED = {
+  Integrations: ["{n} integrations checked. All started.", "integrations"],
+  Log: ["The log of the last 24 hours was read. No error keeps coming back."],
+  Automations: ["{n} automations and scripts checked. No broken steps.", "automations"],
+  Leftovers: ["{n} entities and {m} devices checked. No leftovers.", "entities", "devices"],
+  Offline: ["{n} entities checked. None was offline for a long time.", "states"],
+  Helpers: ["{n} helpers checked. All are in use.", "helpers"],
+  Batteries: ["{n} batteries checked. None is low.", "batteries"],
 };
 
 const TITLES = {
@@ -579,12 +800,30 @@ const HINTS = {
 
 /** The one next step for a group of log errors: [the line, the button]. */
 const STEPS = {
-  update: ["An update is ready ({version}). Updates often fix errors like these.", "See the update"],
-  signin: ["", "Sign in again"],
-  devices: ["", "Open the devices"],
-  template: ["", "Open dashboards"],
-  logs: ["", "Open the log"],
+  update: ["An update is ready ({version}). Updates often fix errors like these.", "Update"],
+  signin: ["", "Sign in"],
+  devices: ["", "Devices"],
+  template: ["", "Dashboards"],
+  logs: ["", "Log"],
 };
+
+/** The short name of the Home Assistant page a link goes to. One word, so the card stays calm. */
+const PLACES = [
+  ["/config/logs", "Log"],
+  ["/config/integrations/integration/", "Integration"],
+  ["/config/integrations", "Integrations"],
+  ["/config/devices/device/", "Device"],
+  ["/config/devices", "Devices"],
+  ["/config/entities", "Entities"],
+  ["/config/automation", "Automations"],
+  ["/config/script", "Scripts"],
+  ["/config/helpers", "Helpers"],
+  ["/config/lovelace", "Dashboards"],
+];
+const placeName = (link) => (PLACES.find(([start]) => (link || "").startsWith(start)) || ["", "Open"])[1];
+/** A small arrow after each link: it goes to another page of Home Assistant. */
+const ARROW =
+  '<svg class="arrow" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M8 7h9v9M17 7 7 17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 /** "The errors stopped": what the person did. */
 const STOPPED = {
@@ -633,6 +872,7 @@ const ASK_URL = "https://lukaps.com/homecheckup/api/ask.php";
 const STATUS_URL = "https://lukaps.com/homecheckup/api/status.php";
 const CHOOSE_SHOWN = 40; // choices shown at once in "Choose another"
 const NEWS_EVERY = 6 * 3600 * 1000; // how often the page asks what happened to the requests of this browser
+const DETAIL_LINES = 12; // lines of a long error shown before "Show all lines"
 const ASK_KINDS = ["log_errors", "broken_references", "failed_integrations"];
 
 class HomeCheckupPanel extends HTMLElement {
@@ -644,7 +884,9 @@ class HomeCheckupPanel extends HTMLElement {
     this._open = new Set();
     this._scanning = false;
     this._toast = null;
+    this._chip = ""; // the green chip whose "what was checked" line is open
     this._keptOpen = false;
+    this._details = {}; // the log lines the person opened: key -> { data, error, all, copied }
     this._sheet = null;
     this._ask = null;
     this._choose = null;
@@ -785,7 +1027,7 @@ class HomeCheckupPanel extends HTMLElement {
 
   async _keep(key, keep) {
     await this._call({ type: "home_checkup/keep", key, keep });
-    this._say(keep ? { text: this._t("Kept. It will not show again."), act: "undo", data: key } : null);
+    this._say(keep ? { text: this._t("Ignored. It will not show again."), act: "undo", data: key } : null);
   }
 
   _say(toast) {
@@ -1154,7 +1396,9 @@ class HomeCheckupPanel extends HTMLElement {
     const news = (this._newsStatus || {})[this._askCodes()[key]];
     if (!news) return null;
     if (news.status === "planned") return { text: this._t("A fix is planned."), again: false };
-    if (news.status !== "fixed" || !/^[0-9][0-9A-Za-z.\-+]{0,19}$/.test(news.fixed_in || "")) return null;
+    if (news.status !== "fixed") return null;
+    // Fixed, but the version was not given: say so, and let the person ask again when the line is still here.
+    if (!/^[0-9][0-9A-Za-z.\-+]{0,19}$/.test(news.fixed_in || "")) return { text: this._t("A fix arrived."), again: true };
     // The fix is in a version this home already has, and the line is still here: let the person ask again.
     if (!newerVersion(news.fixed_in, this._report?.version || "")) return { text: "", again: true };
     return { text: this._t("A fix arrived in version {version}. Update to get it.", { version: news.fixed_in }), again: false };
@@ -1431,15 +1675,21 @@ class HomeCheckupPanel extends HTMLElement {
     const level = r.count ? "warn" : "good";
     const checked = r.scanned_at ? this._t("Checked {time}", { time: this._time(r.scanned_at) }) : this._t("Not checked yet");
 
+    // The chips are a small menu: one with a problem shows how many and jumps to its card, a green one says what
+    // was checked, so a green mark shows the work behind it.
     const chips = CHECKS.map(([label, kinds]) => {
       const mine = findings.filter((f) => kinds.includes(f.kind));
-      const state = mine.some((f) => f.severity === "warning" && f.in_note !== false) ? "warn" : mine.length ? "note" : "fine";
+      const counted = mine.filter((f) => f.severity === "warning" && f.in_note !== false);
+      const state = counted.length ? "warn" : mine.length ? "note" : "fine";
       const icon =
         state === "fine"
           ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`
           : `<span class="dot"></span>`;
-      return `<span class="chip ${state}">${icon}${esc(this._t(label))}</span>`;
+      const n = state === "warn" ? `<span class="chipn">${counted.length}</span>` : "";
+      const on = state === "fine" && this._chip === label;
+      return `<button type="button" class="chip ${state} ${on ? "on" : ""}" data-act="chip" data-key="${esc(label)}" data-kind="${esc(state === "fine" ? "" : mine[0].kind)}" aria-expanded="${on ? "true" : "false"}">${icon}${esc(this._t(label))}${n}</button>`;
     }).join("");
+    const chipLine = this._chip && CHECKED[this._chip] ? this._checkedLine(this._chip, r) : "";
 
     const kept = r.kept ?? [];
     let html = `
@@ -1452,12 +1702,12 @@ class HomeCheckupPanel extends HTMLElement {
         </div>
         <div class="checked">${esc(checked)}</div>
       </div>
-      <div class="chips">${chips}</div>`;
+      <div class="chips">${chips}</div>${chipLine ? `<div class="chipline" role="status">${esc(chipLine)}</div>` : ""}`;
     if (findings.length) {
       // "Ask" is explained only when a line on the page offers it.
       const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix && !it.choose && !it.file));
       const askHint = canAsk ? ` ${this._t("Ask sends us a request for a fix. You read it first.")}` : "";
-      html += `<div class="keephint">${esc(this._t("Keep means this is fine. It will not show again.") + askHint)}</div>`;
+      html += `<div class="keephint">${esc(this._t("Ignore means this is fine. It will not show again.") + askHint)}</div>`;
     }
     if (warnings.length) html += `<div class="grid">${warnings.map((f) => this._finding(f, false)).join("")}</div>`;
     if (watch.length) {
@@ -1468,7 +1718,7 @@ class HomeCheckupPanel extends HTMLElement {
     }
     html += this._fixesHtml(r.fixes ?? []);
     if (kept.length) {
-      html += `<button class="keptbar" type="button" data-act="kept">${esc(this._t("Kept items ({n})", { n: kept.length }))}<svg viewBox="0 0 24 24" class="${this._keptOpen ? "up" : ""}" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>`;
+      html += `<button class="keptbar" type="button" data-act="kept">${esc(this._t("Ignored items ({n})", { n: kept.length }))}<svg viewBox="0 0 24 24" class="${this._keptOpen ? "up" : ""}" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg></button>`;
       if (this._keptOpen) {
         html += `<ul class="kept">${kept
           .map((k) => `<li><span class="nm">${esc(this._keptName(k))}</span><button type="button" class="ghost" data-act="unkeep" data-key="${esc(k)}">${esc(this._t("Show again"))}</button></li>`)
@@ -1486,6 +1736,15 @@ class HomeCheckupPanel extends HTMLElement {
     return html;
   }
 
+  /** What stands behind a green chip: how much was checked, and the result. */
+  _checkedLine(label, r) {
+    const c = r.checked ?? {};
+    if (label === "Helpers" && r.helpers_checked === false) return this._t("Helpers are checked with the next full check.");
+    const [text, ...keys] = CHECKED[label];
+    if (keys.some((k) => c[k] === undefined)) return "";
+    return this._t(text, Object.fromEntries(keys.map((k, i) => [["n", "m"][i], c[k]])));
+  }
+
   _finding(f, note) {
     const items = f.items ?? [];
     const id = `${f.kind}:${f.integration ?? ""}`;
@@ -1497,7 +1756,8 @@ class HomeCheckupPanel extends HTMLElement {
         const target = this._target(it);
         const pill = it.new ? `<span class="newpill">${esc(this._t("New"))}</span>` : "";
         const name = `<span class="nm">${pill}${esc(it.name)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>`;
-        const mean = it.hint && MEANINGS[it.hint] ? `<span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>` : "";
+        const tryText = it.hint && TRY[it.hint] ? `<span class="try">${esc(this._t("Try: {text}", { text: this._t(TRY[it.hint]) }))}</span>` : "";
+        const mean = it.hint && MEANINGS[it.hint] ? `<span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>${tryText}` : "";
         let infoText = it.info;
         if (f.kind === "broken_references") {
           // Plain words, no raw ids: what happened to the missing thing, then when the automation last ran.
@@ -1518,9 +1778,17 @@ class HomeCheckupPanel extends HTMLElement {
           ? `<span class="mean">${esc(this._t("Written in {file}, line {line}. Change it in that file.", { file: it.file, line: it.line }))}</span>`
           : "";
         const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine;
-        const label = it.link
-          ? `<a class="what" href="${esc(it.link)}" data-act="go" data-link="${esc(it.link)}">${name}${info}</a>`
-          : `<span class="what">${name}${info}</span>`;
+        // A log line opens in place and shows the full error, so nobody has to search the whole log for it.
+        const detail = isLog ? this._details[it.key] : null;
+        const label = isLog
+          ? `<button type="button" class="what detailbtn" data-act="detail" data-key="${esc(it.key)}" aria-expanded="${detail ? "true" : "false"}" title="${esc(this._t("Show the full error"))}">${name}${info}</button>`
+          : it.link
+            ? `<a class="what" href="${esc(it.link)}" data-act="go" data-link="${esc(it.link)}">${name}${info}</a>`
+            : `<span class="what">${name}${info}</span>`;
+        const chevron = isLog
+          ? `<button type="button" class="chev ${detail ? "on" : ""}" data-act="detail" data-key="${esc(it.key)}" aria-label="${esc(this._t("Show the full error"))}"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
+          : "";
+        const detailBox = detail ? this._detailHtml(it.key, detail) : "";
         const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : "";
         const fixBtn = fixLabel
           ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : this._t(fixLabel))}</button>`
@@ -1537,7 +1805,7 @@ class HomeCheckupPanel extends HTMLElement {
               ? `<span class="asked">${esc(this._t("Asked"))}</span>`
               : `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
             : "";
-        return `<li class="${fixBtn || chooseBtn || askBtn ? "hasfix" : ""}">${label}<span class="rowacts">${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Keep"))}</button></span></li>`;
+        return `<li class="${fixBtn || chooseBtn || askBtn ? "hasfix" : ""}${detail ? " hasdetail" : ""}">${chevron ? `<span class="lw">${chevron}${label}</span>` : label}<span class="rowacts">${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Ignore"))}</button></span>${detailBox}</li>`;
       })
       .join("");
     const more =
@@ -1546,11 +1814,11 @@ class HomeCheckupPanel extends HTMLElement {
         : "";
     const step = STEPS[f.action];
     let openLink = f.link
-      ? `<a class="open" href="${esc(f.link)}" data-act="go" data-link="${esc(f.link)}">${esc(this._t("Open"))}</a>`
+      ? `<a class="open" href="${esc(f.link)}" data-act="go" data-link="${esc(f.link)}">${esc(this._t(placeName(f.link)))}${ARROW}</a>`
       : "";
     if (step && f.kind === "log_errors") {
-      const label = f.action === "template" && !f.action_link.startsWith("/config/lovelace") ? "Open" : step[1];
-      openLink = `<a class="open stepbtn" href="${esc(f.action_link)}" data-act="step" data-link="${esc(f.action_link)}" data-key="${esc(f.integration ?? "")}" data-step="${esc(f.action)}">${esc(this._t(label))}</a>`;
+      const label = f.action === "template" && !f.action_link.startsWith("/config/lovelace") ? placeName(f.action_link) : step[1];
+      openLink = `<a class="open stepbtn" href="${esc(f.action_link)}" data-act="step" data-link="${esc(f.action_link)}" data-key="${esc(f.integration ?? "")}" data-step="${esc(f.action)}">${esc(this._t(label))}${ARROW}</a>`;
     }
     let hint = this._t(HINTS[f.kind] ?? "");
     if (f.kind === "log_stopped") hint = this._t(STOPPED[f.action] ?? "No errors since you took the next step.");
@@ -1564,7 +1832,7 @@ class HomeCheckupPanel extends HTMLElement {
         ? `<button type="button" class="fixbtn" data-act="fix" data-key="${esc(f.kind)}">${esc(this._t("Remove…"))}</button>`
         : "";
     return `
-      <section class="finding ${note ? "note" : ""}">
+      <section class="finding ${note ? "note" : ""}" data-kind="${esc(f.kind)}">
         <div class="head">
           <div class="htext"><div class="title">${esc(this._title(f))}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ""}</div>
           <div class="acts">${fixButton}${openLink}</div>
@@ -1573,6 +1841,101 @@ class HomeCheckupPanel extends HTMLElement {
         ${rows && f.kind !== "log_stopped" ? `<ul class="${isLog ? "log" : ""}">${rows}</ul>` : ""}
         ${more}
       </section>`;
+  }
+
+  /** The full error of one log line, read only when the person opens it. It stays in the home. */
+  async _toggleDetail(key) {
+    if (this._details[key]) {
+      delete this._details[key];
+      return this._render();
+    }
+    const d = (this._details[key] = { data: null, error: "", all: false, copied: false });
+    this._render();
+    try {
+      d.data = await this._hass.callWS({ type: "home_checkup/log_detail", key });
+    } catch {
+      d.error = this._t("Could not read the full error.");
+    }
+    if (this._details[key] === d) this._render();
+  }
+
+  _detailHtml(key, d) {
+    if (d.error) return `<div class="errdetail"><div class="dmeta">${esc(d.error)}</div></div>`;
+    if (!d.data) return `<div class="errdetail"><div class="dmeta">…</div></div>`;
+    const lines = String(d.data.text || "").split("\n");
+    // A long error keeps its first lines (what was tried) and its last lines (what went wrong): the end says the most.
+    const short = !d.all && lines.length > DETAIL_LINES;
+    const text = (short ? [...lines.slice(0, 3), "…", ...lines.slice(3 - DETAIL_LINES)] : lines).join("\n");
+    const x = d.data;
+    const from = [x.logger, x.source].filter(Boolean).join(" · ");
+    const at = (t) => this._when(new Date(t * 1000).toISOString());
+    // The facts a person who troubleshoots looks for first, in one quiet line.
+    const facts = [
+      x.integration ? this._t(x.likely ? "Likely from {name}" : "{name}", { name: x.integration }) + (x.version ? ` ${x.version}` : "") : "",
+      x.first ? this._t("First seen {when}", { when: at(x.first) }) : "",
+      x.last ? this._t("Last seen {when}", { when: at(x.last) }) : "",
+      x.count ? this._t("{n} times in 24 hours", { n: x.count }) : "",
+    ].filter(Boolean).join(" · ");
+    const links = [
+      x.issues ? `<a class="dlink" href="${esc(x.issues)}" target="_blank" rel="noopener noreferrer">${esc(this._t("Known issues"))}${ARROW}</a>` : "",
+      x.page ? `<a class="dlink" href="${esc(x.page)}" data-act="go" data-link="${esc(x.page)}" title="${esc(this._t("The integration page has the debug logging switch."))}">${esc(this._t("Debug logging"))}${ARROW}</a>` : "",
+    ].join("");
+    return `<div class="errdetail">
+      ${facts ? `<div class="dmeta">${esc(facts)}</div>` : ""}
+      ${from ? `<div class="dmeta code">${esc(from)}</div>` : ""}
+      <pre class="dtext">${esc(text)}</pre>
+      <div class="dacts">
+        <span class="dlinks">${links}</span>
+        ${short ? `<button type="button" class="ghost" data-act="detailall" data-key="${esc(key)}">${esc(this._t("Show all lines"))}</button>` : ""}
+        <button type="button" class="ghost" data-act="detailcopy" data-key="${esc(key)}" title="${esc(this._t("Copies a report you can paste into a bug report."))}">${esc(this._t(d.copied ? "Copied" : "Copy"))}</button>
+      </div>
+    </div>`;
+  }
+
+  /** Copies the error with the few facts a forum or a GitHub report asks for. No names of devices or people. */
+  async _copyDetail(key) {
+    const d = this._details[key];
+    if (!d?.data) return;
+    const text = [
+      `Home Assistant ${this._hass?.config?.version || ""}`.trim(),
+      d.data.integration ? `${d.data.likely ? "Likely from: " : "Integration: "}${d.data.integration}${d.data.version ? ` ${d.data.version}` : ""}` : "",
+      [d.data.logger, d.data.source].filter(Boolean).join(" · "),
+      `${d.data.level || "ERROR"}, ${d.data.count || 1}x in 24 h, last ${new Date((d.data.last || 0) * 1000).toISOString()}`,
+      "",
+      "```",
+      d.data.text || "",
+      "```",
+    ]
+      .filter((line, i) => line || i > 1)
+      .join("\n");
+    let ok = false;
+    try {
+      await navigator.clipboard.writeText(text);
+      ok = true;
+    } catch {
+      // Home Assistant opened over plain http has no clipboard API: use the old way.
+      const area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.cssText = "position:fixed;opacity:0;top:0;left:0";
+      this.shadowRoot.appendChild(area);
+      area.select();
+      try {
+        ok = document.execCommand("copy");
+      } catch {
+        ok = false;
+      }
+      area.remove();
+    }
+    if (!ok) return;
+    d.copied = true;
+    this._render();
+    setTimeout(() => {
+      if (this._details[key] === d) {
+        d.copied = false;
+        this._render();
+      }
+    }, 2500);
   }
 
   _click(e) {
@@ -1587,6 +1950,27 @@ class HomeCheckupPanel extends HTMLElement {
       e.preventDefault();
       this._hass.callWS({ type: "home_checkup/acted", integration: el.dataset.key, action: el.dataset.step }).catch(() => {});
       this._go(el.dataset.link);
+    } else if (act === "detail") {
+      this._toggleDetail(el.dataset.key);
+    } else if (act === "chip") {
+      const kind = el.dataset.kind;
+      if (kind) {
+        // A chip with a problem jumps to its first card.
+        this._chip = "";
+        this._render();
+        const card = this.shadowRoot.querySelector(`section.finding[data-kind="${kind}"]`);
+        card?.scrollIntoView({ behavior: "smooth", block: "start" });
+        card?.classList.add("flash");
+        setTimeout(() => card?.classList.remove("flash"), 1200);
+      } else {
+        this._chip = this._chip === el.dataset.key ? "" : el.dataset.key;
+        this._render();
+      }
+    } else if (act === "detailall") {
+      if (this._details[el.dataset.key]) this._details[el.dataset.key].all = true;
+      this._render();
+    } else if (act === "detailcopy") {
+      this._copyDetail(el.dataset.key);
     } else if (act === "keep") {
       this._keep(el.dataset.key, true);
     } else if (act === "unkeep" || act === "undo") {
@@ -1665,7 +2049,7 @@ const STYLE = `
   .scan svg { width: 20px; height: 20px; fill: currentColor; }
   .spin { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .content { flex: 1; overflow-y: auto; padding: 24px 24px 48px; box-sizing: border-box; width: 100%; max-width: 1120px; margin: 0 auto;
+  .content { flex: 1; overflow-y: auto; padding: 24px 24px 48px; box-sizing: border-box; width: 100%; max-width: 948px; margin: 0 auto;
     display: flex; flex-direction: column; gap: 16px; }
 
   .hero { display: flex; align-items: center; gap: 20px; padding: 22px 24px; border-radius: var(--ha-card-border-radius, 12px); }
@@ -1688,9 +2072,18 @@ const STYLE = `
   .chip .dot { width: 10px; height: 10px; margin: 0 4px; border-radius: 50%; background: var(--warn); }
   .chip.note .dot { background: var(--dim); }
   .chip.warn { border-color: color-mix(in srgb, var(--warn) 50%, transparent); }
+  button.chip { font: inherit; font-size: 14px; color: inherit; cursor: pointer; }
+  button.chip:focus-visible { outline: 2px solid var(--primary-color); outline-offset: 2px; }
+  .chip.on { border-color: color-mix(in srgb, var(--good) 55%, transparent); }
+  .chipn { min-width: 20px; padding: 0 6px; margin-left: -2px; border-radius: 999px; box-sizing: border-box; text-align: center; font-size: 13px; font-weight: 600;
+    color: var(--warn); background: color-mix(in srgb, var(--warn) 16%, transparent); }
+  .chipline { margin-top: -6px; font-size: 14px; color: var(--dim); }
+  section.finding { scroll-margin-top: 12px; }
+  section.finding.flash { box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 60%, transparent); transition: box-shadow 0.3s; }
   .keephint { font-size: 13px; color: var(--dim); }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 16px; align-items: start; }
+  /* One card under the other: the page reads top to bottom, with no holes beside a tall card. */
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
   .finding { background: var(--card); border-radius: var(--ha-card-border-radius, 12px); padding: 16px 16px 10px 18px;
     box-shadow: inset 4px 0 0 var(--warn), var(--ha-card-box-shadow, none); border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--line)); }
   .finding.note { box-shadow: var(--ha-card-box-shadow, none); }
@@ -1704,16 +2097,34 @@ const STYLE = `
   .fixbtn:hover { border-color: var(--dim); }
   .rowacts { display: flex; align-items: center; gap: 6px; flex: none; }
   li .fixbtn { color: var(--primary-color); border-color: color-mix(in srgb, var(--primary-color) 40%, transparent); }
-  .open { font-size: 14px; font-weight: 500; color: var(--primary-color); text-decoration: none; padding: 4px 2px; white-space: nowrap; }
+  .open { font-size: 14px; font-weight: 500; color: var(--primary-color); text-decoration: none; padding: 4px 2px; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+  .open .arrow { flex: none; opacity: 0.85; }
   ul { list-style: none; margin: 10px 0 0; padding: 0; }
   li { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); min-height: 36px; }
   .what { flex: 1; min-width: 0; display: flex; flex-direction: column; color: inherit; text-decoration: none; font-size: 15px; }
   a.what:hover .nm { color: var(--primary-color); }
   .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .to, .info { color: var(--dim); }
+  button.what { background: none; border: 0; padding: 0; margin: 0; font: inherit; text-align: left; cursor: pointer; align-items: stretch; }
+  button.what:hover .nm { color: var(--primary-color); }
+  .chev { flex: none; width: 26px; height: 24px; margin-left: -6px; padding: 0; border: 0; background: none; color: var(--dim); cursor: pointer; display: grid; place-items: center; }
+  .chev svg { transition: transform 0.15s ease; }
+  .chev.on { color: var(--primary-color); }
+  .chev.on svg { transform: rotate(90deg); }
+  li.hasdetail { flex-wrap: wrap; }
+  .lw { flex: 1; min-width: 0; display: flex; align-items: flex-start; gap: 2px; }
+  .lw .what { flex: 1; }
+  .errdetail { flex-basis: 100%; min-width: 0; margin: 4px 0 6px; padding: 10px 12px; border-radius: 10px; background: color-mix(in srgb, var(--primary-text-color) 6%, transparent); }
+  .dmeta { font-size: 12px; color: var(--dim); overflow-wrap: anywhere; }
+  .dmeta.code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .dtext { margin: 8px 0; font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--primary-text-color); max-height: 60vh; overflow: auto; }
+  .dacts { display: flex; gap: 6px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+  .dlinks { margin-right: auto; display: flex; gap: 14px; flex-wrap: wrap; }
+  .dlink { display: inline-flex; align-items: center; gap: 3px; font-size: 13px; color: var(--primary-color); text-decoration: none; min-height: 32px; }
   .info { font-size: 13px; }
   .fixnews { display: block; font-size: 13px; color: var(--good); margin-top: 2px; }
   .mean { font-size: 13px; color: var(--primary-text-color); margin-top: 2px; }
+  .try { font-size: 13px; color: var(--dim); margin-top: 1px; }
   .step { font-size: 14px; color: var(--primary-text-color); margin: -2px 0 2px; }
   .newpill { display: inline-block; vertical-align: 1px; margin-right: 6px; padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 700;
     letter-spacing: .03em; text-transform: uppercase; color: var(--primary-color); background: color-mix(in srgb, var(--primary-color) 16%, transparent); }
@@ -1792,7 +2203,7 @@ const STYLE = `
     .headline { font-size: 22px; }
     .checked { order: 3; width: 100%; padding-left: 58px; }
     li.hasfix { flex-wrap: wrap; }
-    li.hasfix .what { flex-basis: 100%; }
+    li.hasfix .what, li.hasfix .lw { flex-basis: 100%; }
     li.hasfix .rowacts { margin-left: auto; }
   }
 `;

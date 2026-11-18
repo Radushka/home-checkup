@@ -29,6 +29,7 @@ STOPPED_SHOWN = timedelta(days=3)  # how long "the errors stopped" stays on the 
 NEW_ERROR_AFTER = timedelta(days=2)  # watched this long, a brand new error goes in the note at once
 LOG_MAX_GROUPS = 300
 LOG_SAMPLE_LEN = 300
+LOG_DETAIL_LEN = 4000  # the full text of the newest error of a group (redacted), shown when the person opens the line
 
 UNAVAILABLE_AFTER = timedelta(days=7)
 UNAVAILABLE_SINCE_START_AFTER = timedelta(days=1)

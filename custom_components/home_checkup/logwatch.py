@@ -13,11 +13,12 @@ import logging
 import re
 import threading
 import time
+import traceback
 from dataclasses import dataclass, field
 
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, LOG_HISTORY, LOG_MAX_GROUPS, LOG_SAMPLE_LEN, LOG_WINDOW
+from .const import DOMAIN, LOG_DETAIL_LEN, LOG_HISTORY, LOG_MAX_GROUPS, LOG_SAMPLE_LEN, LOG_WINDOW
 
 _PATH_DOMAIN = re.compile(r"[/\\](?:custom_components|homeassistant[/\\]components)[/\\]([a-z0-9_]+)[/\\]")
 _NAME_DOMAIN = re.compile(r"^(?:homeassistant\.components|custom_components)\.([a-z0-9_]+)")
@@ -97,6 +98,9 @@ class LogGroup:
     last_seen: float
     hours: dict[int, int] = field(default_factory=dict)
     late: dict[int, int] = field(default_factory=dict)  # the same, without start-up noise
+    detail: str = ""  # the full text of the newest one, with its traceback (redacted like the sample)
+    source: str = ""  # where it was logged: "components/tuya/light.py:120"
+    cause: str = ""  # the real error behind a wrapper line: "TimeoutError: no reply from the station"
 
     def count(self, since: float) -> int:
         start = int(since // _HOUR)
@@ -121,6 +125,9 @@ class LogGroup:
             "last": self.last_seen,
             "hours": [[h, n] for h, n in self.hours.items()],
             "late": [[h, n] for h, n in self.late.items()],
+            "detail": self.detail,
+            "source": self.source,
+            "cause": self.cause,
         }
 
 
@@ -153,6 +160,9 @@ class LogWatch(logging.Handler):
                 template=template,
                 sample=_safe_message(record),
                 when=record.created,
+                detail=_full_text(record),
+                source=_short_path(record.pathname, record.lineno),
+                cause=_cause(record.exc_info[0], record.exc_info[1]) if record.exc_info and record.exc_info[0] else "",
             )
         except Exception:  # noqa: BLE001 - a log handler must never raise
             pass
@@ -167,9 +177,15 @@ class LogWatch(logging.Handler):
         sample: str,
         when: float,
         count: int = 1,
+        detail: str = "",
+        source: str = "",
+        cause: str = "",
     ) -> None:
-        template = redact(template)
+        # A counter or an address inside the text ("[2470414290096] Unexpected exception") is not another cause.
+        template = _NUMBERS.sub("#", redact(template))
         sample = redact(sample)
+        cause = " ".join(redact(cause).split())[:LOG_SAMPLE_LEN] if cause else ""
+        detail = _clip(redact(detail)) if detail else ""
         key = (domain, logger, level, template[:200])
         hour = int(when // _HOUR)
         late = self.startup_until is not None and when > self.startup_until
@@ -189,6 +205,12 @@ class LogWatch(logging.Handler):
             if when >= group.last_seen:
                 group.last_seen = when
                 group.sample = sample[:LOG_SAMPLE_LEN]
+                if detail:
+                    group.detail, group.source = detail, source[:200]
+                if cause or detail:
+                    group.cause = cause
+            elif detail and not group.detail:
+                group.detail, group.source, group.cause = detail, source[:200], cause
 
     def load(self, saved: list[dict], now: float | None = None) -> None:
         """Bring back the history saved before the last restart (already redacted when it was saved)."""
@@ -201,11 +223,29 @@ class LogWatch(logging.Handler):
                         float(row["first"]), float(row["last"]),
                         {int(h): int(n) for h, n in row.get("hours", []) if int(h) >= keep_from},
                         {int(h): int(n) for h, n in row.get("late", []) if int(h) >= keep_from},
+                        str(row.get("detail") or "")[:LOG_DETAIL_LEN], str(row.get("source") or "")[:200],
+                        str(row.get("cause") or "")[:LOG_SAMPLE_LEN],
                     )
                 except (KeyError, TypeError, ValueError):
                     continue
-                if group.hours:
-                    self._groups[(group.domain, group.logger, group.level, group.template)] = group
+                if not group.hours:
+                    continue
+                # History saved by an older version: lines that differ only by a number become one line.
+                group.template = _NUMBERS.sub("#", group.template)
+                key = (group.domain, group.logger, group.level, group.template)
+                known = self._groups.get(key)
+                if known is None:
+                    self._groups[key] = group
+                    continue
+                for hour, n in group.hours.items():
+                    known.hours[hour] = known.hours.get(hour, 0) + n
+                for hour, n in group.late.items():
+                    known.late[hour] = known.late.get(hour, 0) + n
+                known.first_seen = min(known.first_seen, group.first_seen)
+                if group.last_seen > known.last_seen:
+                    known.last_seen, known.sample = group.last_seen, group.sample
+                    if group.detail:
+                        known.detail, known.source, known.cause = group.detail, group.source, group.cause
 
     def saved(self) -> list[dict]:
         with self._lock:
@@ -241,9 +281,37 @@ class LogWatch(logging.Handler):
                     sample=text,
                     when=float(entry.get("timestamp") or time.time()),
                     count=int(entry.get("count") or 1),
+                    detail="\n".join(
+                        part for part in (
+                            "\n".join(str(m) for m in message) if isinstance(message, list) else str(message),
+                            str(entry.get("exception") or "").strip(),
+                        ) if part
+                    ),
+                    source=_short_path(str(source[0]), source[1] if len(source) > 1 else 0),
+                    cause=next(
+                        (line.strip() for line in reversed(str(entry.get("exception") or "").splitlines()) if line.strip()), ""
+                    ),
                 )
             except Exception:  # noqa: BLE001
                 continue
+
+    def detail_of(self, key: str, now: float | None = None) -> dict | None:
+        """The full text of one log line, by the key the report gave it. Only for the page of an admin."""
+        since = (now or time.time()) - LOG_WINDOW.total_seconds()
+        with self._lock:
+            for group in self._groups.values():
+                if f"log:{group.domain}:{group.template}" == key:
+                    return {
+                        "text": group.detail or group.sample,
+                        "source": group.source,
+                        "logger": group.logger,
+                        "level": group.level,
+                        "first": group.first_seen,
+                        "last": group.last_seen,
+                        "count": group.count(since),
+                        "domain": group.domain,
+                    }
+        return None
 
     def groups(self, now: float | None = None) -> list[tuple[LogGroup, int]]:
         """The groups seen in the last 24 hours, with their counts, most first. History past 7 days is dropped."""
@@ -264,6 +332,66 @@ class LogWatch(logging.Handler):
                     out.append((group, count))
         out.sort(key=lambda gc: gc[1], reverse=True)
         return out
+
+
+_NUMBERS = re.compile(r"\b(?:0x[0-9a-fA-F]{6,}|\d{6,})\b")
+# Lines that only say "something failed here". The real error is the exception they carry.
+_WRAPPER = re.compile(
+    r"^(?:\[[^\]]{0,40}\]\s*)?(?:Error doing job|Unexpected exception|Task exception was never retrieved|"
+    r"Exception in callback|Unhandled exception|Error handling (?:message|request)|Uncaught exception|Unexpected error)\b",
+    re.I,
+)
+
+
+def is_wrapper(text: str) -> bool:
+    return bool(_WRAPPER.match(text or ""))
+
+
+def _cause(kind, error) -> str:
+    """ "TimeoutError: no reply": the kind of the exception and its own words."""
+    try:
+        words = str(error) if error is not None else ""
+    except Exception:  # noqa: BLE001
+        words = ""
+    name = getattr(kind, "__name__", "") or "Error"
+    return f"{name}: {words}" if words else name
+
+
+_PATH_TAIL = re.compile(r"(?:.*[/\\])?((?:custom_components|homeassistant|site-packages)[/\\].*)$")
+_HOME_DIR = re.compile(r"(?:/(?:home|Users)/|[A-Za-z]:\\Users\\)[^/\\\s\"']+")
+
+
+def _short_path(path: str | None, line: int | None = 0) -> str:
+    """ "homeassistant/components/tuya/light.py:120": the end of the path that says which code it is."""
+    if not path:
+        return ""
+    match = _PATH_TAIL.match(path)
+    tail = (match.group(1) if match else path.replace("\\", "/").rsplit("/", 1)[-1]).replace("\\", "/")
+    tail = tail.removeprefix("site-packages/")
+    return f"{tail}:{line}" if line else tail
+
+
+def _clip(text: str) -> str:
+    """Home folders (they hold a user name) are shortened, and a long text keeps its start and its end."""
+    text = _HOME_DIR.sub("~", text).strip()
+    if len(text) <= LOG_DETAIL_LEN:
+        return text
+    half = LOG_DETAIL_LEN // 2 - 10
+    return f"{text[:half]}\n…\n{text[-half:]}"
+
+
+def _full_text(record: logging.LogRecord) -> str:
+    """The whole message and, when there is one, its traceback."""
+    try:
+        text = record.getMessage()
+    except Exception:  # noqa: BLE001
+        text = str(record.msg)
+    if record.exc_info and record.exc_info[0] is not None:
+        try:
+            text = f"{text}\n{''.join(traceback.format_exception(*record.exc_info)).strip()}"
+        except Exception:  # noqa: BLE001
+            pass
+    return text
 
 
 def _safe_message(record: logging.LogRecord) -> str:

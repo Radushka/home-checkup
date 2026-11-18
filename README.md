@@ -26,6 +26,10 @@ For log errors it does more than count them:
 4. It keeps its own short error history, so it still sees errors that keep coming back after a restart.
 5. After you take the next step, it looks again later and tells you when the errors stopped.
 
+Tap a log line to see the full error right on the page, with a "Copy" button for a forum post or a bug
+report. You do not have to search the whole log. Lines that differ only by a number are counted as one, and
+a line that only says "Unexpected exception" shows the real error as its title.
+
 Anything that first showed in the last 24 hours gets a small "New" mark.
 
 For automations that point to missing things, it says when each one last ran (still-running ones first) and
@@ -122,17 +126,19 @@ Home Checkup is built with your privacy in mind. This is exactly what it does an
 4. From your YAML files and dashboards it picks out only helper names (like `input_boolean.guest_mode`),
    the names of your scripts and automations, and the file name and line number of a broken step.
    All other text is dropped at once and never kept.
-5. Passwords, keys, tokens, sign-in addresses and email addresses in log messages are hidden
+5. For each kind of error it keeps the full text of the newest one, for the "full error" view. It stays in
+   your home, in Home Assistant's own storage folder, for 7 days.
+6. Passwords, keys, tokens, sign-in addresses and email addresses in log messages are hidden
    before a message is kept or shown.
-6. Log messages can name people and devices (for example "Anna's iPhone" or a serial number). They are shown
+7. Log messages can name people and devices (for example "Anna's iPhone" or a serial number). They are shown
    only on your own Home Checkup page, to admins, and never leave your home.
-7. Nothing is written to disk except your own "Keep" list, a 7-day error history (counts and the hidden-name
+8. Nothing is written to disk except your own "Ignore" list, a 7-day error history (counts and the hidden-name
    message text only, in Home Assistant's own storage folder) and, when you use a safe fix, its backup
    (in `/config/home_checkup_backups`, kept in your home).
 
 ## What it gives you
 
-1. A Home Checkup page in the sidebar, for admins. It shows the full list, with a link to each item and a "Keep" button for things that are fine as they are. "Check now" runs the checkup at once.
+1. A Home Checkup page in the sidebar, for admins. It shows the full list, with a link to each item and an "Ignore" button for things that are fine as they are. "Check now" runs the checkup at once.
 2. A sensor, "Things to look at" (0 means healthy).
 3. One note in Settings > System > Repairs when something needs a look. It is always one note, never one per problem, and it goes away by itself when all is well. You can turn it off in the Home Checkup settings (Configure).
 4. A Home Checkup card in [Dashboard Studio](https://lukaps.com/dashboardstudio/), if you use it.

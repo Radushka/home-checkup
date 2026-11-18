@@ -22,6 +22,7 @@ from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
 from .checks import Finding, Item, YamlFacts, broken_refs, integration_name, read_corpus, read_yaml_facts, run_checks
+from .checks import checked_counts
 from .fixes import Fixes
 from .const import DAILY_HOUR, DOMAIN, FIRST_SCAN_DELAY, NEW_FOR, REFRESH_EVERY, STARTUP_GRACE, STOPPED_AFTER, STOPPED_SHOWN
 from .logwatch import LogWatch
@@ -280,6 +281,7 @@ class Checkup:
             "summary": self.summary(),
             "scanned_at": self.scanned_at.isoformat() if self.scanned_at else None,
             "helpers_checked": self.corpus is not None,
+            "checked": checked_counts(self.hass),
             "findings": [f.as_dict() for f in findings],
             "kept": sorted(self.keep),
         }

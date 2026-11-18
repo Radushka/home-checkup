@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+
+from homeassistant.loader import async_get_loaded_integration
 
 from .const import DOMAIN
 from .fixes import FIX_KINDS, FixError
@@ -19,6 +22,7 @@ def async_register_commands(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_scan)
     websocket_api.async_register_command(hass, ws_keep)
     websocket_api.async_register_command(hass, ws_acted)
+    websocket_api.async_register_command(hass, ws_log_detail)
     for command in (
         ws_fix_plan,
         ws_fix_entities,
@@ -94,6 +98,63 @@ async def ws_keep(hass: HomeAssistant, connection: websocket_api.ActiveConnectio
     if checkup := _checkup(hass, connection, msg):
         await checkup.async_set_keep(msg["key"], msg["keep"])
         connection.send_result(msg["id"], _report(checkup, connection))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required("type"): f"{DOMAIN}/log_detail", vol.Required("key"): vol.All(str, vol.Length(min=1, max=500))}
+)
+@callback
+def ws_log_detail(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """The full text of one log line (already redacted), for the person who opens it. Nothing leaves the home."""
+    if checkup := _checkup(hass, connection, msg):
+        detail = checkup.watch.detail_of(msg["key"])
+        if detail is None:
+            connection.send_error(msg["id"], "not_found", "This line is no longer in the log.")
+        else:
+            detail.update(_about(hass, detail.pop("domain", None), detail["text"]))
+            connection.send_result(msg["id"], detail)
+
+
+_IN_CODE = re.compile(r"(custom_components|homeassistant/components)/([a-z0-9_]+)/")
+
+
+def _about(hass: HomeAssistant, domain: str | None, text: str) -> dict[str, Any]:
+    """Facts for a person who troubleshoots: which integration, its version, where its known issues are.
+
+    When Home Assistant itself logged the error, the last integration named in the error text is the likely source.
+    """
+    seen = ""
+    if not domain:
+        found = _IN_CODE.findall(text or "")
+        custom = [name for kind, name in found if kind == "custom_components" and name != DOMAIN]
+        seen = (custom or [name for _, name in found if name != DOMAIN] or [""])[-1]
+    name = version = issues = ""
+    built_in = True
+    target = domain or seen
+    if target:
+        try:
+            integration = async_get_loaded_integration(hass, target)
+        except Exception:  # noqa: BLE001 - not loaded, or not an integration
+            if not domain:
+                return {"integration": "", "version": "", "issues": "", "page": "", "likely": False}
+            name = target
+        else:
+            name = integration.name
+            built_in = integration.is_built_in
+            version = "" if built_in else str(integration.version or "")
+            issues = str(integration.issue_tracker or "")
+            if built_in and not issues:
+                issues = f"https://github.com/home-assistant/core/issues?q=is%3Aissue+is%3Aopen+label%3A%22integration%3A+{target}%22"
+    if not issues.startswith("https://"):
+        issues = ""
+    return {
+        "integration": name,
+        "version": version,
+        "issues": issues,
+        "page": f"/config/integrations/integration/{target}" if target else "",
+        "likely": bool(seen),
+    }
 
 
 # ---- safe fixes (admins only). Each one: exact list first, backup, then the change, then a count. ----------------

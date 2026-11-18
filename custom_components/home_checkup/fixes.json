@@ -1,0 +1,12 @@
+{
+  "v": 1,
+  "about": "Requests sent with the Ask button, and the version that fixed each one. Only problem codes and versions. Nothing about any home.",
+  "fixes": [
+    {
+      "code": "5d1c656d6327aad53746c4570419f54206935fd7ae6f051b503c3f3bae3aa9dc",
+      "status": "fixed",
+      "fixed_in": "0.6.8",
+      "about": "A script step points to a missing media player: Choose another, or the file and line for YAML scripts."
+    }
+  ]
+}
