@@ -67,6 +67,8 @@ class Item:
     hint: str = ""  # for log items: the code of what it means ("timeout", "signin", ...), shown in words by the page
     new: bool = False  # first seen in the last 24 hours
     startup: bool = False  # for log items: only right after a restart
+    times: int = 0  # for log items: how often in the last 24 hours, so the page can show it at a glance
+    last: str = ""  # for log items: the clock time it was last seen
     # For broken automation steps: the one-tap fix Home Checkup can offer, and when the automation last ran.
     fix: str = ""  # "use_new" (a renamed entity), "remove_step" (only that step is broken) or "turn_off"
     old: str = ""  # the missing entity id
@@ -268,6 +270,8 @@ def check_log(
                             ),
                             hint=meaning_of(f"{g.template} {g.sample} {g.cause}"),
                             startup=g.startup_only(since),
+                            times=n,
+                            last=_clock(g.last_seen),
                         )
                         for g, n in level_groups
                     ],

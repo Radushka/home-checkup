@@ -55,6 +55,12 @@ const WORDS = {
     "Copy": "Copier",
     "Copied": "Copié",
     "First seen {when}": "Vue pour la première fois : {when}",
+    "Open a line to see what you can do.": "Ouvrez une ligne pour voir ce que vous pouvez faire.",
+    "Log errors are grouped by cause, from the last 24 hours.": "Les erreurs du journal sont regroupées par cause, sur les dernières 24 heures.",
+    "{n} error": "{n} erreur",
+    "{n} errors": "{n} erreurs",
+    "{n} warning": "{n} avertissement",
+    "{n} warnings": "{n} avertissements",
     "{n} integrations checked. All started.": "{n} intégrations vérifiées. Toutes ont démarré.",
     "The log of the last 24 hours was read. No error keeps coming back.": "Le journal des dernières 24 heures a été lu. Aucune erreur ne revient.",
     "{n} automations and scripts checked. No broken steps.": "{n} automatisations et scripts vérifiés. Aucune étape cassée.",
@@ -197,6 +203,7 @@ const WORDS = {
     "The email address does not look right.": "L’adresse e-mail ne semble pas correcte.",
     "Could not send. Please try again later.": "Envoi impossible. Réessayez plus tard.",
     "{n} to watch": "{n} à surveiller",
+    "Needs a look": "À vérifier",
     "To watch": "À surveiller",
     "Seen only briefly. These count when they keep coming back.": "Vus brièvement. Ils comptent s’ils reviennent souvent.",
     "{n} of these is written in a YAML file. The button cannot remove it.": "{n} de ces éléments est écrit dans un fichier YAML. Le bouton ne peut pas le supprimer.",
@@ -286,6 +293,12 @@ const WORDS = {
     "Copy": "Kopieren",
     "Copied": "Kopiert",
     "First seen {when}": "Zuerst gesehen: {when}",
+    "Open a line to see what you can do.": "Öffnen Sie eine Zeile, um zu sehen, was Sie tun können.",
+    "Log errors are grouped by cause, from the last 24 hours.": "Protokollfehler sind nach Ursache gruppiert, aus den letzten 24 Stunden.",
+    "{n} error": "{n} Fehler",
+    "{n} errors": "{n} Fehler",
+    "{n} warning": "{n} Warnung",
+    "{n} warnings": "{n} Warnungen",
     "{n} integrations checked. All started.": "{n} Integrationen geprüft. Alle sind gestartet.",
     "The log of the last 24 hours was read. No error keeps coming back.": "Das Protokoll der letzten 24 Stunden wurde gelesen. Kein Fehler kommt immer wieder.",
     "{n} automations and scripts checked. No broken steps.": "{n} Automationen und Skripte geprüft. Keine defekten Schritte.",
@@ -428,6 +441,7 @@ const WORDS = {
     "The email address does not look right.": "Die E-Mail-Adresse sieht nicht richtig aus.",
     "Could not send. Please try again later.": "Senden nicht möglich. Bitte versuchen Sie es später erneut.",
     "{n} to watch": "{n} zum Beobachten",
+    "Needs a look": "Zum Ansehen",
     "To watch": "Beobachten",
     "Seen only briefly. These count when they keep coming back.": "Nur kurz gesehen. Sie zählen, wenn sie immer wieder auftreten.",
     "{n} of these is written in a YAML file. The button cannot remove it.": "{n} davon steht in einer YAML-Datei. Die Schaltfläche kann ihn nicht entfernen.",
@@ -517,6 +531,12 @@ const WORDS = {
     "Copy": "Copiar",
     "Copied": "Copiado",
     "First seen {when}": "Visto por primera vez: {when}",
+    "Open a line to see what you can do.": "Abra una línea para ver lo que puede hacer.",
+    "Log errors are grouped by cause, from the last 24 hours.": "Los errores del registro se agrupan por causa, de las últimas 24 horas.",
+    "{n} error": "{n} error",
+    "{n} errors": "{n} errores",
+    "{n} warning": "{n} aviso",
+    "{n} warnings": "{n} avisos",
     "{n} integrations checked. All started.": "{n} integraciones comprobadas. Todas se iniciaron.",
     "The log of the last 24 hours was read. No error keeps coming back.": "Se leyó el registro de las últimas 24 horas. Ningún error se repite.",
     "{n} automations and scripts checked. No broken steps.": "{n} automatizaciones y scripts comprobados. Ningún paso roto.",
@@ -659,6 +679,7 @@ const WORDS = {
     "The email address does not look right.": "La dirección de correo no parece correcta.",
     "Could not send. Please try again later.": "No se pudo enviar. Inténtelo más tarde.",
     "{n} to watch": "{n} para vigilar",
+    "Needs a look": "Para revisar",
     "To watch": "Para vigilar",
     "Seen only briefly. These count when they keep coming back.": "Vistos solo un momento. Cuentan si siguen volviendo.",
     "{n} of these is written in a YAML file. The button cannot remove it.": "{n} de estos está escrito en un archivo YAML. El botón no puede quitarlo.",
@@ -788,7 +809,6 @@ const TITLES = {
 
 const HINTS = {
   failed_integrations: "Their devices do not work until they start again.",
-  log_errors: "Grouped by cause, last 24 hours.",
   log_warnings: "Usually harmless. Shown, not counted.",
   broken_references: "These steps will fail when they run.",
   leftover_entities: "Nothing provides them any more.",
@@ -872,6 +892,7 @@ const ASK_URL = "https://lukaps.com/homecheckup/api/ask.php";
 const STATUS_URL = "https://lukaps.com/homecheckup/api/status.php";
 const CHOOSE_SHOWN = 40; // choices shown at once in "Choose another"
 const NEWS_EVERY = 6 * 3600 * 1000; // how often the page asks what happened to the requests of this browser
+const MANY_TIMES = 50; // from here a count stands out in amber
 const DETAIL_LINES = 12; // lines of a long error shown before "Show all lines"
 const ASK_KINDS = ["log_errors", "broken_references", "failed_integrations"];
 
@@ -1026,6 +1047,7 @@ class HomeCheckupPanel extends HTMLElement {
   }
 
   async _keep(key, keep) {
+    if (keep) delete this._details[key]; // an ignored line leaves; it must not come back opened after Undo
     await this._call({ type: "home_checkup/keep", key, keep });
     this._say(keep ? { text: this._t("Ignored. It will not show again."), act: "undo", data: key } : null);
   }
@@ -1655,14 +1677,27 @@ class HomeCheckupPanel extends HTMLElement {
     scan.disabled = this._scanning || this._error === "not_loaded";
     scan.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" class="${this._scanning ? "spin" : ""}"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg><span>${esc(this._t(this._scanning ? "Checking…" : "Check now"))}</span>`;
     root.querySelector(".content").innerHTML = this._body();
+    this._fillChips();
+    if (!this._chipWatch && typeof ResizeObserver !== "undefined") {
+      this._chipWatch = new ResizeObserver(() => this._fillChips());
+      this._chipWatch.observe(root.querySelector(".content"));
+    }
+  }
+
+  /** When all chips fit in one row they stretch to fill it, so the last one ends flush with the right edge. */
+  _fillChips() {
+    const chips = this.shadowRoot?.querySelector(".chips");
+    if (!chips) return;
+    const tops = new Set([...chips.children].map((c) => c.offsetTop));
+    chips.classList.toggle("fill", tops.size === 1);
   }
 
   _body() {
     if (this._error === "not_loaded") {
-      return `<div class="hero off">${mark("off")}<div class="words"><div class="headline">${esc(this._t("Home Checkup is not set up."))}</div><div class="detail">${esc(this._t("Add it in Settings, Devices and services."))}</div></div></div>`;
+      return `<div class="hero off"><div class="words"><div class="headline">${esc(this._t("Home Checkup is not set up."))}</div><div class="detail">${esc(this._t("Add it in Settings, Devices and services."))}</div></div></div>`;
     }
     if (this._error) {
-      return `<div class="hero off">${mark("off")}<div class="words"><div class="headline">${esc(this._t("Could not load the report."))}</div></div></div>`;
+      return `<div class="hero off"><div class="words"><div class="headline">${esc(this._t("Could not load the report."))}</div></div></div>`;
     }
     const r = this._report;
     if (!r) return "";
@@ -1681,35 +1716,28 @@ class HomeCheckupPanel extends HTMLElement {
       const mine = findings.filter((f) => kinds.includes(f.kind));
       const counted = mine.filter((f) => f.severity === "warning" && f.in_note !== false);
       const state = counted.length ? "warn" : mine.length ? "note" : "fine";
+      // One mark per chip: a green check, or the number of cards (amber when they count, grey when they do not).
       const icon =
         state === "fine"
           ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`
-          : `<span class="dot"></span>`;
-      const n = state === "warn" ? `<span class="chipn">${counted.length}</span>` : "";
+          : `<span class="chipn">${state === "warn" ? counted.length : mine.length}</span>`;
       const on = state === "fine" && this._chip === label;
-      return `<button type="button" class="chip ${state} ${on ? "on" : ""}" data-act="chip" data-key="${esc(label)}" data-kind="${esc(state === "fine" ? "" : mine[0].kind)}" aria-expanded="${on ? "true" : "false"}">${icon}${esc(this._t(label))}${n}</button>`;
+      return `<button type="button" class="chip ${state} ${on ? "on" : ""}" data-act="chip" data-key="${esc(label)}" data-kind="${esc(state === "fine" ? "" : mine[0].kind)}" aria-expanded="${on ? "true" : "false"}">${icon}${esc(this._t(label))}</button>`;
     }).join("");
     const chipLine = this._chip && CHECKED[this._chip] ? this._checkedLine(this._chip, r) : "";
 
     const kept = r.kept ?? [];
+    // A slim title, no box and no icon: the only colour is the number, or a small green check when all is well.
+    const headline = r.count
+      ? esc(this._headline(r.count)).replace(/\d+/, (n) => `<span class="hn">${n}</span>`)
+      : `<svg class="hok" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>${esc(this._headline(0))}`;
     let html = `
       <div class="hero ${level}">
-        ${mark(level)}
-        <div class="words">
-          <div class="headline">${esc(this._headline(r.count ?? 0))}</div>
-          <div class="detail">${esc(r.count ? this._t("Nothing changes until you choose to.") : this._t("Nothing needs a look today."))}</div>
-          ${watch.length ? `<div class="detail also">${esc(this._t("{n} to watch", { n: watch.length }))}</div>` : ""}
-        </div>
-        <div class="checked">${esc(checked)}</div>
+        <div class="headline">${headline}</div>
+        <div class="checked">${watch.length ? `${esc(this._t("{n} to watch", { n: watch.length }))} · ` : ""}${esc(checked)}</div>
       </div>
       <div class="chips">${chips}</div>${chipLine ? `<div class="chipline" role="status">${esc(chipLine)}</div>` : ""}`;
-    if (findings.length) {
-      // "Ask" is explained only when a line on the page offers it.
-      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix && !it.choose && !it.file));
-      const askHint = canAsk ? ` ${this._t("Ask sends us a request for a fix. You read it first.")}` : "";
-      html += `<div class="keephint">${esc(this._t("Ignore means this is fine. It will not show again.") + askHint)}</div>`;
-    }
-    if (warnings.length) html += `<div class="grid">${warnings.map((f) => this._finding(f, false)).join("")}</div>`;
+    if (warnings.length) html += `<div class="section">${esc(this._t("Needs a look"))}</div><div class="grid">${warnings.map((f) => this._finding(f, false)).join("")}</div>`;
     if (watch.length) {
       html += `<div class="section">${esc(this._t("To watch"))}</div><div class="keephint">${esc(this._t("Seen only briefly. These count when they keep coming back."))}</div><div class="grid">${watch.map((f) => this._finding(f, false)).join("")}</div>`;
     }
@@ -1729,6 +1757,17 @@ class HomeCheckupPanel extends HTMLElement {
     if (this._toast) {
       const t = this._toast;
       html += `<div class="toast" role="status">${esc(t.text)}${t.act ? `<button type="button" data-act="${t.act}" data-key="${esc(t.data)}">${esc(this._t("Undo"))}</button>` : ""}</div>`;
+    }
+    if (findings.length) {
+      // Read once, then it is habit: the help words sit at the very bottom, never on top.
+      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix && !it.choose && !it.file));
+      const help = [
+        this._t("Open a line to see what you can do."),
+        this._t("Ignore means this is fine. It will not show again."),
+        canAsk ? this._t("Ask sends us a request for a fix. You read it first.") : "",
+        findings.some((f) => f.kind === "log_errors" || f.kind === "log_warnings") ? this._t("Log errors are grouped by cause, from the last 24 hours.") : "",
+      ].filter(Boolean).join(" ");
+      html += `<div class="keephint foot">${esc(help)}</div>`;
     }
     html += this._sheetHtml();
     html += this._askHtml();
@@ -1754,11 +1793,10 @@ class HomeCheckupPanel extends HTMLElement {
     const rows = shown
       .map((it) => {
         const target = this._target(it);
-        const pill = it.new ? `<span class="newpill">${esc(this._t("New"))}</span>` : "";
-        const name = `<span class="nm">${pill}${esc(it.name)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>`;
         const tryText = it.hint && TRY[it.hint] ? `<span class="try">${esc(this._t("Try: {text}", { text: this._t(TRY[it.hint]) }))}</span>` : "";
-        const mean = it.hint && MEANINGS[it.hint] ? `<span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>${tryText}` : "";
-        let infoText = it.info;
+        // Our words stand a little apart from the words of the log, as one block.
+        const mean = it.hint && MEANINGS[it.hint] ? `<span class="ours"><span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>${tryText}</span>` : "";
+        let infoText = isLog && it.times ? "" : it.info;
         if (f.kind === "broken_references") {
           // Plain words, no raw ids: what happened to the missing thing, then when the automation last ran.
           const why =
@@ -1777,35 +1815,36 @@ class HomeCheckupPanel extends HTMLElement {
         const where = it.file
           ? `<span class="mean">${esc(this._t("Written in {file}, line {line}. Change it in that file.", { file: it.file, line: it.line }))}</span>`
           : "";
-        const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine;
-        // A log line opens in place and shows the full error, so nobody has to search the whole log for it.
-        const detail = isLog ? this._details[it.key] : null;
-        const label = isLog
-          ? `<button type="button" class="what detailbtn" data-act="detail" data-key="${esc(it.key)}" aria-expanded="${detail ? "true" : "false"}" title="${esc(this._t("Show the full error"))}">${name}${info}</button>`
-          : it.link
-            ? `<a class="what" href="${esc(it.link)}" data-act="go" data-link="${esc(it.link)}">${name}${info}</a>`
-            : `<span class="what">${name}${info}</span>`;
-        const chevron = isLog
-          ? `<button type="button" class="chev ${detail ? "on" : ""}" data-act="detail" data-key="${esc(it.key)}" aria-label="${esc(this._t("Show the full error"))}"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m9 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>`
-          : "";
-        const detailBox = detail ? this._detailHtml(it.key, detail) : "";
+        const asked = this._asked().includes(it.key) && !news?.again;
+        // At a glance, on the right: new or asked, how often, and when last.
+        // Fixed columns, so the marks line up from line to line: new, how often, when last.
+        const pill = it.new ? `<span class="newpill">${esc(this._t("New"))}</span>` : "";
+        const meta =
+          isLog && it.times
+            ? `<span class="mc mnew">${pill}</span><span class="mc times ${it.times >= MANY_TIMES ? "many" : ""}">${it.times}×</span><span class="mc last">${esc(it.last || "")}</span>`
+            : pill;
+        // "Asked" is about our work, not about the error, so it sits with our words.
+        const askedLine = asked && !newsLine ? `<span class="askedline">${esc(this._t("Asked"))}</span>` : "";
+        const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine + askedLine;
+        const detail = this._details[it.key];
         const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : "";
         const fixBtn = fixLabel
           ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : this._t(fixLabel))}</button>`
           : "";
-        // No safe fix for this line yet: the person can ask us for one. Nothing is sent before they read it and press Send.
         // No fix by itself, but the person can choose what the step should use now.
         const chooseBtn =
           !fixBtn && it.choose
             ? `<button type="button" class="fixbtn" data-act="choose" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._t("Choose another"))}</button>`
             : "";
+        // No safe fix for this line yet: the person can ask us for one. Nothing is sent before they read it and press Send.
         const askBtn =
-          !fixBtn && !chooseBtn && !it.file && ASK_KINDS.includes(f.kind)
-            ? this._asked().includes(it.key) && !news?.again
-              ? `<span class="asked">${esc(this._t("Asked"))}</span>`
-              : `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
+          !fixBtn && !chooseBtn && !it.file && ASK_KINDS.includes(f.kind) && !asked
+            ? `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
             : "";
-        return `<li class="${fixBtn || chooseBtn || askBtn ? "hasfix" : ""}${detail ? " hasdetail" : ""}">${chevron ? `<span class="lw">${chevron}${label}</span>` : label}<span class="rowacts">${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Ignore"))}</button></span>${detailBox}</li>`;
+        // The actions live in the opened line: first you look, then you choose what to do.
+        const actions = `${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Ignore"))}</button>`;
+        const opened = detail ? this._detailHtml(it.key, detail, actions, isLog ? null : it) : "";
+        return `<li class="${detail ? "on" : ""}"><button type="button" class="what rowbtn" data-act="detail" data-key="${esc(it.key)}" data-log="${isLog ? "1" : ""}" aria-expanded="${detail ? "true" : "false"}"><span class="rtop"><span class="nm">${esc(it.name)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>${meta ? `<span class="rmeta ${isLog && it.times ? "cols" : ""}">${meta}</span>` : ""}</span>${info}</button>${opened}</li>`;
       })
       .join("");
     const more =
@@ -1831,26 +1870,35 @@ class HomeCheckupPanel extends HTMLElement {
       f.kind === "leftover_entities" || f.kind === "unused_helpers"
         ? `<button type="button" class="fixbtn" data-act="fix" data-key="${esc(f.kind)}">${esc(this._t("Remove…"))}</button>`
         : "";
+    // A log group is named by its integration alone; a small count says it is about the log, and how much.
+    const count = isLog
+      ? `<span class="gcount">${esc(f.kind === "log_errors" ? this._tn(items.length, "{n} error", "{n} errors") : this._tn(items.length, "{n} warning", "{n} warnings"))}</span>`
+      : "";
+    const title = isLog ? f.integration_name || "Home Assistant" : this._title(f);
+    const box = rows && f.kind !== "log_stopped";
+    // Like a grouped list: the name and the shortcut sit above the box, the box holds only the lines, the hint sits under it.
     return `
       <section class="finding ${note ? "note" : ""}" data-kind="${esc(f.kind)}">
         <div class="head">
-          <div class="htext"><div class="title">${esc(this._title(f))}</div>${hint ? `<div class="hint">${esc(hint)}</div>` : ""}</div>
+          <div class="htext"><span class="title">${esc(title)}</span>${count}</div>
           <div class="acts">${fixButton}${openLink}</div>
         </div>
         ${stepLine}
-        ${rows && f.kind !== "log_stopped" ? `<ul class="${isLog ? "log" : ""}">${rows}</ul>` : ""}
+        ${box ? `<ul class="box ${isLog ? "log" : ""}">${rows}</ul>` : ""}
         ${more}
+        ${hint ? `<div class="hint">${esc(hint)}</div>` : ""}
       </section>`;
   }
 
   /** The full error of one log line, read only when the person opens it. It stays in the home. */
-  async _toggleDetail(key) {
+  async _toggleDetail(key, isLog = true) {
     if (this._details[key]) {
       delete this._details[key];
       return this._render();
     }
-    const d = (this._details[key] = { data: null, error: "", all: false, copied: false });
+    const d = (this._details[key] = { data: isLog ? null : {}, error: "", all: false, copied: false });
     this._render();
+    if (!isLog) return;
     try {
       d.data = await this._hass.callWS({ type: "home_checkup/log_detail", key });
     } catch {
@@ -1859,9 +1907,16 @@ class HomeCheckupPanel extends HTMLElement {
     if (this._details[key] === d) this._render();
   }
 
-  _detailHtml(key, d) {
-    if (d.error) return `<div class="errdetail"><div class="dmeta">${esc(d.error)}</div></div>`;
-    if (!d.data) return `<div class="errdetail"><div class="dmeta">…</div></div>`;
+  /** The opened line: what there is to know, then everything the person can do about it, in one row. */
+  _detailHtml(key, d, actions, item) {
+    const row = (links, extra) => `<div class="dacts"><span class="dlinks">${links}</span>${extra}${actions}</div>`;
+    if (item) {
+      // Not a log line: the id for people who want it, a way to the thing itself, and the actions.
+      const link = item.link ? `<a class="dlink" href="${esc(item.link)}" data-act="go" data-link="${esc(item.link)}">${esc(this._t(placeName(item.link)))}${ARROW}</a>` : "";
+      return `<div class="errdetail">${item.id ? `<div class="dmeta code">${esc(item.id)}</div>` : ""}${row(link, "")}</div>`;
+    }
+    if (d.error) return `<div class="errdetail"><div class="dmeta">${esc(d.error)}</div>${row("", "")}</div>`;
+    if (!d.data) return `<div class="errdetail"><div class="dmeta">…</div>${row("", "")}</div>`;
     const lines = String(d.data.text || "").split("\n");
     // A long error keeps its first lines (what was tried) and its last lines (what went wrong): the end says the most.
     const short = !d.all && lines.length > DETAIL_LINES;
@@ -1880,15 +1935,12 @@ class HomeCheckupPanel extends HTMLElement {
       x.issues ? `<a class="dlink" href="${esc(x.issues)}" target="_blank" rel="noopener noreferrer">${esc(this._t("Known issues"))}${ARROW}</a>` : "",
       x.page ? `<a class="dlink" href="${esc(x.page)}" data-act="go" data-link="${esc(x.page)}" title="${esc(this._t("The integration page has the debug logging switch."))}">${esc(this._t("Debug logging"))}${ARROW}</a>` : "",
     ].join("");
+    const extra = `${short ? `<button type="button" class="ghost" data-act="detailall" data-key="${esc(key)}">${esc(this._t("Show all lines"))}</button>` : ""}<button type="button" class="ghost" data-act="detailcopy" data-key="${esc(key)}" title="${esc(this._t("Copies a report you can paste into a bug report."))}">${esc(this._t(d.copied ? "Copied" : "Copy"))}</button>`;
     return `<div class="errdetail">
       ${facts ? `<div class="dmeta">${esc(facts)}</div>` : ""}
       ${from ? `<div class="dmeta code">${esc(from)}</div>` : ""}
       <pre class="dtext">${esc(text)}</pre>
-      <div class="dacts">
-        <span class="dlinks">${links}</span>
-        ${short ? `<button type="button" class="ghost" data-act="detailall" data-key="${esc(key)}">${esc(this._t("Show all lines"))}</button>` : ""}
-        <button type="button" class="ghost" data-act="detailcopy" data-key="${esc(key)}" title="${esc(this._t("Copies a report you can paste into a bug report."))}">${esc(this._t(d.copied ? "Copied" : "Copy"))}</button>
-      </div>
+      ${row(links, extra)}
     </div>`;
   }
 
@@ -1951,7 +2003,7 @@ class HomeCheckupPanel extends HTMLElement {
       this._hass.callWS({ type: "home_checkup/acted", integration: el.dataset.key, action: el.dataset.step }).catch(() => {});
       this._go(el.dataset.link);
     } else if (act === "detail") {
-      this._toggleDetail(el.dataset.key);
+      this._toggleDetail(el.dataset.key, el.dataset.log === "1");
     } else if (act === "chip") {
       const kind = el.dataset.kind;
       if (kind) {
@@ -2052,19 +2104,19 @@ const STYLE = `
   .content { flex: 1; overflow-y: auto; padding: 24px 24px 48px; box-sizing: border-box; width: 100%; max-width: 948px; margin: 0 auto;
     display: flex; flex-direction: column; gap: 16px; }
 
-  .hero { display: flex; align-items: center; gap: 20px; padding: 22px 24px; border-radius: var(--ha-card-border-radius, 12px); }
-  .hero.good { background: color-mix(in srgb, var(--good) 12%, var(--card)); }
-  .hero.warn { background: color-mix(in srgb, var(--warn) 14%, var(--card)); }
-  .hero.off { background: var(--card); }
+  .hero { display: flex; align-items: baseline; justify-content: space-between; gap: 6px 20px; flex-wrap: wrap; padding: 4px 0 0; }
   .mark { width: 56px; height: 56px; flex: none; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
   .mark.good { stroke: var(--good); } .mark.warn { stroke: var(--warn); }
   .mark.off { stroke: var(--dim); } .mark.off circle { stroke-dasharray: 4 5; }
   .words { flex: 1; min-width: 0; }
   .headline { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.2; }
+  .headline .hn { color: var(--warn); }
+  .headline .hok { width: 24px; height: 24px; margin-right: 10px; vertical-align: -3px; fill: none; stroke: var(--good); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
   .detail { font-size: 15px; color: var(--dim); margin-top: 4px; }
-  .checked { font-size: 13px; color: var(--dim); white-space: nowrap; align-self: flex-start; }
+  .checked { font-size: 13px; color: var(--dim); white-space: nowrap; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips.fill .chip { flex: 1 1 auto; justify-content: center; }
   .chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px 7px 9px; border-radius: 999px; font-size: 14px;
     background: var(--card); border: 1px solid var(--line); }
   .chip svg { width: 18px; height: 18px; padding: 2px; border-radius: 50%; box-sizing: border-box; fill: none; stroke: var(--good); stroke-width: 3;
@@ -2196,12 +2248,62 @@ const STYLE = `
     font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .danger:disabled, .ghost:disabled { opacity: .45; cursor: default; }
 
+  /* 0.6.11: a grouped list. The name and the shortcut sit above the box, the box holds only lines that open. */
+  .grid { gap: 22px; }
+  .finding, .finding.note { background: none; border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+  .head { align-items: center; padding: 0; min-height: 30px; }
+  .title { font-size: 16px; }
+  .gcount { margin-left: 8px; font-size: 14px; color: var(--dim); white-space: nowrap; }
+  /* Each issue is its own box, so an opened one never runs into the next. */
+  ul.box { margin: 6px 0 0; display: flex; flex-direction: column; gap: 8px; }
+  ul.box > li { display: block; padding: 0; min-height: 0; overflow: hidden; background: var(--card); border-radius: var(--ha-card-border-radius, 12px);
+    border: var(--ha-card-border-width, 1px) solid var(--ha-card-border-color, var(--line)); box-shadow: var(--ha-card-box-shadow, none); }
+  button.rowbtn { width: 100%; box-sizing: border-box; padding: 11px 16px 11px 16px; }
+  .rowbtn:hover, .rowbtn:focus-visible, li.on > .rowbtn { background: color-mix(in srgb, var(--primary-text-color) 5%, transparent); }
+  .rowbtn:focus-visible { outline: 2px solid var(--primary-color); outline-offset: -2px; }
+  button.what:hover .nm { color: inherit; }
+  .rtop { display: flex; gap: 12px; align-items: baseline; }
+  .rtop .nm { flex: 1; min-width: 0; }
+  .rmeta { flex: none; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dim); white-space: nowrap; }
+  .times { font-variant-numeric: tabular-nums; }
+  .times.many { color: var(--warn); font-weight: 600; }
+  .rmeta .newpill { margin-right: 0; }
+  .rmeta.cols { display: inline-grid; grid-template-columns: 46px 44px 48px; gap: 0 6px; align-items: baseline; }
+  .rmeta.cols .mc { text-align: right; }
+  .rmeta.cols .mnew { text-align: left; }
+  .askedline { font-size: 13px; color: var(--dim); margin-top: 4px; }
+  .rmeta .asked { padding: 0; }
+  .ours { display: flex; flex-direction: column; margin-top: 7px; padding-left: 10px; border-left: 2px solid var(--line); }
+  .ours .mean { margin-top: 0; }
+  ul.box > li.on { background: color-mix(in srgb, var(--primary-background-color) 55%, var(--card)); }
+  /* An opened issue has three bands: the issue on top and the actions at the bottom are lightly shaded,
+     the details between them stay almost clear, so the long text is easy to read. */
+  ul.box .errdetail { margin: 0; padding: 12px 16px 0; background: none; border-radius: 0; }
+  ul.box .errdetail .dacts { margin: 10px -16px 0; padding: 8px 16px; background: color-mix(in srgb, var(--primary-text-color) 6%, transparent); }
+  ul.box .errdetail .dtext { margin-bottom: 0; }
+  /* In the action row every button weighs the same: none is pushed ahead of the others. */
+  ul.box .errdetail .dacts .ghost, ul.box .errdetail .dacts .fixbtn { color: var(--primary-text-color); border-color: var(--line); }
+  li.on > .rowbtn { background: color-mix(in srgb, var(--primary-text-color) 6%, transparent); }
+  .finding > .hint { margin: 6px 6px 0; font-size: 13px; }
+  .finding > .step { margin: 4px 6px 0; }
+  .finding > .more { margin-left: 6px; }
+  .chip { padding-left: 8px; }
+  .chipn { margin-left: 0; min-width: 22px; height: 22px; line-height: 22px; padding: 0 6px; }
+  .chip.note .chipn { color: var(--dim); background: color-mix(in srgb, var(--dim) 18%, transparent); }
+  .keephint.foot { margin-top: 6px; }
   @media (max-width: 600px) {
+    .rtop { flex-wrap: wrap; gap: 2px 12px; }
+    .rmeta.cols { display: inline-flex; gap: 8px; }
+    .rmeta.cols .mnew { order: 3; }
+    .rmeta.cols .mnew:empty { display: none; }
+    .rtop .nm { flex-basis: 100%; }
+    button.rowbtn { padding: 11px 14px 11px 12px; }
+    ul.box .errdetail { padding: 12px 12px 0; }
+    ul.box .errdetail .dacts { margin: 10px -12px 0; padding: 8px 12px; }
     .content { padding: 16px 16px 40px; gap: 14px; }
-    .hero { padding: 18px; gap: 14px; flex-wrap: wrap; }
+    .hero { padding: 2px 0 0; }
     .mark { width: 44px; height: 44px; }
     .headline { font-size: 22px; }
-    .checked { order: 3; width: 100%; padding-left: 58px; }
     li.hasfix { flex-wrap: wrap; }
     li.hasfix .what, li.hasfix .lw { flex-basis: 100%; }
     li.hasfix .rowacts { margin-left: auto; }
