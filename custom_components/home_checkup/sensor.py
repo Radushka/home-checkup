@@ -51,12 +51,14 @@ class HomeCheckupSensor(SensorEntity):
         return {
             "status": "healthy" if checkup.count == 0 else "attention",
             "headline": checkup.headline,
+            "watch": checkup.watch_count,
             "summary": checkup.summary()[:MAX_LISTED],
             "findings": [
                 {
                     "kind": f.kind,
                     "title": f.title,
                     "severity": f.severity,
+                    "in_note": f.in_note,
                     "count": len(f.items),
                     "integration": f.integration,
                     "integration_name": f.integration_name,

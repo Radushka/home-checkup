@@ -108,6 +108,9 @@ const WORDS = {
     "Its device was removed": "Son appareil a été supprimé",
     "No longer exists": "N’existe plus",
     "Use the new one": "Utiliser le nouveau",
+    "{n} to watch": "{n} à surveiller",
+    "To watch": "À surveiller",
+    "Seen only briefly. These count when they keep coming back.": "Vus brièvement. Ils comptent s’ils reviennent souvent.",
     "{n} of these is written in a YAML file. The button cannot remove it.": "{n} de ces éléments est écrit dans un fichier YAML. Le bouton ne peut pas le supprimer.",
     "{n} of these are written in YAML files. The button cannot remove them.": "{n} de ces éléments sont écrits dans des fichiers YAML. Le bouton ne peut pas les supprimer.",
     "Remove this step": "Retirer cette étape",
@@ -246,6 +249,9 @@ const WORDS = {
     "Its device was removed": "Sein Gerät wurde entfernt",
     "No longer exists": "Gibt es nicht mehr",
     "Use the new one": "Die neue nutzen",
+    "{n} to watch": "{n} zum Beobachten",
+    "To watch": "Beobachten",
+    "Seen only briefly. These count when they keep coming back.": "Nur kurz gesehen. Sie zählen, wenn sie immer wieder auftreten.",
     "{n} of these is written in a YAML file. The button cannot remove it.": "{n} davon steht in einer YAML-Datei. Die Schaltfläche kann ihn nicht entfernen.",
     "{n} of these are written in YAML files. The button cannot remove them.": "{n} davon stehen in YAML-Dateien. Die Schaltfläche kann sie nicht entfernen.",
     "Remove this step": "Diesen Schritt entfernen",
@@ -384,6 +390,9 @@ const WORDS = {
     "Its device was removed": "Se quitó su dispositivo",
     "No longer exists": "Ya no existe",
     "Use the new one": "Usar el nuevo",
+    "{n} to watch": "{n} para vigilar",
+    "To watch": "Para vigilar",
+    "Seen only briefly. These count when they keep coming back.": "Vistos solo un momento. Cuentan si siguen volviendo.",
     "{n} of these is written in a YAML file. The button cannot remove it.": "{n} de estos está escrito en un archivo YAML. El botón no puede quitarlo.",
     "{n} of these are written in YAML files. The button cannot remove them.": "{n} de estos están escritos en archivos YAML. El botón no puede quitarlos.",
     "Remove this step": "Quitar este paso",
@@ -972,14 +981,17 @@ class HomeCheckupPanel extends HTMLElement {
     const r = this._report;
     if (!r) return "";
     const findings = r.findings ?? [];
-    const warnings = findings.filter((f) => f.severity === "warning");
+    // One number everywhere: the headline counts what the Repairs note and the sensor count. A short burst of log
+    // errors (in_note false) is shown under "To watch" and does not raise the number.
+    const warnings = findings.filter((f) => f.severity === "warning" && f.in_note !== false);
+    const watch = findings.filter((f) => f.severity === "warning" && f.in_note === false);
     const notes = findings.filter((f) => f.severity !== "warning");
     const level = r.count ? "warn" : "good";
     const checked = r.scanned_at ? this._t("Checked {time}", { time: this._time(r.scanned_at) }) : this._t("Not checked yet");
 
     const chips = CHECKS.map(([label, kinds]) => {
       const mine = findings.filter((f) => kinds.includes(f.kind));
-      const state = mine.some((f) => f.severity === "warning") ? "warn" : mine.length ? "note" : "fine";
+      const state = mine.some((f) => f.severity === "warning" && f.in_note !== false) ? "warn" : mine.length ? "note" : "fine";
       const icon =
         state === "fine"
           ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`
@@ -994,12 +1006,16 @@ class HomeCheckupPanel extends HTMLElement {
         <div class="words">
           <div class="headline">${esc(this._headline(r.count ?? 0))}</div>
           <div class="detail">${esc(r.count ? this._t("Nothing changes until you choose to.") : this._t("Nothing needs a look today."))}</div>
+          ${watch.length ? `<div class="detail also">${esc(this._t("{n} to watch", { n: watch.length }))}</div>` : ""}
         </div>
         <div class="checked">${esc(checked)}</div>
       </div>
       <div class="chips">${chips}</div>`;
     if (findings.length) html += `<div class="keephint">${esc(this._t("Keep means this is fine. It will not show again."))}</div>`;
     if (warnings.length) html += `<div class="grid">${warnings.map((f) => this._finding(f, false)).join("")}</div>`;
+    if (watch.length) {
+      html += `<div class="section">${esc(this._t("To watch"))}</div><div class="keephint">${esc(this._t("Seen only briefly. These count when they keep coming back."))}</div><div class="grid">${watch.map((f) => this._finding(f, false)).join("")}</div>`;
+    }
     if (notes.length) {
       html += `<div class="section">${esc(this._t("Good to know"))}</div><div class="grid">${notes.map((f) => this._finding(f, true)).join("")}</div>`;
     }

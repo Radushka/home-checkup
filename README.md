@@ -21,7 +21,7 @@ For log errors it does more than count them:
 2. It offers one next step: "See the update" when an update that may fix it is ready, "Sign in again",
    "Open the devices", or "Open dashboards" for a template that reads something missing.
 3. It tells start-up noise (errors only in the first minutes after a restart) from real, ongoing problems.
-   Start-up noise is shown, but not counted.
+   Start-up noise is shown, but not counted. When a later restart is clean, it leaves the page at once.
 4. It keeps its own short error history, so it still sees errors that keep coming back after a restart.
 5. After you take the next step, it looks again later and tells you when the errors stopped.
 
@@ -75,6 +75,8 @@ Needs Home Assistant 2025.11 or newer.
 Home Checkup adds to Home Assistant; it does not replace or change any part of it.
 
 1. Repairs belongs to Home Assistant. Home Checkup adds at most one note there, never one per problem.
+   The note, the Home Checkup page, the sensor and the Studio card always show the same number. A short burst
+   of log errors is listed on the page under "To watch". It is counted only when it keeps coming back.
 2. Many people never open their log, so the note lists log errors too, but only real problems: errors that
    keep coming back (seen in at least 3 different hours of the last 24), and brand new errors once Home Checkup
    has watched for 2 days. One short burst, such as a network drop, and start-up noise stay on the Home Checkup

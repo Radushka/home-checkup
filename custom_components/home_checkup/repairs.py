@@ -30,29 +30,37 @@ OLD_KINDS = (
 
 
 @callback
-def async_sync_issues(hass: HomeAssistant, findings: list) -> None:
-    for kind in OLD_KINDS:
-        ir.async_delete_issue(hass, DOMAIN, kind)
-    # Home Assistant's own repairs come first: a problem of an integration that already has its own note
-    # there is not counted again in ours (it is still on the Home Checkup page).
+def async_mark_covered(hass: HomeAssistant, findings: list) -> None:
+    """Home Assistant's own repairs come first: a problem of an integration that already has its own note
+    there is not counted again in ours. It moves to "To watch" on the Home Checkup page."""
     covered = {
         issue.domain
         for issue in ir.async_get(hass).issues.values()
         if issue.domain != DOMAIN and issue.active and issue.dismissed_version is None
     }
-    warnings = [
-        f
-        for f in findings
-        if f.severity == "warning"
-        and f.in_note
-        and not (f.integration and f.integration in covered)
-    ]
+    for finding in findings:
+        if finding.severity == "warning" and finding.integration and finding.integration in covered:
+            finding.in_note = False
+
+
+@callback
+def async_sync_issues(hass: HomeAssistant, findings: list) -> None:
+    for kind in OLD_KINDS:
+        ir.async_delete_issue(hass, DOMAIN, kind)
+    # The note counts what the page and the sensor count (see async_mark_covered and Checkup.count).
+    warnings = [f for f in findings if f.severity == "warning" and f.in_note]
     if not warnings:
         ir.async_delete_issue(hass, DOMAIN, ISSUE_ID)
         return
     shown = warnings[:5]
     more = len(warnings) - len(shown)
     lines = [f"- {f.title}" for f in shown] + ([f"- and {more} more"] if more else [])
+    placeholders = {"count": str(len(warnings)), "list": "\n".join(lines)}
+    # Home Assistant shows when a note was first made ("12 hours ago"). When what the note says changes, make it
+    # again so its time is fresh. A note someone chose to ignore is left alone, so it stays ignored.
+    old = ir.async_get(hass).async_get_issue(DOMAIN, ISSUE_ID)
+    if old is not None and old.dismissed_version is None and (old.translation_placeholders or {}) != placeholders:
+        ir.async_delete_issue(hass, DOMAIN, ISSUE_ID)
     ir.async_create_issue(
         hass,
         DOMAIN,
@@ -62,7 +70,7 @@ def async_sync_issues(hass: HomeAssistant, findings: list) -> None:
         severity=ir.IssueSeverity.WARNING,
         learn_more_url=f"homeassistant://{PANEL_URL}",  # opens the sidebar page inside Home Assistant
         translation_key="things_to_look_at" if len(warnings) > 1 else "thing_to_look_at",
-        translation_placeholders={"count": str(len(warnings)), "list": "\n".join(lines)},
+        translation_placeholders=placeholders,
     )
 
 

@@ -24,10 +24,14 @@ from .checks import Finding, Item, integration_name, read_corpus, run_checks
 from .fixes import Fixes
 from .const import DAILY_HOUR, DOMAIN, FIRST_SCAN_DELAY, NEW_FOR, REFRESH_EVERY, STARTUP_GRACE, STOPPED_AFTER, STOPPED_SHOWN
 from .logwatch import LogWatch
-from .repairs import async_sync_issues
+from .repairs import async_mark_covered, async_sync_issues
 
 _LOGGER = logging.getLogger(__name__)
 STORE_VERSION = 1
+
+
+def _counted(finding: Finding) -> bool:
+    return finding.severity == "warning" and finding.in_note
 
 
 class Checkup:
@@ -123,6 +127,7 @@ class Checkup:
         )
         self.findings += self._stopped(now)
         self._mark_new(now)
+        async_mark_covered(self.hass, self.findings)
         self._log_store.async_delay_save(self._log_data, 60)
         self.scanned_at = dt_util.utcnow()
         async_sync_issues(self.hass, self.findings if self.repairs_note else [])
@@ -215,8 +220,16 @@ class Checkup:
 
     @property
     def count(self) -> int:
-        """Things that need a look. Notes marked "info" are shown but not counted."""
-        return sum(1 for f in self.findings if f.severity == "warning")
+        """Things that need a look: one number for the page, the sensor, the Studio card and the Repairs note.
+
+        Not counted: notes marked "info", and things "to watch" (a short burst of log errors, or a problem that
+        already has Home Assistant's own repair note)."""
+        return sum(1 for f in self.findings if _counted(f))
+
+    @property
+    def watch_count(self) -> int:
+        """Things to watch: shown under their own heading, not counted."""
+        return sum(1 for f in self.findings if f.severity == "warning" and not f.in_note)
 
     @property
     def headline(self) -> str:
@@ -227,16 +240,16 @@ class Checkup:
 
     def summary(self) -> list[str]:
         """The daily summary as short sentences, most important first."""
-        lines = [f.title + "." for f in self.findings if f.severity == "warning"]
-        lines += [f.title + "." for f in self.findings if f.severity != "warning"]
+        lines = [f.title + "." for f in self.findings if _counted(f)]
+        lines += [f.title + "." for f in self.findings if not _counted(f)]
         return lines or ["Nothing needs a look today."]
 
     def report(self) -> dict[str, Any]:
-        order = {"warning": 0, "info": 1}
-        findings = sorted(self.findings, key=lambda f: order.get(f.severity, 2))
+        findings = sorted(self.findings, key=lambda f: 0 if _counted(f) else 1 if f.severity == "warning" else 2)
         return {
             "status": "healthy" if self.count == 0 else "attention",
             "count": self.count,
+            "watch": self.watch_count,
             "headline": self.headline,
             "summary": self.summary(),
             "scanned_at": self.scanned_at.isoformat() if self.scanned_at else None,

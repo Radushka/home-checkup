@@ -30,6 +30,7 @@ from .const import (
     LOG_WINDOW,
     NEW_ERROR_AFTER,
     NOTE_HOURS,
+    STARTUP_GRACE,
     CORPUS_MAX_BYTES,
     CORPUS_SKIP_DIRS,
     CORPUS_SKIP_NAME_PARTS,
@@ -87,7 +88,9 @@ class Finding:
     integration_name: str | None = None
     link: str = ""
     items: list[Item] = field(default_factory=list)
-    in_note: bool = True  # False: shown on the page and counted, but not in the Repairs note
+    # False: shown on the page under "To watch". Not counted anywhere and not in the Repairs note,
+    # so the page, the sensor and the note always show the same number.
+    in_note: bool = True
     # The next step the page offers (log findings): a code the page shows in words, and where it goes.
     action: str = ""  # "update", "signin", "devices", "template", "logs"
     action_link: str = ""
@@ -181,12 +184,17 @@ def _entity_name(hass: HomeAssistant, entry: er.RegistryEntry | None, entity_id:
 
 
 @callback
+def _clock(when: float) -> str:
+    return dt_util.as_local(dt_util.utc_from_timestamp(when)).strftime("%H:%M")
+
+
 def check_log(
     hass: HomeAssistant,
     watch: LogWatch,
     now: float | None = None,
     keep: frozenset[str] = frozenset(),
     watching_since: float = 0.0,
+    started_at: datetime | None = None,
 ) -> list[Finding]:
     """One finding per integration and level. What goes in the Repairs note:
 
@@ -197,8 +205,14 @@ def check_log(
     now = now if now is not None else time.time()
     since = now - LOG_WINDOW.total_seconds()
     knows_normal = watching_since and now - watching_since >= NEW_ERROR_AFTER.total_seconds()
+    # A start-up error that did not come back at the latest restart is fixed: it leaves the page at once, and does
+    # not stay for the rest of the 24 hours. It is judged only when the start-up minutes of that restart are over.
+    started = started_at.timestamp() if started_at else 0.0
+    clean_restart = bool(started) and now > started + STARTUP_GRACE
     by_domain: dict[str | None, list] = defaultdict(list)
     for group, count in watch.groups(now):
+        if clean_restart and group.last_seen < started and group.startup_only(since):
+            continue
         if count and f"log:{group.domain}:{group.template}" not in keep:
             by_domain[group.domain].append((group, count))
     findings: list[Finding] = []
@@ -245,9 +259,9 @@ def check_log(
                             name=g.sample,
                             id=g.logger,
                             info=(
-                                f"{_plural(n, 'time')}, only right after a restart"
+                                f"{_plural(n, 'time')}, only right after a restart, last at {_clock(g.last_seen)}"
                                 if g.startup_only(since)
-                                else f"{_plural(n, 'time')}, last at {dt_util.as_local(dt_util.utc_from_timestamp(g.last_seen)).strftime('%H:%M')}"
+                                else f"{_plural(n, 'time')}, last at {_clock(g.last_seen)}"
                             ),
                             hint=meaning_of(f"{g.template} {g.sample}"),
                             startup=g.startup_only(since),
@@ -878,7 +892,7 @@ def run_checks(
     findings: list[Finding] = []
     for number, check in enumerate((
         lambda: check_failed_integrations(hass, kept),
-        lambda: check_log(hass, watch, now or time.time(), kept, watching_since),
+        lambda: check_log(hass, watch, now or time.time(), kept, watching_since, started_at),
         lambda: check_broken_references(hass, kept),
         lambda: check_leftovers(hass, kept, started_at),
         lambda: check_unavailable(hass, started_at, kept),
