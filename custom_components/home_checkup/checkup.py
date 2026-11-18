@@ -21,7 +21,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
-from .checks import Finding, Item, integration_name, read_corpus, run_checks
+from .checks import Finding, Item, YamlFacts, broken_refs, integration_name, read_corpus, read_yaml_facts, run_checks
 from .fixes import Fixes
 from .const import DAILY_HOUR, DOMAIN, FIRST_SCAN_DELAY, NEW_FOR, REFRESH_EVERY, STARTUP_GRACE, STOPPED_AFTER, STOPPED_SHOWN
 from .logwatch import LogWatch
@@ -44,6 +44,7 @@ class Checkup:
         self.findings: list[Finding] = []
         self.scanned_at: datetime | None = None
         self.corpus: set[str] | None = None
+        self.yaml_facts: YamlFacts | None = None
         self.repairs_note = True
         self.fixes = Fixes(hass)
         # When each item was first and last seen, to mark what is new since yesterday.
@@ -125,6 +126,13 @@ class Checkup:
         except Exception:  # noqa: BLE001 - without the files, the helper check is simply skipped
             _LOGGER.debug("Could not read the configuration files", exc_info=True)
             self.corpus = None
+        try:
+            self.yaml_facts = await self.hass.async_add_executor_job(
+                read_yaml_facts, self.hass.config.config_dir, broken_refs(self.hass)
+            )
+        except Exception:  # noqa: BLE001 - without the files, the buttons are offered as before
+            _LOGGER.debug("Could not read where automations and scripts are written", exc_info=True)
+            self.yaml_facts = None
         self.refresh()
 
     @callback
@@ -132,7 +140,7 @@ class Checkup:
         now = time.time()
         self.findings = run_checks(
             self.hass, self.watch, self.corpus, self.started_at, self.keep, now,
-            watching_since=self.watching_since, run_start=self.run_start,
+            watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts,
         )
         self.findings += self._stopped(now)
         self._mark_new(now)

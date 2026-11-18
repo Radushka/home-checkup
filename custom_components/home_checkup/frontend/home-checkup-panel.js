@@ -113,6 +113,7 @@ const WORDS = {
     "{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.": "{name} pointe vers {old}, qui n’existe plus. Choisissez ce qu’elle doit utiliser maintenant. Une sauvegarde est faite d’abord.",
     "Search": "Rechercher",
     "Nothing of the same kind was found.": "Rien du même type n’a été trouvé.",
+    "Written in {file}, line {line}. Change it in that file.": "Écrit dans {file}, ligne {line}. Modifiez-le dans ce fichier.",
     "This script lives in a YAML file. Open it to change it.": "Ce script se trouve dans un fichier YAML. Ouvrez-le pour le modifier.",
     "Showing the first {n}. Search to find more.": "Les {n} premiers sont affichés. Recherchez pour en trouver d’autres.",
     "Ask": "Demander",
@@ -286,6 +287,7 @@ const WORDS = {
     "{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.": "{name} zeigt auf {old}, das es nicht mehr gibt. Wählen Sie, was jetzt genutzt werden soll. Zuerst wird eine Sicherung erstellt.",
     "Search": "Suchen",
     "Nothing of the same kind was found.": "Nichts von derselben Art gefunden.",
+    "Written in {file}, line {line}. Change it in that file.": "Steht in {file}, Zeile {line}. Ändern Sie es dort.",
     "This script lives in a YAML file. Open it to change it.": "Dieses Skript liegt in einer YAML-Datei. Öffnen Sie es, um es zu ändern.",
     "Showing the first {n}. Search to find more.": "Die ersten {n} werden gezeigt. Suchen Sie, um mehr zu finden.",
     "Ask": "Anfragen",
@@ -459,6 +461,7 @@ const WORDS = {
     "{name} points to {old}, which no longer exists. Choose what it should use now. A backup is made first.": "{name} apunta a {old}, que ya no existe. Elija lo que debe usar ahora. Primero se hace una copia de seguridad.",
     "Search": "Buscar",
     "Nothing of the same kind was found.": "No se encontró nada del mismo tipo.",
+    "Written in {file}, line {line}. Change it in that file.": "Escrito en {file}, línea {line}. Cámbielo en ese archivo.",
     "This script lives in a YAML file. Open it to change it.": "Este script está en un archivo YAML. Ábralo para cambiarlo.",
     "Showing the first {n}. Search to find more.": "Se muestran los primeros {n}. Busque para encontrar más.",
     "Ask": "Pedir",
@@ -1452,7 +1455,7 @@ class HomeCheckupPanel extends HTMLElement {
       <div class="chips">${chips}</div>`;
     if (findings.length) {
       // "Ask" is explained only when a line on the page offers it.
-      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix && !it.choose));
+      const canAsk = findings.some((f) => ASK_KINDS.includes(f.kind) && (f.items ?? []).some((it) => !it.fix && !it.choose && !it.file));
       const askHint = canAsk ? ` ${this._t("Ask sends us a request for a fix. You read it first.")}` : "";
       html += `<div class="keephint">${esc(this._t("Keep means this is fine. It will not show again.") + askHint)}</div>`;
     }
@@ -1510,7 +1513,11 @@ class HomeCheckupPanel extends HTMLElement {
         }
         const news = this._asked().includes(it.key) ? this._news(it.key) : null;
         const newsLine = news?.text ? `<span class="fixnews">${esc(news.text)}</span>` : "";
-        const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + newsLine;
+        // Written by hand in a YAML file: no button can change it, so the line says where to look.
+        const where = it.file
+          ? `<span class="mean">${esc(this._t("Written in {file}, line {line}. Change it in that file.", { file: it.file, line: it.line }))}</span>`
+          : "";
+        const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine;
         const label = it.link
           ? `<a class="what" href="${esc(it.link)}" data-act="go" data-link="${esc(it.link)}">${name}${info}</a>`
           : `<span class="what">${name}${info}</span>`;
@@ -1525,7 +1532,7 @@ class HomeCheckupPanel extends HTMLElement {
             ? `<button type="button" class="fixbtn" data-act="choose" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._t("Choose another"))}</button>`
             : "";
         const askBtn =
-          !fixBtn && !chooseBtn && ASK_KINDS.includes(f.kind)
+          !fixBtn && !chooseBtn && !it.file && ASK_KINDS.includes(f.kind)
             ? this._asked().includes(it.key) && !news?.again
               ? `<span class="asked">${esc(this._t("Asked"))}</span>`
               : `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`

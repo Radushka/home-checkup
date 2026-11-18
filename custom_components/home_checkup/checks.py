@@ -73,6 +73,9 @@ class Item:
     to: str = ""  # use_new: the entity that looks like its new name
     to_name: str = ""
     choose: bool = False  # no new name was found: the person can choose another entity of the same kind
+    # The automation or script is written by hand in a YAML file, where no button can change it: where to look.
+    file: str = ""  # "packages/scripts.yaml"
+    line: int = 0
     gone: str = ""  # turn_off: the integration that was removed ("Roomba")
     gone_at: str = ""  # turn_off: when, ISO date
     last_ran: str = ""  # ISO time, "" when it never ran
@@ -608,7 +611,9 @@ def _automation_config(hass: HomeAssistant, entity_id: str) -> dict[str, Any] | 
 
 
 @callback
-def check_broken_references(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> list[Finding]:
+def check_broken_references(
+    hass: HomeAssistant, keep: frozenset[str] = frozenset(), facts: YamlFacts | None = None
+) -> list[Finding]:
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
     items: list[Item] = []
@@ -650,7 +655,10 @@ def check_broken_references(hass: HomeAssistant, keep: frozenset[str] = frozense
                 link = f"/config/script/edit/{owner_id.split('.', 1)[1]}"
             last = state.attributes.get("last_triggered") if state else None
             last_ran = last.isoformat() if hasattr(last, "isoformat") else str(last or "")
-            can_fix = domain == "automation" and state is not None and bool(state.attributes.get("id"))
+            # Home Assistant's editor can change only what is in automations.yaml and scripts.yaml. Anything written
+            # in another YAML file (a package, an included folder) gets no button: the line says where it is instead.
+            editable = facts is None or facts.editable(domain, owner_id, state)
+            can_fix = domain == "automation" and state is not None and bool(state.attributes.get("id")) and editable
             for target in missing:
                 item = Item(
                     key=f"ref:{owner_id}:{target}",
@@ -678,8 +686,10 @@ def check_broken_references(hass: HomeAssistant, keep: frozenset[str] = frozense
                         elif gone and domain == "automation":
                             item.fix = "turn_off"
                         # No safe fix by itself: the person can choose what the step should use now. Scripts too.
-                        if not item.fix and (can_fix or domain == "script") and "." in target:
+                        if not item.fix and (can_fix or (domain == "script" and editable)) and "." in target:
                             item.choose = True
+                    if not editable and facts is not None and item.key in facts.spots:
+                        item.file, item.line = facts.spots[item.key]
                 else:
                     device_id = target.rsplit("(", 1)[-1].rstrip(")")
                     deleted_dev = next((d for i, d in dev_reg.deleted_devices.items() if i.startswith(device_id)), None)
@@ -705,6 +715,107 @@ def check_broken_references(hass: HomeAssistant, keep: frozenset[str] = frozense
     ]
 
 
+# ---- 5b. Where a hand-written automation or script lives -----------------------------------------------------
+
+
+@dataclass
+class YamlFacts:
+    """What the YAML files say about automations and scripts. Read in a worker thread; only names and line numbers."""
+
+    scripts: frozenset[str] = frozenset()  # the scripts in scripts.yaml: the ones Home Assistant's editor can change
+    automations: frozenset[str] = frozenset()  # the automation ids in automations.yaml
+    spots: dict[str, tuple[str, int]] = field(default_factory=dict)  # item key -> (file, line) of the missing entity
+
+    def editable(self, domain: str, owner_id: str, state: Any) -> bool:
+        if domain == "script":
+            return owner_id.split(".", 1)[1] in self.scripts
+        return bool(state and str(state.attributes.get("id") or "") in self.automations)
+
+
+_SCRIPT_KEY = re.compile(r"^([A-Za-z0-9_]+):", re.MULTILINE)
+_AUTOMATION_ID = re.compile(r"""^(?:-\s+| {0,2})id:\s*['"]?([^'"\s#]+)""", re.MULTILINE)
+
+
+def broken_refs(hass: HomeAssistant) -> list[tuple[str, str, list[str]]]:
+    """(item key, missing entity, words that mark its owner in a YAML file) for every broken step."""
+    refs: list[tuple[str, str, list[str]]] = []
+    for finding in check_broken_references(hass):
+        for item in finding.items:
+            if not item.old:
+                continue
+            domain, object_id = item.id.split(".", 1)
+            if domain == "script":
+                marks = [rf"^\s*{re.escape(object_id)}:\s*(#.*)?$"]
+            else:
+                state = hass.states.get(item.id)
+                marks = [rf"""^\s*-?\s*alias:\s*['"]?{re.escape(item.name)}['"]?\s*$"""]
+                if state and state.attributes.get("id"):
+                    marks.append(rf"""^\s*-?\s*id:\s*['"]?{re.escape(str(state.attributes['id']))}['"]?\s*$""")
+            refs.append((item.key, item.old, marks))
+    return refs
+
+
+def _yaml_files(root: Path):
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in CORPUS_SKIP_DIRS and not d.startswith(".")]
+        for filename in sorted(filenames):
+            lower = filename.lower()
+            if lower.endswith((".yaml", ".yml")) and not any(part in lower for part in CORPUS_SKIP_NAME_PARTS):
+                yield Path(dirpath) / filename
+
+
+def read_yaml_facts(config_dir: str, refs: list[tuple[str, str, list[str]]]) -> YamlFacts:
+    """Which automations and scripts the editor can change, and where the broken steps of the others are written.
+
+    Runs in a worker thread. Keeps only script names, automation ids, file names and line numbers.
+    """
+    root = Path(config_dir)
+
+    def text_of(path: Path) -> str:
+        try:
+            return path.read_text(encoding="utf-8", errors="ignore") if path.stat().st_size <= CORPUS_MAX_BYTES else ""
+        except OSError:
+            return ""
+
+    facts = YamlFacts(
+        scripts=frozenset(_SCRIPT_KEY.findall(text_of(root / "scripts.yaml"))),
+        automations=frozenset(_AUTOMATION_ID.findall(text_of(root / "automations.yaml"))),
+    )
+    if not refs:
+        return facts
+    wanted = [
+        (key, old, re.compile(rf"(?<![\w.]){re.escape(old)}(?!\w)"), [re.compile(m) for m in marks])
+        for key, old, marks in refs
+    ]
+    # For each broken step: the place nearest below its owner's name. (distance, file, line)
+    best: dict[str, tuple[int, str, int]] = {}
+    seen: dict[str, list[tuple[str, int]]] = {}
+    for path in _yaml_files(root):
+        text = text_of(path)
+        if not any(old in text for _key, old, _token, _marks in wanted):
+            continue
+        lines = text.splitlines()
+        name = path.relative_to(root).as_posix()
+        for key, old, token, marks in wanted:
+            if old not in text:
+                continue
+            for number, line in enumerate(lines):
+                if old not in line or not token.search(line) or line.lstrip().startswith("#"):
+                    continue
+                seen.setdefault(key, []).append((name, number + 1))
+                for back in range(number, -1, -1):
+                    if any(mark.match(lines[back]) for mark in marks):
+                        if key not in best or number - back < best[key][0]:
+                            best[key] = (number - back, name, number + 1)
+                        break
+    for key, _old, _token, _marks in wanted:
+        if key in best:
+            facts.spots[key] = best[key][1:]
+        elif len(seen.get(key, [])) == 1:
+            facts.spots[key] = seen[key][0]
+    return facts
+
+
 # ---- 6. Helpers nothing seems to use ------------------------------------------------------------------------
 
 
@@ -728,12 +839,8 @@ def read_corpus(config_dir: str) -> set[str]:
         except OSError:
             return
 
-    for dirpath, dirnames, filenames in os.walk(root):
-        dirnames[:] = [d for d in dirnames if d not in CORPUS_SKIP_DIRS and not d.startswith(".")]
-        for filename in filenames:
-            lower = filename.lower()
-            if lower.endswith((".yaml", ".yml")) and not any(part in lower for part in CORPUS_SKIP_NAME_PARTS):
-                take(Path(dirpath) / filename)
+    for path in _yaml_files(root):
+        take(path)
     storage = root / ".storage"
     if storage.is_dir():
         for path in storage.iterdir():
@@ -890,13 +997,14 @@ def run_checks(
     now: float | None = None,
     watching_since: float = 0.0,
     run_start: float = 0.0,
+    facts: YamlFacts | None = None,
 ) -> list[Finding]:
     kept = frozenset(keep)
     findings: list[Finding] = []
     for number, check in enumerate((
         lambda: check_failed_integrations(hass, kept),
         lambda: check_log(hass, watch, now or time.time(), kept, watching_since, run_start),
-        lambda: check_broken_references(hass, kept),
+        lambda: check_broken_references(hass, kept, facts),
         lambda: check_leftovers(hass, kept, started_at),
         lambda: check_unavailable(hass, started_at, kept),
         lambda: check_unused_helpers(hass, corpus, kept),

@@ -39,6 +39,10 @@ offers a one-tap fix where the answer is clear:
 4. "Choose another" when there is no clear answer. You pick what the step should use now, from a list of the
    same kind (a light for a light). This works for automations and for scripts made in the UI.
 
+An automation or script that you wrote by hand in another YAML file (a package, for example) gets no button,
+because Home Assistant's editor cannot change it. The line says where it is instead, such as
+"Written in packages/scripts.yaml, line 102", so you can change it there.
+
 It never changes, removes or restarts anything by itself. For a few clear cases (leftover entities, helpers
 made in the UI that nothing uses, and the automation fixes above) it offers a safe fix on its page. A fix happens only when an admin taps it.
 It shows the exact list first, makes a backup, and can be undone for 30 days.
@@ -88,7 +92,8 @@ Home Checkup is built with your privacy in mind. This is exactly what it does an
 2. It never opens `secrets.yaml`, or any file named like a secret, password, token or key file.
 3. It never opens the files where Home Assistant keeps passwords, keys and sign-ins
    (such as `.storage/core.config_entries`, `.storage/auth` and the cloud files).
-4. From your YAML files and dashboards it picks out only helper names (like `input_boolean.guest_mode`).
+4. From your YAML files and dashboards it picks out only helper names (like `input_boolean.guest_mode`),
+   the names of your scripts and automations, and the file name and line number of a broken step.
    All other text is dropped at once and never kept.
 5. Passwords, keys, tokens, sign-in addresses and email addresses in log messages are hidden
    before a message is kept or shown.
