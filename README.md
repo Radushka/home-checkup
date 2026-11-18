@@ -45,9 +45,21 @@ their lines from your YAML files yourself.
 
 ## Install
 
-Home Checkup installs through [HACS](https://hacs.xyz).
+Home Checkup installs from this repository through Home Assistant's store for custom integrations. On Home
+Assistant 2026.11 and newer that is the built-in **Marketplace**. On older versions it is [HACS](https://hacs.xyz).
 
-1. In Home Assistant, open **HACS**.
+[![Open this repository in Home Assistant.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Radushka&repository=home-checkup&category=integration)
+
+### Home Assistant 2026.11 and newer (Marketplace)
+
+1. Open **Settings > Marketplace**. The first time, tick **I understand the risks**.
+2. Choose **Add from link** and paste `https://github.com/Radushka/home-checkup`. Home Assistant asks you to
+   connect GitHub once, with a short code.
+3. Install **Home Checkup**, restart Home Assistant if it asks, then press **Set up**.
+
+### Home Assistant 2025.11 to 2026.10 (HACS)
+
+1. Open **HACS**.
 2. Open the menu (three dots, top right) and choose **Custom repositories**.
 3. Paste `https://github.com/Radushka/home-checkup`, choose **Integration**, and press **Add**.
 4. Find **Home Checkup** in HACS and press **Download**.
