@@ -52,7 +52,7 @@ Assistant 2026.11 and newer that is the built-in **Marketplace**. On older versi
 
 ### Home Assistant 2026.11 and newer (Marketplace)
 
-1. Open **Settings > Marketplace**. The first time, tick **I understand the risks**.
+1. Open **Settings > Marketplace**. The first time, tick **I understand the risks and agree** and press **Continue**.
 2. Choose **Add from link** and paste `https://github.com/Radushka/home-checkup`. Home Assistant asks you to
    connect GitHub once, with a short code.
 3. Install **Home Checkup**, restart Home Assistant if it asks, then press **Set up**.
