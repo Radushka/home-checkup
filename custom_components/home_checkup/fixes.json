@@ -7,6 +7,30 @@
       "status": "fixed",
       "fixed_in": "0.6.8",
       "about": "A script step points to a missing media player: Choose another, or the file and line for YAML scripts."
+    },
+    {
+      "code": "d36c399b4f87b8c3ab82a80603e0cd63519e795205370afa446d1d50f656ec18",
+      "status": "fixed",
+      "fixed_in": "0.6.10",
+      "about": "Eufy Security wrapper line 'Unexpected exception': the page shows the real error under it."
+    },
+    {
+      "code": "617e79b1f2315dba20e775795a6cd2678abc8b05616f6b8144c10815e6d6d59d",
+      "status": "fixed",
+      "fixed_in": "0.6.10",
+      "about": "Eufy Security wrapper line 'Task exception was never retrieved': the page shows the real error."
+    },
+    {
+      "code": "c28bd17089394432ab80dc41db34f95cc039551555a3c445a8b94839d0367fd3",
+      "status": "fixed",
+      "fixed_in": "0.6.10",
+      "about": "Wrapper line 'Task exception was never retrieved': the page shows the real error."
+    },
+    {
+      "code": "2519fa26adf183b1e3ac280f15d6dc6392d4e18f4e9df83d2fd2de352ac9832e",
+      "status": "fixed",
+      "fixed_in": "0.6.10",
+      "about": "Camera does not support streaming: explained in plain words, with what to try."
     }
   ]
 }

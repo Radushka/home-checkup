@@ -221,11 +221,12 @@ class Checkup:
 
     # ---- keep list --------------------------------------------------------------------------------------------
 
-    async def async_set_keep(self, key: str, keep: bool) -> None:
+    async def async_set_keep(self, key: str | list[str], keep: bool) -> None:
+        keys = [key] if isinstance(key, str) else key
         if keep:
-            self.keep.add(key)
+            self.keep.update(keys)
         else:
-            self.keep.discard(key)
+            self.keep.difference_update(keys)
         await self._store.async_save({"keep": sorted(self.keep)})
         self.refresh()
 

@@ -69,6 +69,7 @@ class Item:
     startup: bool = False  # for log items: only right after a restart
     times: int = 0  # for log items: how often in the last 24 hours, so the page can show it at a glance
     last: str = ""  # for log items: the clock time it was last seen
+    last_at: float = 0  # for log items: the same moment as a timestamp, so the page can add the day when it was not today
     # For broken automation steps: the one-tap fix Home Checkup can offer, and when the automation last ran.
     fix: str = ""  # "use_new" (a renamed entity), "remove_step" (only that step is broken) or "turn_off"
     old: str = ""  # the missing entity id
@@ -272,6 +273,7 @@ def check_log(
                             startup=g.startup_only(since),
                             times=n,
                             last=_clock(g.last_seen),
+                            last_at=g.last_seen,
                         )
                         for g, n in level_groups
                     ],

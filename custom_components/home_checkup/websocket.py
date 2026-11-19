@@ -88,15 +88,21 @@ async def ws_acted(hass: HomeAssistant, connection: websocket_api.ActiveConnecti
 @websocket_api.websocket_command(
     {
         vol.Required("type"): f"{DOMAIN}/keep",
-        vol.Required("key"): vol.All(str, vol.Length(min=1, max=500)),
+        vol.Exclusive("key", "what"): vol.All(str, vol.Length(min=1, max=500)),
+        # "Ignore all" of one group, and its Undo: many items in one step.
+        vol.Exclusive("keys", "what"): vol.All([vol.All(str, vol.Length(min=1, max=500))], vol.Length(min=1, max=500)),
         vol.Optional("keep", default=True): bool,
     }
 )
 @websocket_api.async_response
 async def ws_keep(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
     """Mark an item "Keep" (it never shows again), or take the mark away. This changes only our own list."""
+    keys = msg.get("keys") or ([msg["key"]] if "key" in msg else [])
+    if not keys:
+        connection.send_error(msg["id"], "invalid_format", "key or keys is needed")
+        return
     if checkup := _checkup(hass, connection, msg):
-        await checkup.async_set_keep(msg["key"], msg["keep"])
+        await checkup.async_set_keep(keys, msg["keep"])
         connection.send_result(msg["id"], _report(checkup, connection))
 
 

@@ -78,6 +78,9 @@ const WORDS = {
     "Copies a report you can paste into a bug report.": "Copie un rapport à coller dans un signalement de bogue.",
     "Could not read the full error.": "Impossible de lire l’erreur complète.",
     "Ignored. It will not show again.": "Ignoré. Cela ne s’affichera plus.",
+    "Ignore all": "Tout ignorer",
+    "Ignored {n} item. They will not show again.": "{n} élément ignoré. Il ne s’affichera plus.",
+    "Ignored {n} items. They will not show again.": "{n} éléments ignorés. Ils ne s’afficheront plus.",
     "Undo": "Annuler",
     "Ignored items ({n})": "Éléments ignorés ({n})",
     "Show again": "Afficher de nouveau",
@@ -316,6 +319,9 @@ const WORDS = {
     "Copies a report you can paste into a bug report.": "Kopiert einen Bericht zum Einfügen in eine Fehlermeldung.",
     "Could not read the full error.": "Der vollständige Fehler konnte nicht gelesen werden.",
     "Ignored. It will not show again.": "Ignoriert. Es wird nicht mehr angezeigt.",
+    "Ignore all": "Alle ignorieren",
+    "Ignored {n} item. They will not show again.": "{n} Eintrag ignoriert. Er wird nicht mehr angezeigt.",
+    "Ignored {n} items. They will not show again.": "{n} Einträge ignoriert. Sie werden nicht mehr angezeigt.",
     "Undo": "Rückgängig",
     "Ignored items ({n})": "Ignorierte Einträge ({n})",
     "Show again": "Wieder zeigen",
@@ -554,6 +560,9 @@ const WORDS = {
     "Copies a report you can paste into a bug report.": "Copia un informe para pegar en un aviso de error.",
     "Could not read the full error.": "No se pudo leer el error completo.",
     "Ignored. It will not show again.": "Ignorado. No volverá a mostrarse.",
+    "Ignore all": "Ignorar todo",
+    "Ignored {n} item. They will not show again.": "{n} elemento ignorado. No volverá a mostrarse.",
+    "Ignored {n} items. They will not show again.": "{n} elementos ignorados. No volverán a mostrarse.",
     "Undo": "Deshacer",
     "Ignored items ({n})": "Elementos ignorados ({n})",
     "Show again": "Mostrar de nuevo",
@@ -892,6 +901,7 @@ const ASK_URL = "https://lukaps.com/homecheckup/api/ask.php";
 const STATUS_URL = "https://lukaps.com/homecheckup/api/status.php";
 const CHOOSE_SHOWN = 40; // choices shown at once in "Choose another"
 const NEWS_EVERY = 6 * 3600 * 1000; // how often the page asks what happened to the requests of this browser
+const LONG_GROUP = 4; // from here a group offers "Ignore all"
 const MANY_TIMES = 50; // from here a count stands out in amber
 const DETAIL_LINES = 12; // lines of a long error shown before "Show all lines"
 const ASK_KINDS = ["log_errors", "broken_references", "failed_integrations"];
@@ -1050,6 +1060,27 @@ class HomeCheckupPanel extends HTMLElement {
     if (keep) delete this._details[key]; // an ignored line leaves; it must not come back opened after Undo
     await this._call({ type: "home_checkup/keep", key, keep });
     this._say(keep ? { text: this._t("Ignored. It will not show again."), act: "undo", data: key } : null);
+  }
+
+  /** "Ignore all" of one group, and its Undo. One step for the whole group, and one Undo brings all of it back. */
+  async _keepAll(keys, keep) {
+    if (!keys.length) return;
+    if (keep) for (const key of keys) delete this._details[key];
+    await this._call({ type: "home_checkup/keep", keys, keep });
+    this._say(keep ? { text: this._tn(keys.length, "Ignored {n} item. They will not show again.", "Ignored {n} items. They will not show again."), act: "undoall", data: keys.join("\n") } : null);
+  }
+
+  /** When a log error was last seen. A time before today gets its day ("Tue 20:40"), so it does not read as today. */
+  _lastSeen(it) {
+    if (!it.last_at) return it.last || "";
+    const then = new Date(it.last_at * 1000);
+    if (then.toDateString() === new Date().toDateString()) return it.last || "";
+    try {
+      const day = then.toLocaleDateString(this._hass?.locale?.language || undefined, { weekday: "short" }).replace(/\.$/, "");
+      return `${day} ${it.last || ""}`.trim();
+    } catch {
+      return it.last || "";
+    }
   }
 
   _say(toast) {
@@ -1702,6 +1733,8 @@ class HomeCheckupPanel extends HTMLElement {
     const r = this._report;
     if (!r) return "";
     const findings = r.findings ?? [];
+    // One width for the "last seen" column on the whole page: wider only when a line needs its day.
+    this._days = findings.some((f) => (f.items ?? []).some((it) => it.last_at && this._lastSeen(it) !== (it.last || "")));
     // One number everywhere: the headline counts what the Repairs note and the sensor count. A short burst of log
     // errors (in_note false) is shown under "To watch" and does not raise the number.
     const warnings = findings.filter((f) => f.severity === "warning" && f.in_note !== false);
@@ -1821,7 +1854,7 @@ class HomeCheckupPanel extends HTMLElement {
         const pill = it.new ? `<span class="newpill">${esc(this._t("New"))}</span>` : "";
         const meta =
           isLog && it.times
-            ? `<span class="mc mnew">${pill}</span><span class="mc times ${it.times >= MANY_TIMES ? "many" : ""}">${it.times}×</span><span class="mc last">${esc(it.last || "")}</span>`
+            ? `<span class="mc mnew">${pill}</span><span class="mc times ${it.times >= MANY_TIMES ? "many" : ""}">${it.times}×</span><span class="mc last">${esc(this._lastSeen(it))}</span>`
             : pill;
         // "Asked" is about our work, not about the error, so it sits with our words.
         const askedLine = asked && !newsLine ? `<span class="askedline">${esc(this._t("Asked"))}</span>` : "";
@@ -1844,13 +1877,14 @@ class HomeCheckupPanel extends HTMLElement {
         // The actions live in the opened line: first you look, then you choose what to do.
         const actions = `${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Ignore"))}</button>`;
         const opened = detail ? this._detailHtml(it.key, detail, actions, isLog ? null : it) : "";
-        return `<li class="${detail ? "on" : ""}"><button type="button" class="what rowbtn" data-act="detail" data-key="${esc(it.key)}" data-log="${isLog ? "1" : ""}" aria-expanded="${detail ? "true" : "false"}"><span class="rtop"><span class="nm">${esc(it.name)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>${meta ? `<span class="rmeta ${isLog && it.times ? "cols" : ""}">${meta}</span>` : ""}</span>${info}</button>${opened}</li>`;
+        return `<li class="${detail ? "on" : ""}"><button type="button" class="what rowbtn" data-act="detail" data-key="${esc(it.key)}" data-log="${isLog ? "1" : ""}" aria-expanded="${detail ? "true" : "false"}"><span class="rtop"><span class="nm">${esc(it.name)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>${meta ? `<span class="rmeta ${isLog && it.times ? `cols${this._days ? " days" : ""}` : ""}">${meta}</span>` : ""}</span>${info}</button>${opened}</li>`;
       })
       .join("");
     const more =
       items.length > SHOWN
         ? `<button type="button" class="more" data-act="more" data-id="${esc(id)}">${esc(open ? this._t("Show fewer") : this._t("Show all {n}", { n: items.length }))}</button>`
         : "";
+    const box0 = rows && f.kind !== "log_stopped";
     const step = STEPS[f.action];
     let openLink = f.link
       ? `<a class="open" href="${esc(f.link)}" data-act="go" data-link="${esc(f.link)}">${esc(this._t(placeName(f.link)))}${ARROW}</a>`
@@ -1871,6 +1905,11 @@ class HomeCheckupPanel extends HTMLElement {
         ? `<button type="button" class="fixbtn" data-act="fix" data-key="${esc(f.kind)}">${esc(this._t("Remove…"))}</button>`
         : "";
     // A log group is named by its integration alone; a small count says it is about the log, and how much.
+    // A long group can be set aside in one step. Things already fixed ("stopped") have nothing to ignore.
+    const ignoreAll =
+      box0 && items.length >= LONG_GROUP
+        ? `<button type="button" class="ignoreall" data-act="keepall" data-id="${esc(id)}">${esc(this._t("Ignore all"))}</button>`
+        : "";
     const count = isLog
       ? `<span class="gcount">${esc(f.kind === "log_errors" ? this._tn(items.length, "{n} error", "{n} errors") : this._tn(items.length, "{n} warning", "{n} warnings"))}</span>`
       : "";
@@ -1881,7 +1920,7 @@ class HomeCheckupPanel extends HTMLElement {
       <section class="finding ${note ? "note" : ""}" data-kind="${esc(f.kind)}">
         <div class="head">
           <div class="htext"><span class="title">${esc(title)}</span>${count}</div>
-          <div class="acts">${fixButton}${openLink}</div>
+          <div class="acts">${ignoreAll}${fixButton}${openLink}</div>
         </div>
         ${stepLine}
         ${box ? `<ul class="box ${isLog ? "log" : ""}">${rows}</ul>` : ""}
@@ -2027,6 +2066,11 @@ class HomeCheckupPanel extends HTMLElement {
       this._keep(el.dataset.key, true);
     } else if (act === "unkeep" || act === "undo") {
       this._keep(el.dataset.key, false);
+    } else if (act === "keepall") {
+      const f = (this._report?.findings ?? []).find((x) => `${x.kind}:${x.integration ?? ""}` === el.dataset.id);
+      this._keepAll((f?.items ?? []).map((it) => it.key), true);
+    } else if (act === "undoall") {
+      this._keepAll((el.dataset.key || "").split("\n").filter(Boolean), false);
     } else if (act === "more") {
       const id = el.dataset.id;
       this._open.has(id) ? this._open.delete(id) : this._open.add(id);
@@ -2149,6 +2193,8 @@ const STYLE = `
   .fixbtn:hover { border-color: var(--dim); }
   .rowacts { display: flex; align-items: center; gap: 6px; flex: none; }
   li .fixbtn { color: var(--primary-color); border-color: color-mix(in srgb, var(--primary-color) 40%, transparent); }
+  .ignoreall { border: 0; background: transparent; color: var(--dim); font: inherit; font-size: 14px; padding: 4px 8px; margin-right: 4px; cursor: pointer; white-space: nowrap; border-radius: 6px; }
+  .ignoreall:hover, .ignoreall:focus-visible { color: var(--primary-text-color); }
   .open { font-size: 14px; font-weight: 500; color: var(--primary-color); text-decoration: none; padding: 4px 2px; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
   .open .arrow { flex: none; opacity: 0.85; }
   ul { list-style: none; margin: 10px 0 0; padding: 0; }
@@ -2269,6 +2315,7 @@ const STYLE = `
   .times.many { color: var(--warn); font-weight: 600; }
   .rmeta .newpill { margin-right: 0; }
   .rmeta.cols { display: inline-grid; grid-template-columns: 46px 44px 48px; gap: 0 6px; align-items: baseline; }
+  .rmeta.cols.days { grid-template-columns: 46px 44px 78px; }
   .rmeta.cols .mc { text-align: right; }
   .rmeta.cols .mnew { text-align: left; }
   .askedline { font-size: 13px; color: var(--dim); margin-top: 4px; }
@@ -2293,6 +2340,9 @@ const STYLE = `
   .keephint.foot { margin-top: 6px; }
   @media (max-width: 600px) {
     .rtop { flex-wrap: wrap; gap: 2px 12px; }
+    .head { flex-wrap: wrap; row-gap: 2px; }
+    .head .acts { margin-left: auto; }
+    .head > .htext { flex: 1 1 auto; }
     .rmeta.cols { display: inline-flex; gap: 8px; }
     .rmeta.cols .mnew { order: 3; }
     .rmeta.cols .mnew:empty { display: none; }
