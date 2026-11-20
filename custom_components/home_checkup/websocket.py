@@ -44,6 +44,9 @@ def _checkup(hass: HomeAssistant, connection: websocket_api.ActiveConnection, ms
     return checkup
 
 
+# The full report names integrations, automations, files and log lines: it is for admins only.
+# Everyone else (a wall tablet, a family account) reads the sensor: the count, the headline and the group names.
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/report"})
 @callback
 def ws_report(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
@@ -52,10 +55,9 @@ def ws_report(hass: HomeAssistant, connection: websocket_api.ActiveConnection, m
 
 
 def _report(checkup, connection: websocket_api.ActiveConnection) -> dict[str, Any]:
-    """The report; admins also get the recent fixes (with Undo)."""
+    """The report with the recent fixes (with Undo). Every command that sends it is for admins only."""
     report = checkup.report()
-    if connection.user and connection.user.is_admin:
-        report["fixes"] = checkup.fixes.recent()
+    report["fixes"] = checkup.fixes.recent()
     return report
 
 

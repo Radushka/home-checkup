@@ -156,10 +156,12 @@ Home Checkup is built with your privacy in mind. This is exactly what it does an
    your home, in Home Assistant's own storage folder, for 7 days.
 6. Passwords, keys, tokens, sign-in addresses and email addresses in log messages are hidden
    before a message is kept or shown.
-7. Log messages can name people and devices (for example "Anna's iPhone" or a serial number). They are shown
+7. The full list is for admins only. Other users of your home (a wall tablet, a family account) can read only
+   the sensor: the number, the headline and the names of the groups, such as "2 batteries running low".
+8. Log messages can name people and devices (for example "Anna's iPhone" or a serial number). They are shown
    only on your own Home Checkup page, to admins. Home Checkup never sends them by itself. Before you send
    a request with "Ask", you see every word and can remove any name.
-8. Nothing is written to disk except your own "Ignore" list, a 7-day error history (counts and the hidden-name
+9. Nothing is written to disk except your own "Ignore" list, a 7-day error history (counts and the hidden-name
    message text only, in Home Assistant's own storage folder) and, when you use a safe fix, its backup
    (in `/config/home_checkup_backups`, kept in your home).
 
