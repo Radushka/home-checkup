@@ -186,6 +186,8 @@ class Fixes:
         record = self._record(fix_id)
         if record.get("undone_at"):
             raise FixError("This fix was already undone.")
+        if record["kind"] == "offline_device":
+            return await self._undo_disable(record)
         if record["kind"] != "leftover_entities":
             raise FixError("This is brought back by the Home Checkup page.")
         ent_reg = er.async_get(self.hass)
@@ -216,6 +218,48 @@ class Fixes:
                 unit_of_measurement=snap.get("unit_of_measurement"),
             )
             back += entry.entity_id == snap["entity_id"]
+        record["undone_at"] = dt_util.utcnow().isoformat()
+        record["restored"] = back
+        await self._save()
+        return _public(record)
+
+    # ---- 3b. a device that is offline for good: switch it off, never delete it -------------------------------
+
+    async def async_disable_device(self, key: str, findings: list) -> dict[str, Any]:
+        """Disable one offline device from the list shown now. Home Assistant keeps it, with all its settings."""
+        item = next((i for f in findings if f.kind == "unavailable" for i in f.items if i.key == key), None)
+        if item is None or item.fix != "disable":
+            raise FixError("This list is too old. Open it again to see the latest list.")
+        dev_reg = dr.async_get(self.hass)
+        device = dev_reg.async_get(item.id)
+        if device is None or device.disabled_by is not None:
+            raise FixError("This device is no longer there, so nothing was changed.")
+        fix_id = secrets.token_hex(6)
+        record = {
+            "id": fix_id,
+            "kind": "offline_device",
+            "at": dt_util.utcnow().isoformat(),
+            "asked": 1,
+            "items": [{"name": item.name, "id": item.id}],
+        }
+        record["backup"] = await self._backup(fix_id, record, copy_registry=True)
+        dev_reg.async_update_device(item.id, disabled_by=dr.DeviceEntryDisabler.USER)
+        done = (after := dev_reg.async_get(item.id)) is not None and after.disabled_by is not None
+        record["removed"] = int(done)
+        record["status"] = "done" if done else "check"
+        self.records.insert(0, record)
+        await self._save()
+        return _public(record)
+
+    async def _undo_disable(self, record: dict[str, Any]) -> dict[str, Any]:
+        dev_reg = dr.async_get(self.hass)
+        device_id = record["items"][0]["id"]
+        device = dev_reg.async_get(device_id)
+        back = 0
+        # Only switch on again what this fix switched off. If the person changed it since, leave their choice.
+        if device is not None and device.disabled_by is dr.DeviceEntryDisabler.USER:
+            dev_reg.async_update_device(device_id, disabled_by=None)
+            back = 1
         record["undone_at"] = dt_util.utcnow().isoformat()
         record["restored"] = back
         await self._save()

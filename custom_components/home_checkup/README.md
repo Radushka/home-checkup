@@ -9,7 +9,9 @@ Once a day it tells you if your home is healthy, or which few things need a look
 1. Errors in the log, grouped by cause and by the integration that caused them.
 2. Integrations that did not start.
 3. Leftover entities and devices that nothing provides any more.
-4. Entities that have been unavailable for a long time.
+4. Devices and entities that have been offline for a long time. A device with nothing left that works is one
+   line, with the day it went offline. The day stays true after a restart. A wall tablet that only sleeps
+   (Browser Mod, Fully Kiosk) is not listed.
 5. Automations and scripts that point to things that no longer exist.
 6. Helpers that nothing seems to use.
 7. Batteries running low (under 15%), so you can change them before a device stops. Phones, tablets and
@@ -75,6 +77,9 @@ because Home Assistant's editor cannot change it. The line says where it is inst
 It never changes, removes or restarts anything by itself. For a few clear cases (leftover entities, helpers
 made in the UI that nothing uses, and the automation fixes above) it offers a safe fix on its page. A fix happens only when an admin taps it.
 It shows the exact list first, makes a backup, and can be undone for 30 days.
+
+An offline device has a "Disable" button. It only switches the device off in Home Assistant. Nothing is
+deleted, the device keeps its settings, and Undo switches it on again.
 
 Helpers written in YAML files are listed, but the button cannot remove them. The page marks them, and you remove
 their lines from your YAML files yourself.

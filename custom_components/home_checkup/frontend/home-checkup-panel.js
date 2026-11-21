@@ -34,6 +34,16 @@ const WORDS = {
     "{n} leftover devices": "{n} appareils orphelins",
     "{n} entity offline for a long time": "{n} entité hors ligne depuis longtemps",
     "{n} entities offline for a long time": "{n} entités hors ligne depuis longtemps",
+    "{n} device offline for a long time": "{n} appareil hors ligne depuis longtemps",
+    "{n} devices offline for a long time": "{n} appareils hors ligne depuis longtemps",
+    "{n} devices and entities offline for a long time": "{n} appareils et entités hors ligne depuis longtemps",
+    "Offline since {date}": "Hors ligne depuis le {date}",
+    "Offline since {date} or earlier": "Hors ligne depuis le {date} ou avant",
+    "{n} entity": "{n} entité",
+    "{n} entities": "{n} entités",
+    "Disable": "Désactiver",
+    "Disabled. Nothing was deleted.": "Désactivé. Rien n’a été supprimé.",
+    "Disabled {name}": "{name} désactivé",
     "{n} helper nothing seems to use": "{n} entrée que rien ne semble utiliser",
     "{n} helpers nothing seems to use": "{n} entrées que rien ne semble utiliser",
     "Their devices do not work until they start again.": "Leurs appareils ne marchent pas tant qu’elles ne redémarrent pas.",
@@ -275,6 +285,16 @@ const WORDS = {
     "{n} leftover devices": "{n} verwaiste Geräte",
     "{n} entity offline for a long time": "{n} Entität lange offline",
     "{n} entities offline for a long time": "{n} Entitäten lange offline",
+    "{n} device offline for a long time": "{n} Gerät lange offline",
+    "{n} devices offline for a long time": "{n} Geräte lange offline",
+    "{n} devices and entities offline for a long time": "{n} Geräte und Entitäten lange offline",
+    "Offline since {date}": "Offline seit {date}",
+    "Offline since {date} or earlier": "Offline seit {date} oder länger",
+    "{n} entity": "{n} Entität",
+    "{n} entities": "{n} Entitäten",
+    "Disable": "Deaktivieren",
+    "Disabled. Nothing was deleted.": "Deaktiviert. Nichts wurde gelöscht.",
+    "Disabled {name}": "{name} deaktiviert",
     "{n} helper nothing seems to use": "{n} Helfer, den nichts zu nutzen scheint",
     "{n} helpers nothing seems to use": "{n} Helfer, die nichts zu nutzen scheint",
     "Their devices do not work until they start again.": "Ihre Geräte funktionieren erst wieder, wenn sie starten.",
@@ -516,6 +536,16 @@ const WORDS = {
     "{n} leftover devices": "{n} dispositivos sobrantes",
     "{n} entity offline for a long time": "{n} entidad sin conexión hace tiempo",
     "{n} entities offline for a long time": "{n} entidades sin conexión hace tiempo",
+    "{n} device offline for a long time": "{n} dispositivo sin conexión hace tiempo",
+    "{n} devices offline for a long time": "{n} dispositivos sin conexión hace tiempo",
+    "{n} devices and entities offline for a long time": "{n} dispositivos y entidades sin conexión hace tiempo",
+    "Offline since {date}": "Sin conexión desde el {date}",
+    "Offline since {date} or earlier": "Sin conexión desde el {date} o antes",
+    "{n} entity": "{n} entidad",
+    "{n} entities": "{n} entidades",
+    "Disable": "Desactivar",
+    "Disabled. Nothing was deleted.": "Desactivado. No se borró nada.",
+    "Disabled {name}": "{name} desactivado",
     "{n} helper nothing seems to use": "{n} ayudante que nada parece usar",
     "{n} helpers nothing seems to use": "{n} ayudantes que nada parece usar",
     "Their devices do not work until they start again.": "Sus dispositivos no funcionan hasta que vuelvan a arrancar.",
@@ -972,6 +1002,12 @@ class HomeCheckupPanel extends HTMLElement {
     if (f.kind === "log_errors") return this._t("Errors from {name}", { name: who });
     if (f.kind === "log_warnings") return this._t("Warnings from {name}", { name: who });
     if (f.kind === "log_stopped") return `${who}: ${this._t("The errors stopped")}`;
+    if (f.kind === "unavailable") {
+      // Whole devices are one line each. The title says what is on the list.
+      const devices = (f.items || []).filter((i) => i.fix === "disable").length;
+      if (devices && devices === n) return this._tn(n, "{n} device offline for a long time", "{n} devices offline for a long time");
+      if (devices) return this._t("{n} devices and entities offline for a long time", { n });
+    }
     const pair = TITLES[f.kind];
     return pair ? this._tn(n, pair[0], pair[1]) : f.title;
   }
@@ -1205,6 +1241,19 @@ class HomeCheckupPanel extends HTMLElement {
     this._fixing = key;
     this._render();
     try {
+      if (item.fix === "disable") {
+        // An offline device: Home Assistant keeps it and its settings, it only stops listing it as offline.
+        const result = await this._hass.callWS({ type: "home_checkup/fix_device", key });
+        this._report = result.report;
+        this._say({
+          text: result.fix.status !== "done" ? this._t("It did not fully change. You can undo it.") : this._t("Disabled. Nothing was deleted."),
+          act: "fixundo",
+          data: result.fix.id,
+        });
+        this._fixing = null;
+        this._render();
+        return;
+      }
       let before;
       const autoId = this._autoId(item);
       if (item.fix === "use_new" || item.fix === "remove_step") {
@@ -1352,7 +1401,7 @@ class HomeCheckupPanel extends HTMLElement {
     this._render();
     try {
       let result;
-      if (fix.kind === "leftover_entities") {
+      if (fix.kind === "leftover_entities" || fix.kind === "offline_device") {
         result = await this._hass.callWS({ type: "home_checkup/fix_undo", fix_id: id });
       } else if (["use_new", "remove_step", "turn_off", "choose"].includes(fix.kind)) {
         const saved = await this._hass.callWS({ type: "home_checkup/fix_automation_saved", fix_id: id });
@@ -1632,6 +1681,8 @@ class HomeCheckupPanel extends HTMLElement {
                 ? this._t("Removed a step from {name}", { name: auto })
                 : f.kind === "turn_off"
                 ? this._t("Turned off {name}", { name: auto })
+                : f.kind === "offline_device"
+                ? this._t("Disabled {name}", { name: auto })
                 : this._tn(f.removed, "Removed {n} helper", "Removed {n} helpers");
         const open = !f.undone_at && new Date(f.undo_until) > new Date();
         const side = f.undone_at
@@ -1842,6 +1893,11 @@ class HomeCheckupPanel extends HTMLElement {
                   : this._t("No longer exists");
           infoText = `${why} · ${this._lastRan(it.last_ran)}`;
         }
+        if (f.kind === "unavailable" && it.since) {
+          const date = new Date(it.since).toLocaleDateString(this._hass?.locale?.language || undefined, { day: "numeric", month: "short" });
+          infoText = this._t(it.or_earlier ? "Offline since {date} or earlier" : "Offline since {date}", { date });
+          if (it.parts) infoText += ` · ${this._tn(it.parts, "{n} entity", "{n} entities")}`;
+        }
         const news = this._asked().includes(it.key) ? this._news(it.key) : null;
         const newsLine = news?.text ? `<span class="fixnews">${esc(news.text)}</span>` : "";
         // Written by hand in a YAML file: no button can change it, so the line says where to look.
@@ -1860,7 +1916,7 @@ class HomeCheckupPanel extends HTMLElement {
         const askedLine = asked && !newsLine ? `<span class="askedline">${esc(this._t("Asked"))}</span>` : "";
         const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine + askedLine;
         const detail = this._details[it.key];
-        const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : "";
+        const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : it.fix === "disable" ? "Disable" : "";
         const fixBtn = fixLabel
           ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : this._t(fixLabel))}</button>`
           : "";
@@ -1952,7 +2008,9 @@ class HomeCheckupPanel extends HTMLElement {
     if (item) {
       // Not a log line: the id for people who want it, a way to the thing itself, and the actions.
       const link = item.link ? `<a class="dlink" href="${esc(item.link)}" data-act="go" data-link="${esc(item.link)}">${esc(this._t(placeName(item.link)))}${ARROW}</a>` : "";
-      return `<div class="errdetail">${item.id ? `<div class="dmeta code">${esc(item.id)}</div>` : ""}${row(link, "")}</div>`;
+      // A device has no id worth reading, so its opened line is only the way there and the actions.
+      const showId = item.id && item.fix !== "disable";
+      return `<div class="errdetail${showId ? "" : " bare"}">${showId ? `<div class="dmeta code">${esc(item.id)}</div>` : ""}${row(link, "")}</div>`;
     }
     if (d.error) return `<div class="errdetail"><div class="dmeta">${esc(d.error)}</div>${row("", "")}</div>`;
     if (!d.data) return `<div class="errdetail"><div class="dmeta">…</div>${row("", "")}</div>`;
@@ -2328,6 +2386,8 @@ const STYLE = `
   ul.box .errdetail { margin: 0; padding: 12px 16px 0; background: none; border-radius: 0; }
   ul.box .errdetail .dacts { margin: 10px -16px 0; padding: 8px 16px; background: color-mix(in srgb, var(--primary-text-color) 6%, transparent); }
   ul.box .errdetail .dtext { margin-bottom: 0; }
+  ul.box .errdetail.bare { padding-top: 0; }
+  ul.box .errdetail.bare .dacts { margin-top: 0; }
   /* In the action row every button weighs the same: none is pushed ahead of the others. */
   ul.box .errdetail .dacts .ghost, ul.box .errdetail .dacts .fixbtn { color: var(--primary-text-color); border-color: var(--line); }
   li.on > .rowbtn { background: color-mix(in srgb, var(--primary-text-color) 6%, transparent); }

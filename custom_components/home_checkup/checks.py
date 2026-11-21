@@ -71,7 +71,7 @@ class Item:
     last: str = ""  # for log items: the clock time it was last seen
     last_at: float = 0  # for log items: the same moment as a timestamp, so the page can add the day when it was not today
     # For broken automation steps: the one-tap fix Home Checkup can offer, and when the automation last ran.
-    fix: str = ""  # "use_new" (a renamed entity), "remove_step" (only that step is broken) or "turn_off"
+    fix: str = ""  # "use_new" (a renamed entity), "remove_step" (only that step is broken), "turn_off", or "disable" (an offline device)
     old: str = ""  # the missing entity id
     to: str = ""  # use_new: the entity that looks like its new name
     to_name: str = ""
@@ -82,6 +82,10 @@ class Item:
     gone: str = ""  # turn_off: the integration that was removed ("Roomba")
     gone_at: str = ""  # turn_off: when, ISO date
     last_ran: str = ""  # ISO time, "" when it never ran
+    # For things that are offline: since when (ISO), whether it may be longer, and for a device how many entities.
+    since: str = ""
+    or_earlier: bool = False
+    parts: int = 0
 
 
 @dataclass
@@ -397,49 +401,122 @@ def check_leftovers(
 # ---- 4. Entities unavailable for a long time ----------------------------------------------------------------
 
 
+# A wall tablet's own entities (Browser Mod, Fully Kiosk) go unavailable when the tablet sleeps. That is not a fault.
+SLEEPING_PLATFORMS = frozenset({"browser_mod", "fully_kiosk"})
+
+
 @callback
-def check_unavailable(hass: HomeAssistant, started_at: datetime | None, keep: frozenset[str] = frozenset()) -> list[Finding]:
+def check_unavailable(
+    hass: HomeAssistant,
+    started_at: datetime | None,
+    keep: frozenset[str] = frozenset(),
+    memory: dict[str, list[Any]] | None = None,
+) -> list[Finding]:
+    """Things that have been offline for a long time. A device with nothing left that works is one line.
+
+    Home Assistant forgets "unavailable since" at every restart. `memory` is our own note per entity:
+    [the earliest moment we know it was offline, whether that moment is exact]. With it the date stays true
+    across restarts, and a thing we already listed is listed again right after a restart.
+    """
     now = dt_util.utcnow()
     ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    memory = memory if memory is not None else {}
     up_long = started_at is not None and now - started_at >= UNAVAILABLE_SINCE_START_AFTER
-    items: list[Item] = []
+
+    # Forget what came back, was removed or was switched off.
+    for entity_id in list(memory):
+        state = hass.states.get(entity_id)
+        entry = ent_reg.async_get(entity_id)
+        if (state is not None and state.state != STATE_UNAVAILABLE) or (state is None and (entry is None or entry.disabled_by)):
+            del memory[entity_id]
+
+    lone: list[tuple[str, Any, datetime, bool]] = []  # entity id, registry entry, since, exact
+    by_device: dict[str, list[tuple[str, Any, datetime, bool]]] = {}
     for state in hass.states.async_all():
         if state.state != STATE_UNAVAILABLE or state.attributes.get(ATTR_RESTORED):
             continue  # restored ones are leftovers or failed integrations, reported elsewhere
-        since = state.last_changed
-        long_time = now - since >= UNAVAILABLE_AFTER
-        since_start = up_long and started_at is not None and since <= started_at + _START_SLACK
-        if not (long_time or since_start):
-            continue
         entry = ent_reg.async_get(state.entity_id)
-        info = (
-            f"Unavailable since {dt_util.as_local(since).strftime('%-d %b')}."
-            if long_time
-            else "Unavailable since Home Assistant last started."
-        )
+        if entry is not None and entry.platform in SLEEPING_PLATFORMS:
+            continue
+        since = state.last_changed
+        at_start = started_at is not None and since <= started_at + _START_SLACK
+        exact = not at_start  # "since the start" only says: at least that long
+        noted = memory.get(state.entity_id)
+        if noted and at_start and noted[0] < since.timestamp():
+            since, exact = dt_util.utc_from_timestamp(noted[0]), bool(noted[1])
+        if not (now - since >= UNAVAILABLE_AFTER or (up_long and at_start) or (noted and at_start)):
+            continue
+        memory[state.entity_id] = [since.timestamp(), exact]
+        row = (state.entity_id, entry, since, exact)
+        if entry is not None and entry.device_id:
+            by_device.setdefault(entry.device_id, []).append(row)
+        else:
+            lone.append(row)
+
+    def words(since: datetime, exact: bool) -> str:
+        day = dt_util.as_local(since).strftime("%-d %b")
+        return f"Offline since {day}" if exact else f"Offline since {day} or earlier"
+
+    items: list[Item] = []
+    for device_id, rows in by_device.items():
+        device = dev_reg.async_get(device_id)
+        # One line for the device only when nothing of it works any more: every entity that is switched on is on the list.
+        enabled = [e for e in er.async_entries_for_device(ent_reg, device_id) if e.disabled_by is None]
+        if device is None or len(rows) < len(enabled):
+            lone.extend(rows)
+            continue
+        key = f"offline_device:{device_id}"
+        if key in keep or all(f"unavailable:{entity_id}" in keep for entity_id, *_ in rows):
+            continue
+        _, _, since, exact = min(rows, key=lambda r: r[2])
         items.append(
             Item(
-                key=f"unavailable:{state.entity_id}",
-                name=_entity_name(hass, entry, state.entity_id),
-                id=state.entity_id,
-                info=info,
-                link="/config/entities",
+                key=key,
+                name=device.name_by_user or device.name or "Unnamed device",
+                id=device_id,
+                info=f"{words(since, exact)} · {_plural(len(rows), 'entity', 'entities')}",
+                link=f"/config/devices/device/{device_id}",
+                fix="disable",
+                since=since.isoformat(),
+                or_earlier=not exact,
+                parts=len(rows),
             )
         )
-    items = [i for i in items if i.key not in keep]
+    for entity_id, entry, since, exact in lone:
+        key = f"unavailable:{entity_id}"
+        if key in keep:
+            continue
+        items.append(
+            Item(
+                key=key,
+                name=_entity_name(hass, entry, entity_id),
+                id=entity_id,
+                info=f"{words(since, exact)}.",
+                link="/config/entities",
+                since=since.isoformat(),
+                or_earlier=not exact,
+            )
+        )
     if not items:
         return []
+    devices = sum(1 for i in items if i.fix == "disable")
+    others = len(items) - devices
+    if devices and not others:
+        title = f"{_plural(devices, 'device')} offline for a long time"
+    elif devices:
+        title = f"{len(items)} devices and entities offline for a long time"
+    else:
+        title = f"{_plural(others, 'entity', 'entities')} offline for a long time"
     return [
         Finding(
             kind="unavailable",
-            title=f"{_plural(len(items), 'entity', 'entities')} unavailable for a long time",
-            detail="The device may be off, unplugged or out of range. If it is gone for good, remove it.",
-            link="/config/entities",
+            title=title,
+            detail="The device may be off, unplugged or out of range. If it is gone for good, disable or remove it.",
+            link="/config/entities" if others else "/config/devices/dashboard",
             items=items,
         )
     ]
-
-
 
 
 # ---- 5. Automations and scripts that point to missing things -------------------------------------------------
@@ -1029,6 +1106,7 @@ def run_checks(
     watching_since: float = 0.0,
     run_start: float = 0.0,
     facts: YamlFacts | None = None,
+    offline: dict[str, list[Any]] | None = None,
 ) -> list[Finding]:
     kept = frozenset(keep)
     findings: list[Finding] = []
@@ -1037,7 +1115,7 @@ def run_checks(
         lambda: check_log(hass, watch, now or time.time(), kept, watching_since, run_start),
         lambda: check_broken_references(hass, kept, facts),
         lambda: check_leftovers(hass, kept, started_at),
-        lambda: check_unavailable(hass, started_at, kept),
+        lambda: check_unavailable(hass, started_at, kept, offline),
         lambda: check_unused_helpers(hass, corpus, kept),
         lambda: check_batteries(hass, kept),
     )):

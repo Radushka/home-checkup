@@ -27,6 +27,7 @@ def async_register_commands(hass: HomeAssistant) -> None:
         ws_fix_plan,
         ws_fix_entities,
         ws_fix_undo,
+        ws_fix_device,
         ws_fix_helpers_start,
         ws_fix_helpers_finish,
         ws_fix_helpers_saved,
@@ -202,6 +203,13 @@ _KEYS = vol.All([vol.All(str, vol.Length(min=1, max=500))], vol.Length(min=1, ma
 @websocket_api.async_response
 async def ws_fix_entities(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
     await _fix(hass, connection, msg, lambda c: c.fixes.async_remove_entities(msg["plan_id"], msg["keys"]))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/fix_device", vol.Required("key"): str})
+@websocket_api.async_response
+async def ws_fix_device(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    await _fix(hass, connection, msg, lambda c: c.fixes.async_disable_device(msg["key"], c.findings))
 
 
 @websocket_api.require_admin
