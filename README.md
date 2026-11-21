@@ -17,30 +17,36 @@ Once a day it tells you if your home is healthy, or which few things need a look
 
 ## Install
 
-Home Checkup installs from this repository through Home Assistant's store for custom integrations. On Home
-Assistant 2026.11 and newer that is the built-in **Marketplace**. On older versions it is [HACS](https://hacs.xyz).
+Home Checkup is in the default list of [HACS](https://hacs.xyz), the store for custom integrations.
+
+1. Open **HACS** in Home Assistant.
+2. Search for **Home Checkup** and open it.
+3. Press **Download**.
+4. Restart Home Assistant.
+5. Open **Settings > Devices and services > Add integration** and choose **Home Checkup**.
+
+Home Checkup then appears in the sidebar. The first checkup runs about five minutes after Home Assistant starts.
+
+Needs Home Assistant 2025.11 or newer.
 
 [![Open this repository in Home Assistant.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Radushka&repository=home-checkup&category=integration)
 
-### Home Assistant 2026.11 and newer (Marketplace)
+### Other ways to install
+
+Use these only if the search does not find Home Checkup.
+
+**Home Assistant 2026.11 and newer (Marketplace)**
 
 1. Open **Settings > Marketplace**. The first time, tick **I understand the risks and agree** and press **Continue**.
 2. Choose **Add from link** and paste `https://github.com/Radushka/home-checkup`. Home Assistant asks you to
    connect GitHub once, with a short code.
 3. Install **Home Checkup**, restart Home Assistant if it asks, then press **Set up**.
 
-### Home Assistant 2025.11 to 2026.10 (HACS)
+**HACS, as a custom repository**
 
-1. Open **HACS**.
-2. Open the menu (three dots, top right) and choose **Custom repositories**.
-3. Paste `https://github.com/Radushka/home-checkup`, choose **Integration**, and press **Add**.
-4. Find **Home Checkup** in HACS and press **Download**.
-5. Restart Home Assistant.
-6. Open **Settings > Devices and services > Add integration** and choose **Home Checkup**.
-
-Home Checkup then appears in the sidebar. The first checkup runs about five minutes after Home Assistant starts.
-
-Needs Home Assistant 2025.11 or newer.
+1. Open **HACS**, open the menu (three dots, top right) and choose **Custom repositories**.
+2. Paste `https://github.com/Radushka/home-checkup`, choose **Integration**, and press **Add**.
+3. Find **Home Checkup** in HACS and press **Download**, then restart Home Assistant.
 
 ## The page
 
