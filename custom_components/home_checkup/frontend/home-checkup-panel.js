@@ -42,6 +42,20 @@ const WORDS = {
     "{n} entity": "{n} entité",
     "{n} entities": "{n} entités",
     "Disable": "Désactiver",
+    "{n} update to read before you install": "{n} mise à jour à lire avant d’installer",
+    "{n} updates to read before you install": "{n} mises à jour à lire avant d’installer",
+    "{n} device could have an area": "{n} appareil pourrait avoir une pièce",
+    "{n} devices could have an area": "{n} appareils pourraient avoir une pièce",
+    "Shown, not counted. Routine updates are not listed here.": "Affiché, non compté. Les mises à jour de routine ne sont pas listées ici.",
+    "Shown, not counted. Only clear matches are suggested.": "Affiché, non compté. Seules les correspondances claires sont proposées.",
+    "Its notes mention a breaking change.": "Ses notes mentionnent un changement cassant.",
+    "Read the notes before you update.": "Lisez les notes avant de mettre à jour.",
+    "A big version step.": "Un grand saut de version.",
+    "Suggested area: {name}": "Pièce suggérée : {name}",
+    "Add to {name}": "Ajouter à {name}",
+    "Added to {name}.": "Ajouté à {name}.",
+    "Added {name} to {area}": "{name} ajouté à {area}",
+    "Updates": "Mises à jour",
     "Disabled. Nothing was deleted.": "Désactivé. Rien n’a été supprimé.",
     "Disabled {name}": "{name} désactivé",
     "{n} helper nothing seems to use": "{n} entrée que rien ne semble utiliser",
@@ -304,6 +318,20 @@ const WORDS = {
     "{n} entity": "{n} Entität",
     "{n} entities": "{n} Entitäten",
     "Disable": "Deaktivieren",
+    "{n} update to read before you install": "{n} Update vor dem Installieren lesen",
+    "{n} updates to read before you install": "{n} Updates vor dem Installieren lesen",
+    "{n} device could have an area": "{n} Gerät könnte einen Bereich haben",
+    "{n} devices could have an area": "{n} Geräte könnten einen Bereich haben",
+    "Shown, not counted. Routine updates are not listed here.": "Angezeigt, nicht gezählt. Routine-Updates stehen hier nicht.",
+    "Shown, not counted. Only clear matches are suggested.": "Angezeigt, nicht gezählt. Nur klare Treffer werden vorgeschlagen.",
+    "Its notes mention a breaking change.": "Die Hinweise nennen eine inkompatible Änderung.",
+    "Read the notes before you update.": "Lesen Sie die Hinweise vor dem Update.",
+    "A big version step.": "Ein großer Versionssprung.",
+    "Suggested area: {name}": "Vorgeschlagener Bereich: {name}",
+    "Add to {name}": "Zu {name} hinzufügen",
+    "Added to {name}.": "Zu {name} hinzugefügt.",
+    "Added {name} to {area}": "{name} zu {area} hinzugefügt",
+    "Updates": "Updates",
     "Disabled. Nothing was deleted.": "Deaktiviert. Nichts wurde gelöscht.",
     "Disabled {name}": "{name} deaktiviert",
     "{n} helper nothing seems to use": "{n} Helfer, den nichts zu nutzen scheint",
@@ -566,6 +594,20 @@ const WORDS = {
     "{n} entity": "{n} entidad",
     "{n} entities": "{n} entidades",
     "Disable": "Desactivar",
+    "{n} update to read before you install": "{n} actualización para leer antes de instalar",
+    "{n} updates to read before you install": "{n} actualizaciones para leer antes de instalar",
+    "{n} device could have an area": "{n} dispositivo podría tener un área",
+    "{n} devices could have an area": "{n} dispositivos podrían tener un área",
+    "Shown, not counted. Routine updates are not listed here.": "Se muestra, no se cuenta. Las actualizaciones de rutina no aparecen aquí.",
+    "Shown, not counted. Only clear matches are suggested.": "Se muestra, no se cuenta. Solo se sugieren coincidencias claras.",
+    "Its notes mention a breaking change.": "Sus notas mencionan un cambio incompatible.",
+    "Read the notes before you update.": "Lea las notas antes de actualizar.",
+    "A big version step.": "Un gran salto de versión.",
+    "Suggested area: {name}": "Área sugerida: {name}",
+    "Add to {name}": "Añadir a {name}",
+    "Added to {name}.": "Añadido a {name}.",
+    "Added {name} to {area}": "{name} añadido a {area}",
+    "Updates": "Actualizaciones",
     "Disabled. Nothing was deleted.": "Desactivado. No se borró nada.",
     "Disabled {name}": "{name} desactivado",
     "{n} helper nothing seems to use": "{n} ayudante que nada parece usar",
@@ -883,6 +925,8 @@ const TITLES = {
   unavailable: ["{n} entity offline for a long time", "{n} entities offline for a long time"],
   unused_helpers: ["{n} helper nothing seems to use", "{n} helpers nothing seems to use"],
   low_batteries: ["{n} battery running low", "{n} batteries running low"],
+  updates: ["{n} update to read before you install", "{n} updates to read before you install"],
+  areas: ["{n} device could have an area", "{n} devices could have an area"],
 };
 
 const HINTS = {
@@ -894,6 +938,8 @@ const HINTS = {
   unavailable: "Off, unplugged or out of range.",
   unused_helpers: "Shown, not counted. Something outside may still use them.",
   low_batteries: "Change them before the device stops working.",
+  updates: "Shown, not counted. Routine updates are not listed here.",
+  areas: "Shown, not counted. Only clear matches are suggested.",
 };
 
 /** The one next step for a group of log errors: [the line, the button]. */
@@ -908,6 +954,7 @@ const STEPS = {
 /** The short name of the Home Assistant page a link goes to. One word, so the card stays calm. */
 const PLACES = [
   ["/config/logs", "Log"],
+  ["/config/updates", "Updates"],
   ["/config/integrations/integration/", "Integration"],
   ["/config/integrations", "Integrations"],
   ["/config/devices/device/", "Device"],
@@ -1280,6 +1327,18 @@ class HomeCheckupPanel extends HTMLElement {
     this._fixing = key;
     this._render();
     try {
+      if (item.fix === "set_area") {
+        const result = await this._hass.callWS({ type: "home_checkup/fix_area", key });
+        this._report = result.report;
+        this._say({
+          text: result.fix.status !== "done" ? this._t("It did not fully change. You can undo it.") : this._t("Added to {name}.", { name: item.to_name }),
+          act: "fixundo",
+          data: result.fix.id,
+        });
+        this._fixing = null;
+        this._render();
+        return;
+      }
       if (item.fix === "disable") {
         // An offline device: Home Assistant keeps it and its settings, it only stops listing it as offline.
         const result = await this._hass.callWS({ type: "home_checkup/fix_device", key });
@@ -1440,7 +1499,7 @@ class HomeCheckupPanel extends HTMLElement {
     this._render();
     try {
       let result;
-      if (fix.kind === "leftover_entities" || fix.kind === "offline_device") {
+      if (fix.kind === "leftover_entities" || fix.kind === "offline_device" || fix.kind === "device_area") {
         result = await this._hass.callWS({ type: "home_checkup/fix_undo", fix_id: id });
       } else if (["use_new", "remove_step", "turn_off", "choose"].includes(fix.kind)) {
         const saved = await this._hass.callWS({ type: "home_checkup/fix_automation_saved", fix_id: id });
@@ -1722,6 +1781,8 @@ class HomeCheckupPanel extends HTMLElement {
                 ? this._t("Turned off {name}", { name: auto })
                 : f.kind === "offline_device"
                 ? this._t("Disabled {name}", { name: auto })
+                : f.kind === "device_area"
+                ? this._t("Added {name} to {area}", { name: auto, area: f.items?.[0]?.area ?? "" })
                 : this._tn(f.removed, "Removed {n} helper", "Removed {n} helpers");
         const open = !f.undone_at && new Date(f.undo_until) > new Date();
         const side = f.undone_at
@@ -1919,6 +1980,11 @@ class HomeCheckupPanel extends HTMLElement {
         const tryText = it.hint && TRY[it.hint] ? `<span class="try">${esc(this._t("Try: {text}", { text: this._t(TRY[it.hint]) }))}</span>` : "";
         // Our words stand a little apart from the words of the log, as one block.
         let mean = it.hint && MEANINGS[it.hint] ? `<span class="ours"><span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>${tryText}</span>` : "";
+        if (it.risk) {
+          // A waiting update: why it is worth reading first. Never a count, never an alarm.
+          const why = it.risk === "breaking" ? "Its notes mention a breaking change." : "A big version step.";
+          mean = `<span class="ours"><span class="mean">${esc(this._t(why))}</span><span class="try">${esc(this._t("Read the notes before you update."))}</span></span>`;
+        }
         if (it.back) {
           // Good news: nothing to try. The gap in plain words says more than a count.
           const at = (t) => this._time(new Date(t * 1000).toISOString());
@@ -1947,6 +2013,7 @@ class HomeCheckupPanel extends HTMLElement {
           if (it.of) infoText += ` · ${this._t("{n} of {m} entities", { n: it.parts, m: it.of })}`;
           else if (it.parts) infoText += ` · ${this._tn(it.parts, "{n} entity", "{n} entities")}`;
         }
+        if (f.kind === "areas" && it.to_name) infoText = this._t("Suggested area: {name}", { name: it.to_name });
         const news = this._asked().includes(it.key) ? this._news(it.key) : null;
         const newsLine = news?.text ? `<span class="fixnews">${esc(news.text)}</span>` : "";
         // Written by hand in a YAML file: no button can change it, so the line says where to look.
@@ -1968,8 +2035,9 @@ class HomeCheckupPanel extends HTMLElement {
         const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine + askedLine;
         const detail = this._details[it.key];
         const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : it.fix === "disable" ? "Disable" : "";
-        const fixBtn = fixLabel
-          ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : this._t(fixLabel))}</button>`
+        const fixWords = it.fix === "set_area" ? this._t("Add to {name}", { name: it.to_name }) : fixLabel ? this._t(fixLabel) : "";
+        const fixBtn = fixWords
+          ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : fixWords)}</button>`
           : "";
         // No fix by itself, but the person can choose what the step should use now.
         const chooseBtn =
@@ -2061,7 +2129,7 @@ class HomeCheckupPanel extends HTMLElement {
       // Not a log line: the id for people who want it, a way to the thing itself, and the actions.
       const link = item.link ? `<a class="dlink" href="${esc(item.link)}" data-act="go" data-link="${esc(item.link)}">${esc(this._t(placeName(item.link)))}${ARROW}</a>` : "";
       // A device has no id worth reading, so its opened line is only the way there and the actions.
-      const showId = item.id && item.fix !== "disable" && !item.of;
+      const showId = item.id && item.fix !== "disable" && item.fix !== "set_area" && !item.of;
       return `<div class="errdetail${showId ? "" : " bare"}">${showId ? `<div class="dmeta code">${esc(item.id)}</div>` : ""}${row(link, "")}</div>`;
     }
     if (d.error) return `<div class="errdetail"><div class="dmeta">${esc(d.error)}</div>${row("", "")}</div>`;

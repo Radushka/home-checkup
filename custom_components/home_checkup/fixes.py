@@ -188,6 +188,8 @@ class Fixes:
             raise FixError("This fix was already undone.")
         if record["kind"] == "offline_device":
             return await self._undo_disable(record)
+        if record["kind"] == "device_area":
+            return await self._undo_area(record)
         if record["kind"] != "leftover_entities":
             raise FixError("This is brought back by the Home Checkup page.")
         ent_reg = er.async_get(self.hass)
@@ -259,6 +261,47 @@ class Fixes:
         # Only switch on again what this fix switched off. If the person changed it since, leave their choice.
         if device is not None and device.disabled_by is dr.DeviceEntryDisabler.USER:
             dev_reg.async_update_device(device_id, disabled_by=None)
+            back = 1
+        record["undone_at"] = dt_util.utcnow().isoformat()
+        record["restored"] = back
+        await self._save()
+        return _public(record)
+
+    # ---- 3c. a device without an area: put it in the area its name says ------------------------------------------
+
+    async def async_set_area(self, key: str, findings: list) -> dict[str, Any]:
+        item = next((i for f in findings if f.kind == "areas" for i in f.items if i.key == key), None)
+        if item is None or item.fix != "set_area" or not item.to:
+            raise FixError("This list is too old. Open it again to see the latest list.")
+        dev_reg = dr.async_get(self.hass)
+        device = dev_reg.async_get(item.id)
+        if device is None or device.area_id:
+            raise FixError("This device already has an area, so nothing was changed.")
+        fix_id = secrets.token_hex(6)
+        record = {
+            "id": fix_id,
+            "kind": "device_area",
+            "at": dt_util.utcnow().isoformat(),
+            "asked": 1,
+            "items": [{"name": item.name, "id": item.id, "area": item.to_name, "area_id": item.to}],
+        }
+        record["backup"] = await self._backup(fix_id, record, copy_registry=False)
+        dev_reg.async_update_device(item.id, area_id=item.to)
+        done = (after := dev_reg.async_get(item.id)) is not None and after.area_id == item.to
+        record["removed"] = int(done)
+        record["status"] = "done" if done else "check"
+        self.records.insert(0, record)
+        await self._save()
+        return _public(record)
+
+    async def _undo_area(self, record: dict[str, Any]) -> dict[str, Any]:
+        dev_reg = dr.async_get(self.hass)
+        target = record["items"][0]
+        device = dev_reg.async_get(target["id"])
+        back = 0
+        # Only take it out of the area this fix put it in. If the person moved it since, leave their choice.
+        if device is not None and device.area_id == target.get("area_id"):
+            dev_reg.async_update_device(target["id"], area_id=None)
             back = 1
         record["undone_at"] = dt_util.utcnow().isoformat()
         record["restored"] = back

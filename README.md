@@ -17,6 +17,10 @@ Once a day it tells you if your home is healthy, or which few things need a look
 6. Helpers that nothing seems to use.
 7. Batteries running low (under 15%), so you can change them before a device stops. Phones, tablets and
    computers are left out, because you charge them.
+8. Waiting updates worth reading first: their notes mention a breaking change, or the version makes a big
+   step. Routine updates are not listed. Shown, not counted.
+9. Devices without an area whose own name says where they are, for example "Kitchen Echo" and the area
+   "Kitchen". One tap adds the device to that area, and Undo takes it out again. Shown, not counted.
 
 ## Install
 
@@ -117,6 +121,9 @@ It shows the exact list first, makes a backup, and can be undone for 30 days.
 An offline device has a "Disable" button. It only switches the device off in Home Assistant. Nothing is
 deleted, the device keeps its settings, and Undo switches it on again.
 
+The release notes of a waiting update are read through Home Assistant's own update entities, the same way
+as when you open an update. Nothing about your home is sent for this.
+
 Helpers written in YAML files are listed, but the button cannot remove them. The page marks them, and you remove
 their lines from your YAML files yourself.
 
@@ -160,6 +167,8 @@ Home Checkup is built with your privacy in mind. This is exactly what it does an
 
 1. Everything stays in your home, with one exception that you control: a request that you send yourself with
    "Ask" (see "Ask for a fix" above). Without it, Home Checkup sends nothing to any server, ours included.
+   For a waiting update it asks Home Assistant for the release notes, the same way the update screen does.
+   Home Assistant may fetch them from the maker of that update. That request says nothing about your home.
 2. It never opens `secrets.yaml`, or any file named like a secret, password, token or key file.
 3. It never opens the files where Home Assistant keeps passwords, keys and sign-ins
    (such as `.storage/core.config_entries`, `.storage/auth` and the cloud files).

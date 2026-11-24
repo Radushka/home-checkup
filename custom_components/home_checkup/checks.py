@@ -6,6 +6,7 @@ Each item has a key, so a person can mark it "Keep" and it never shows again.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -20,6 +21,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_RESTORED, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.loader import async_get_loaded_integration
@@ -93,6 +95,7 @@ class Item:
     # For a log error about something that could not be reached and that works again: when the errors began.
     back: bool = False
     back_from: float = 0
+    risk: str = ""  # a waiting update: "breaking" (its notes say so) or "major" (a big version step)
 
 
 @dataclass
@@ -1159,6 +1162,167 @@ def check_batteries(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> 
     ]
 
 
+# ---- 8. Updates worth reading first -------------------------------------------------------------------------------
+
+_NOT_BREAKING = re.compile(r"\b(no|non|not|without|zero)[ -]+(known[ -]+)?breaking", re.I)
+_BREAKING = re.compile(
+    r"breaking|backwards?[ -]incompatible|not backwards?[ -]compatible|migration (is )?(required|needed)|"
+    r"action (is )?required|you (must|need to|have to) (re-?configure|re-?add|re-?install|change|update your)",
+    re.I,
+)
+NOTES_MAX = 20000
+
+
+async def read_update_notes(hass: HomeAssistant, known: dict[str, list[str]]) -> dict[str, list[str]]:
+    """The release notes of waiting updates, asked from Home Assistant's own update entities, once per version.
+
+    This is what Home Assistant shows when you open an update. Nothing about the home is sent anywhere.
+    """
+    out: dict[str, list[str]] = {}
+    component = hass.data.get("update")
+    for state in hass.states.async_all("update"):
+        if state.state != "on":
+            continue
+        latest = str(state.attributes.get("latest_version") or "")
+        old = known.get(state.entity_id)
+        if old and old[0] == latest:
+            out[state.entity_id] = old
+            continue
+        text = ""
+        try:
+            entity = component.get_entity(state.entity_id) if component is not None else None
+            if entity is not None and int(entity.supported_features or 0) & 16:  # UpdateEntityFeature.RELEASE_NOTES
+                text = str(await asyncio.wait_for(entity.async_release_notes(), 20) or "")
+        except Exception:  # noqa: BLE001 - without notes the summary is still read
+            _LOGGER.debug("Could not read the release notes of %s", state.entity_id, exc_info=True)
+        out[state.entity_id] = [latest, text[:NOTES_MAX]]
+    return out
+
+
+def _major(version: str) -> int | None:
+    match = re.match(r"v?(\d+)\.", version.strip())
+    number = int(match.group(1)) if match else None
+    return None if number is None or number >= 1000 else number  # 2026.11 is a date, not a big step
+
+
+@callback
+def check_updates(
+    hass: HomeAssistant, keep: frozenset[str] = frozenset(), notes: dict[str, list[str]] | None = None
+) -> list[Finding]:
+    """Waiting updates to read before installing: their notes mention a breaking change, or the version jumps.
+
+    Routine updates are not listed. Home Assistant already shows those.
+    """
+    notes = notes or {}
+    items: list[Item] = []
+    for state in hass.states.async_all("update"):
+        if state.state != "on" or state.attributes.get("in_progress") not in (None, False):
+            continue
+        installed = str(state.attributes.get("installed_version") or "")
+        latest = str(state.attributes.get("latest_version") or "")
+        if not latest or state.attributes.get("skipped_version") == latest:
+            continue
+        noted = notes.get(state.entity_id)
+        text = f"{state.attributes.get('release_summary') or ''}\n{noted[1] if noted and noted[0] == latest else ''}"
+        risk = ""
+        if _BREAKING.search(_NOT_BREAKING.sub(" ", text)):
+            risk = "breaking"
+        else:
+            before, after = _major(installed), _major(latest)
+            if before is not None and after is not None and after > before:
+                risk = "major"
+        if not risk:
+            continue
+        name = str(state.attributes.get("title") or state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id)
+        items.append(
+            Item(
+                key=f"update:{state.entity_id}:{latest}",
+                name=re.sub(r"\s+update$", "", name, flags=re.I),
+                id=state.entity_id,
+                info=f"{installed} → {latest}" if installed else latest,
+                link="/config/updates",
+                risk=risk,
+            )
+        )
+    items = [i for i in items if i.key not in keep]
+    if not items:
+        return []
+    items.sort(key=lambda i: (i.risk != "breaking", i.name.lower()))
+    return [
+        Finding(
+            kind="updates",
+            title=f"{_plural(len(items), 'update')} to read before you install",
+            detail="Their notes mention a breaking change, or the version makes a big step.",
+            severity="info",
+            link="/config/updates",
+            items=items,
+        )
+    ]
+
+
+# ---- 9. Devices that could have an area ---------------------------------------------------------------------------
+
+
+def _words(text: str) -> str:
+    return " ".join(re.sub(r"[^\w]+", " ", (text or "").lower()).split())
+
+
+@callback
+def check_areas(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> list[Finding]:
+    """Devices without an area whose own name says where they are ("Kitchen Echo" and the area "Kitchen").
+
+    Only a clear match is suggested: the longest area name in the device name, and only one of that length.
+    """
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    areas = sorted(
+        ((_words(a.name), a) for a in ar.async_get(hass).async_list_areas() if len(_words(a.name)) >= 3),
+        key=lambda pair: -len(pair[0]),
+    )
+    if not areas:
+        return []
+    items: list[Item] = []
+    for device in dev_reg.devices.values():
+        if device.area_id or device.disabled_by is not None or device.entry_type is dr.DeviceEntryType.SERVICE:
+            continue
+        key = f"area:{device.id}"
+        if key in keep:
+            continue
+        name = device.name_by_user or device.name or ""
+        padded = f" {_words(name)} "
+        hits = [(words, area) for words, area in areas if f" {words} " in padded]
+        if not hits or (len(hits) > 1 and len(hits[1][0]) == len(hits[0][0])):
+            continue
+        if not any(e.disabled_by is None for e in er.async_entries_for_device(ent_reg, device.id)):
+            continue
+        area = hits[0][1]
+        items.append(
+            Item(
+                key=key,
+                name=name,
+                id=device.id,
+                info=f"Suggested area: {area.name}",
+                link=f"/config/devices/device/{device.id}",
+                fix="set_area",
+                to=area.id,
+                to_name=area.name,
+            )
+        )
+    if not items:
+        return []
+    items.sort(key=lambda i: (i.to_name.lower(), i.name.lower()))
+    return [
+        Finding(
+            kind="areas",
+            title=f"{_plural(len(items), 'device')} could have an area",
+            detail="Their name says where they are. A device with an area shows up in the right room.",
+            severity="info",
+            link="/config/devices/dashboard",
+            items=items,
+        )
+    ]
+
+
 # ---- All together ---------------------------------------------------------------------------------------------
 
 
@@ -1198,6 +1362,7 @@ def run_checks(
     facts: YamlFacts | None = None,
     offline: dict[str, list[Any]] | None = None,
     drops: dict[str, list[float]] | None = None,
+    update_notes: dict[str, list[str]] | None = None,
 ) -> list[Finding]:
     kept = frozenset(keep)
     findings: list[Finding] = []
@@ -1209,6 +1374,8 @@ def run_checks(
         lambda: check_unavailable(hass, started_at, kept, offline),
         lambda: check_unused_helpers(hass, corpus, kept),
         lambda: check_batteries(hass, kept),
+        lambda: check_updates(hass, kept, update_notes),
+        lambda: check_areas(hass, kept),
     )):
         try:
             findings.extend(check())

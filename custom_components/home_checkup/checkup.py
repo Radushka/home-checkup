@@ -21,7 +21,17 @@ from homeassistant.helpers.storage import Store
 from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
-from .checks import Finding, Item, YamlFacts, broken_refs, integration_name, read_corpus, read_yaml_facts, run_checks
+from .checks import (
+    Finding,
+    Item,
+    YamlFacts,
+    broken_refs,
+    integration_name,
+    read_corpus,
+    read_update_notes,
+    read_yaml_facts,
+    run_checks,
+)
 from .checks import checked_counts
 from .fixes import Fixes
 from .const import DAILY_HOUR, DOMAIN, FIRST_SCAN_DELAY, NEW_FOR, REFRESH_EVERY, STARTUP_GRACE, STOPPED_AFTER, STOPPED_SHOWN
@@ -46,6 +56,7 @@ class Checkup:
         self.scanned_at: datetime | None = None
         self.corpus: set[str] | None = None
         self.yaml_facts: YamlFacts | None = None
+        self.update_notes: dict[str, list[str]] = {}  # update entity -> [version, release notes], in memory only
         self.repairs_note = True
         self.fixes = Fixes(hass)
         # When each item was first and last seen, to mark what is new since yesterday.
@@ -138,6 +149,10 @@ class Checkup:
         except Exception:  # noqa: BLE001 - without the files, the buttons are offered as before
             _LOGGER.debug("Could not read where automations and scripts are written", exc_info=True)
             self.yaml_facts = None
+        try:
+            self.update_notes = await read_update_notes(self.hass, self.update_notes)
+        except Exception:  # noqa: BLE001 - without the notes, only the version step is judged
+            _LOGGER.debug("Could not read release notes", exc_info=True)
         self.refresh()
 
     @callback
@@ -145,7 +160,7 @@ class Checkup:
         now = time.time()
         self.findings = run_checks(
             self.hass, self.watch, self.corpus, self.started_at, self.keep, now,
-            watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts, offline=self._offline, drops=self._drops,
+            watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts, offline=self._offline, drops=self._drops, update_notes=self.update_notes,
         )
         self.findings += self._stopped(now)
         self._mark_new(now)
