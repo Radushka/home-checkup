@@ -81,6 +81,11 @@ For log errors it does more than count them:
    in time. Try: Check that it is on and close to Wi-Fi."
    When a device that could not be reached works again, its errors are shown as good news ("works again",
    with the time of the gap) and are not counted. A device that drops 3 times in a week is a problem again.
+   When a device moved to a new address, Home Checkup says so: "Kitchen camera now answers at 192.168.2.80.
+   The integration still uses the old address." It knows this from what Home Assistant already sees on your
+   network. It never reads the settings of an integration, and it never changes an address by itself.
+   When another integration still reaches the same device, Home Checkup says that the device is on and that
+   only this connection is closed.
 2. It offers one next step: "See the update" when an update that may fix it is ready, "Sign in again",
    "Open the devices", or "Open dashboards" for a template that reads something missing.
 3. It tells start-up noise (errors only in the first minutes after a restart) from real, ongoing problems.

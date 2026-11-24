@@ -53,9 +53,14 @@ MEANINGS: tuple[tuple[str, re.Pattern[str]], ...] = tuple(
 )
 
 
+_SSL_NOISE = re.compile(r"\bssl:\S+", re.I)
+
+
 def meaning_of(text: str) -> str:
     """The code of the first cause that fits, or "" when none does."""
+    # aiohttp writes "ssl:default" into every failed connection. It says nothing about certificates.
+    text = _SSL_NOISE.sub(" ", text or "")
     for code, pattern in MEANINGS:
-        if pattern.search(text or ""):
+        if pattern.search(text):
             return code
     return ""

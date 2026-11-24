@@ -50,6 +50,12 @@ const WORDS = {
     "Shown, not counted. Only clear matches are suggested.": "Affiché, non compté. Seules les correspondances claires sont proposées.",
     "Its notes mention a breaking change.": "Ses notes mentionnent un changement cassant.",
     "Read the notes before you update.": "Lisez les notes avant de mettre à jour.",
+    "It cannot be reached at its address.": "Il est injoignable à son adresse.",
+    "The device is on, but it refused this connection.": "L’appareil est allumé, mais il a refusé cette connexion.",
+    "Check that this service is turned on in the app of the device.": "Vérifiez que ce service est activé dans l’application de l’appareil.",
+    "Check its power. If its address changed, set the new one in the integration.": "Vérifiez son alimentation. Si son adresse a changé, indiquez la nouvelle dans l’intégration.",
+    "{name} now answers at {ip}. The integration still uses the old address.": "{name} répond maintenant à l’adresse {ip}. L’intégration utilise encore l’ancienne adresse.",
+    "Set the new address in the integration.": "Indiquez la nouvelle adresse dans l’intégration.",
     "A big version step.": "Un grand saut de version.",
     "Suggested area: {name}": "Pièce suggérée : {name}",
     "Add to {name}": "Ajouter à {name}",
@@ -326,6 +332,12 @@ const WORDS = {
     "Shown, not counted. Only clear matches are suggested.": "Angezeigt, nicht gezählt. Nur klare Treffer werden vorgeschlagen.",
     "Its notes mention a breaking change.": "Die Hinweise nennen eine inkompatible Änderung.",
     "Read the notes before you update.": "Lesen Sie die Hinweise vor dem Update.",
+    "It cannot be reached at its address.": "Es ist unter seiner Adresse nicht erreichbar.",
+    "The device is on, but it refused this connection.": "Das Gerät ist eingeschaltet, hat diese Verbindung aber abgelehnt.",
+    "Check that this service is turned on in the app of the device.": "Prüfen Sie, ob dieser Dienst in der App des Geräts eingeschaltet ist.",
+    "Check its power. If its address changed, set the new one in the integration.": "Prüfen Sie die Stromversorgung. Wenn sich die Adresse geändert hat, tragen Sie die neue in der Integration ein.",
+    "{name} now answers at {ip}. The integration still uses the old address.": "{name} antwortet jetzt unter {ip}. Die Integration nutzt noch die alte Adresse.",
+    "Set the new address in the integration.": "Tragen Sie die neue Adresse in der Integration ein.",
     "A big version step.": "Ein großer Versionssprung.",
     "Suggested area: {name}": "Vorgeschlagener Bereich: {name}",
     "Add to {name}": "Zu {name} hinzufügen",
@@ -602,6 +614,12 @@ const WORDS = {
     "Shown, not counted. Only clear matches are suggested.": "Se muestra, no se cuenta. Solo se sugieren coincidencias claras.",
     "Its notes mention a breaking change.": "Sus notas mencionan un cambio incompatible.",
     "Read the notes before you update.": "Lea las notas antes de actualizar.",
+    "It cannot be reached at its address.": "No se puede alcanzar en su dirección.",
+    "The device is on, but it refused this connection.": "El dispositivo está encendido, pero rechazó esta conexión.",
+    "Check that this service is turned on in the app of the device.": "Compruebe que este servicio esté activado en la aplicación del dispositivo.",
+    "Check its power. If its address changed, set the new one in the integration.": "Compruebe su alimentación. Si su dirección cambió, indique la nueva en la integración.",
+    "{name} now answers at {ip}. The integration still uses the old address.": "{name} responde ahora en {ip}. La integración sigue usando la dirección antigua.",
+    "Set the new address in the integration.": "Indique la nueva dirección en la integración.",
     "A big version step.": "Un gran salto de versión.",
     "Suggested area: {name}": "Área sugerida: {name}",
     "Add to {name}": "Añadir a {name}",
@@ -871,6 +889,8 @@ const MEANINGS = {
   slowstart: "It starts slowly. Usually harmless.",
   unsupported: "The device cannot do what was asked.",
   flaky: "It keeps dropping.",
+  address: "It cannot be reached at its address.",
+  closed: "The device is on, but it refused this connection.",
   baddata: "It got an answer it could not read.",
   badvalue: "It got a value it cannot use.",
   database: "The history database had a problem. Your history may have a gap.",
@@ -901,6 +921,8 @@ const TRY = {
   missing: "Change it to an entity that exists.",
   unsupported: "Check the automation or card that asked for it.",
   flaky: "Check its power and its Wi-Fi signal.",
+  address: "Check its power. If its address changed, set the new one in the integration.",
+  closed: "Check that this service is turned on in the app of the device.",
   baddata: "Update the integration.",
   badvalue: "Check the automation or card that sent it.",
   bug: "Update it. If the error stays, report it to its makers.",
@@ -1984,6 +2006,10 @@ class HomeCheckupPanel extends HTMLElement {
           // A waiting update: why it is worth reading first. Never a count, never an alarm.
           const why = it.risk === "breaking" ? "Its notes mention a breaking change." : "A big version step.";
           mean = `<span class="ours"><span class="mean">${esc(this._t(why))}</span><span class="try">${esc(this._t("Read the notes before you update."))}</span></span>`;
+        }
+        if (it.hint === "moved" && it.seen_at) {
+          // Proof, not a guess: the same hardware is seen at another address than the one the integration uses.
+          mean = `<span class="ours"><span class="mean">${esc(this._t("{name} now answers at {ip}. The integration still uses the old address.", { name: it.device, ip: it.seen_at }))}</span><span class="try">${esc(this._t("Try: {text}", { text: this._t("Set the new address in the integration.") }))}</span></span>`;
         }
         if (it.back) {
           // Good news: nothing to try. The gap in plain words says more than a count.

@@ -46,7 +46,7 @@ from .const import (
     TEMPLATE_HELPER_DOMAINS,
     UNAVAILABLE_SINCE_START_AFTER,
 )
-from .logwatch import LogWatch, is_wrapper
+from .logwatch import LogWatch, is_wrapper, redact
 from .meanings import meaning_of
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +96,9 @@ class Item:
     back: bool = False
     back_from: float = 0
     risk: str = ""  # a waiting update: "breaking" (its notes say so) or "major" (a big version step)
+    # hint "moved": the device Home Assistant now sees at another address than the one the integration uses.
+    device: str = ""
+    seen_at: str = ""
 
 
 @dataclass
@@ -201,6 +204,120 @@ def _entity_name(hass: HomeAssistant, entry: er.RegistryEntry | None, entity_id:
     return entity_id.split(".", 1)[-1].replace("_", " ").capitalize()
 
 
+# ---- A device that moved to a new address -----------------------------------------------------------------
+
+_IP_IN_TEXT = re.compile(r"(?<![\d.])((?:\d{1,3}\.){3}\d{1,3})(?![\d.])")
+_LOCAL_IP = re.compile(r"^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.)")
+
+
+@callback
+def seen_addresses(hass: HomeAssistant) -> dict[str, str]:
+    """Hardware address (MAC) -> the IP address where Home Assistant sees that device on the network now.
+
+    Home Assistant already knows this: from router integrations (their device trackers) and from what it hears
+    on the network. Nothing is scanned here, and no settings of any integration are read.
+    """
+    seen: dict[str, str] = {}
+    try:
+        from homeassistant.components.dhcp.helpers import async_get_address_data_internal  # noqa: PLC0415
+
+        for mac, data in async_get_address_data_internal(hass).items():
+            if data.get("ip"):
+                seen[dr.format_mac(mac)] = str(data["ip"])
+    except Exception:  # noqa: BLE001 - not set up, or it changed: the router integrations below still count
+        pass
+    for state in hass.states.async_all("device_tracker"):
+        mac, ip = state.attributes.get("mac"), state.attributes.get("ip")
+        if mac and ip and state.state == "home":
+            seen[dr.format_mac(str(mac))] = str(ip)
+    return seen
+
+
+@callback
+def _down(hass: HomeAssistant, ent_reg: er.EntityRegistry, device_id: str) -> bool:
+    states = [
+        hass.states.get(e.entity_id)
+        for e in er.async_entries_for_device(ent_reg, device_id)
+        if e.disabled_by is None
+    ]
+    return all(s is None or s.state == STATE_UNAVAILABLE for s in states)
+
+
+@callback
+def _any_device_down(hass: HomeAssistant, entry_ids: list[str]) -> bool:
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    return any(
+        er.async_entries_for_device(ent_reg, device.id) and _down(hass, ent_reg, device.id)
+        for entry_id in entry_ids
+        for device in dr.async_entries_for_config_entry(dev_reg, entry_id)
+    )
+
+
+@callback
+def _answers_elsewhere(hass: HomeAssistant, entry_ids: list[str]) -> bool:
+    """True when another integration talks to the same hardware (same MAC) right now.
+
+    Then the device is on and its address is right. Only this one connection is closed, for example a service
+    that was turned off in the app of the device.
+    """
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    macs = {
+        dr.format_mac(mac)
+        for entry_id in entry_ids
+        for device in dr.async_entries_for_config_entry(dev_reg, entry_id)
+        for kind, mac in device.connections
+        if kind == dr.CONNECTION_NETWORK_MAC
+    }
+    if not macs:
+        return False
+    for device in dev_reg.devices.values():
+        if not any(k == dr.CONNECTION_NETWORK_MAC and dr.format_mac(m) in macs for k, m in device.connections):
+            continue
+        for entity in er.async_entries_for_device(ent_reg, device.id):
+            if entity.config_entry_id in entry_ids or entity.disabled_by is not None:
+                continue
+            state = hass.states.get(entity.entity_id)
+            if state is not None and state.state != STATE_UNAVAILABLE and not state.attributes.get(ATTR_RESTORED):
+                return True
+    return False
+
+
+@callback
+def address_hint(
+    hass: HomeAssistant, entry_ids: list[str], text: str, seen: dict[str, str], need_down: bool = False
+) -> tuple[str, str, str]:
+    """For something local that cannot be reached: ("moved", device name, new IP), ("address", "", "") or ("", "", "").
+
+    "moved" needs proof: the error names an address, and the same hardware (by its MAC) is now seen at another one.
+    When Home Assistant sees the device at the very address the error names, the address is right: no hint.
+    """
+    named = set(_IP_IN_TEXT.findall(text or ""))
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    here: list[tuple[str, str]] = []  # devices of these entries that the network shows, with their address now
+    local = any(_LOCAL_IP.match(ip) for ip in named)
+    for entry_id in entry_ids:
+        for device in dr.async_entries_for_config_entry(dev_reg, entry_id):
+            for kind, mac in device.connections:
+                if kind != dr.CONNECTION_NETWORK_MAC:
+                    continue
+                local = True
+                ip = seen.get(dr.format_mac(mac))
+                if ip and not (need_down and not _down(hass, ent_reg, device.id)):
+                    here.append((device.name_by_user or device.name or "", ip))
+    if not local:
+        return "", "", ""
+    if not need_down and _answers_elsewhere(hass, entry_ids):
+        return "closed", "", ""
+    if any(ip in named for _, ip in here):
+        return "", "", ""
+    if named and len(here) == 1 and here[0][0]:
+        return "moved", here[0][0], here[0][1]
+    return "address", "", ""
+
+
 # ---- 1. Log: warnings and errors grouped by integration and cause ---------------------------------------
 
 
@@ -259,6 +376,7 @@ def check_log(
     # starts again (`run_start`: when this run began). If the error comes back at this start, it is shown again,
     # with the new time. So an old line never returns for a few minutes after a restart.
     drops = drops if drops is not None else {}
+    seen = seen_addresses(hass)
     for key in [k for k, times in drops.items() if not times or times[-1] < now - 7 * 86400]:
         del drops[key]
     by_domain: dict[str | None, list] = defaultdict(list)
@@ -277,6 +395,19 @@ def check_log(
             for g, _ in errors
         }
         back_errors = [(g, n) for g, n in errors if state[g.template] == "back"]
+        # Still failing, and about something local: maybe it moved to a new address.
+        entry_ids = [e.entry_id for e in hass.config_entries.async_entries(domain)] if domain else []
+        # A log error does not say which device it is about, so the words about the address are only used
+        # while a whole device of this integration is offline. A camera that is slow now and then keeps its own words.
+        moved = {}
+        if entry_ids and _any_device_down(hass, entry_ids):
+            moved = {
+                g.template: hint
+                for g, _ in errors
+                if state[g.template] == "" and not g.startup_only(since)
+                and meaning_of(f"{g.template} {g.sample} {g.cause}") in REACH_HINTS
+                and (hint := address_hint(hass, entry_ids, f"{g.sample} {g.cause}", seen, need_down=True))[0]
+            }
         errors = [(g, n) for g, n in errors if state[g.template] != "back"]
         name = integration_name(hass, domain)
         for level_groups, is_error, word, back in (
@@ -333,8 +464,11 @@ def check_log(
                             hint=(
                                 "flaky"
                                 if is_error and state.get(g.template) == "flaky"
-                                else meaning_of(f"{g.template} {g.sample} {g.cause}")
+                                else (is_error and not back and g.template in moved and moved[g.template][0])
+                                or meaning_of(f"{g.template} {g.sample} {g.cause}")
                             ),
+                            device=moved[g.template][1] if is_error and not back and g.template in moved else "",
+                            seen_at=moved[g.template][2] if is_error and not back and g.template in moved else "",
                             back=back,
                             back_from=g.first_seen if back and g.first_seen >= since else 0,
                             startup=g.startup_only(since),
@@ -354,17 +488,29 @@ def check_log(
 
 @callback
 def check_failed_integrations(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> list[Finding]:
-    items = [
-        Item(
-            key=f"entry:{entry.entry_id}",
-            name=f"{integration_name(hass, entry.domain)}: {entry.title}",
-            id=entry.entry_id,
-            info=entry.reason or entry.state.value.replace("_", " "),
-            link=f"/config/integrations/integration/{entry.domain}",
+    seen = seen_addresses(hass)
+    items = []
+    for entry in hass.config_entries.async_entries():
+        if entry.state not in FAILED_STATES or entry.disabled_by is not None or entry.domain == DOMAIN:
+            continue
+        # It keeps trying and cannot reach something local: maybe that device moved to a new address.
+        hint, device, seen_at = (
+            address_hint(hass, [entry.entry_id], entry.reason or "", seen)
+            if entry.state is ConfigEntryState.SETUP_RETRY and meaning_of(entry.reason or "") in REACH_HINTS
+            else ("", "", "")
         )
-        for entry in hass.config_entries.async_entries()
-        if entry.state in FAILED_STATES and entry.disabled_by is None and entry.domain != DOMAIN
-    ]
+        items.append(
+            Item(
+                key=f"entry:{entry.entry_id}",
+                name=f"{integration_name(hass, entry.domain)}: {entry.title}",
+                id=entry.entry_id,
+                info=redact(entry.reason or "") or entry.state.value.replace("_", " "),
+                link=f"/config/integrations/integration/{entry.domain}",
+                hint=hint,
+                device=device,
+                seen_at=seen_at,
+            )
+        )
     items = [i for i in items if i.key not in keep]
     if not items:
         return []
