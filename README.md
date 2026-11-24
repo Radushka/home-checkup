@@ -10,8 +10,9 @@ Once a day it tells you if your home is healthy, or which few things need a look
 2. Integrations that did not start.
 3. Leftover entities and devices that nothing provides any more.
 4. Devices and entities that have been offline for a long time. A device with nothing left that works is one
-   line, with the day it went offline. The day stays true after a restart. A wall tablet that only sleeps
-   (Browser Mod, Fully Kiosk) is not listed.
+   line, with the day it went offline. A device that is partly offline is one line too, for example
+   "5 of 12 entities". The day stays true after a restart. A wall tablet that only sleeps (Browser Mod,
+   Fully Kiosk) and the sensors of phones and computers (the companion app) are not listed.
 5. Automations and scripts that point to things that no longer exist.
 6. Helpers that nothing seems to use.
 7. Batteries running low (under 15%), so you can change them before a device stops. Phones, tablets and
@@ -74,6 +75,8 @@ For log errors it does more than count them:
 
 1. It adds one plain line on what a common error means, and one thing to try. For example: "It did not answer
    in time. Try: Check that it is on and close to Wi-Fi."
+   When a device that could not be reached works again, its errors are shown as good news ("works again",
+   with the time of the gap) and are not counted. A device that drops 3 times in a week is a problem again.
 2. It offers one next step: "See the update" when an update that may fix it is ready, "Sign in again",
    "Open the devices", or "Open dashboards" for a template that reads something missing.
 3. It tells start-up noise (errors only in the first minutes after a restart) from real, ongoing problems.

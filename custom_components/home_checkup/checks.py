@@ -37,6 +37,9 @@ from .const import (
     DOMAIN,
     HELPER_DOMAINS,
     HELPER_MIN_AGE,
+    BACK_AFTER,
+    BACK_AFTER_UNNAMED,
+    KEEPS_DROPPING,
     UNAVAILABLE_AFTER,
     TEMPLATE_HELPER_DOMAINS,
     UNAVAILABLE_SINCE_START_AFTER,
@@ -86,6 +89,10 @@ class Item:
     since: str = ""
     or_earlier: bool = False
     parts: int = 0
+    of: int = 0  # a device that is partly offline: how many entities it has in all
+    # For a log error about something that could not be reached and that works again: when the errors began.
+    back: bool = False
+    back_from: float = 0
 
 
 @dataclass
@@ -105,6 +112,7 @@ class Finding:
     action: str = ""  # "update", "signin", "devices", "template", "logs"
     action_link: str = ""
     action_info: str = ""  # for "update": the new version
+    back: bool = False  # log errors about something that works again: shown as good news, not counted
 
     def as_dict(self) -> dict[str, Any]:
         data = asdict(self)
@@ -198,6 +206,34 @@ def _clock(when: float) -> str:
     return dt_util.as_local(dt_util.utc_from_timestamp(when)).strftime("%H:%M")
 
 
+REACH_HINTS = frozenset({"timeout", "unreachable", "dropped", "offline", "dns"})
+_ENTITY_IN_TEXT = re.compile(r"\b([a-z][a-z0-9_]*\.[a-z0-9_]+)\b")
+
+
+@callback
+def _works_again(hass: HomeAssistant, group: Any, now: float, drops: dict[str, list[float]], key: str) -> str:
+    """"back": a could-not-reach error whose device works again. "flaky": it did that 3 times this week. Else "".
+
+    With the entity named in the error we can look: it must be available now, and quiet for BACK_AFTER.
+    Without a name only time can tell, so the quiet time is longer.
+    """
+    text = f"{group.template} {group.sample} {group.cause}"
+    if meaning_of(text) not in REACH_HINTS:
+        return ""
+    named = [e for e in dict.fromkeys(_ENTITY_IN_TEXT.findall(f"{group.sample} {group.cause}")) if hass.states.get(e)]
+    if any(hass.states.get(e).state == STATE_UNAVAILABLE for e in named):
+        return ""
+    quiet = BACK_AFTER if named else BACK_AFTER_UNNAMED
+    if now - group.last_seen < quiet.total_seconds():
+        return ""
+    week = now - 7 * 86400
+    times = [t for t in drops.get(key, []) if t >= week]
+    if not times or group.last_seen - times[-1] > BACK_AFTER.total_seconds():
+        times.append(group.last_seen)
+    drops[key] = times
+    return "flaky" if len(times) >= KEEPS_DROPPING else "back"
+
+
 def check_log(
     hass: HomeAssistant,
     watch: LogWatch,
@@ -205,6 +241,7 @@ def check_log(
     keep: frozenset[str] = frozenset(),
     watching_since: float = 0.0,
     run_start: float = 0.0,
+    drops: dict[str, list[float]] | None = None,
 ) -> list[Finding]:
     """One finding per integration and level. What goes in the Repairs note:
 
@@ -218,6 +255,9 @@ def check_log(
     # A start-up error is about one start. Errors from an earlier start leave the page as soon as Home Assistant
     # starts again (`run_start`: when this run began). If the error comes back at this start, it is shown again,
     # with the new time. So an old line never returns for a few minutes after a restart.
+    drops = drops if drops is not None else {}
+    for key in [k for k, times in drops.items() if not times or times[-1] < now - 7 * 86400]:
+        del drops[key]
     by_domain: dict[str | None, list] = defaultdict(list)
     for group, count in watch.groups(now):
         if run_start and group.last_seen < run_start and group.startup_only(since):
@@ -228,8 +268,19 @@ def check_log(
     for domain, groups in by_domain.items():
         errors = [(g, n) for g, n in groups if g.level in ("ERROR", "CRITICAL")]
         warnings = [(g, n) for g, n in groups if g.level not in ("ERROR", "CRITICAL")]
+        # Could-not-reach errors whose device works again are good news: their own group, shown but not counted.
+        state = {
+            g.template: "" if g.startup_only(since) else _works_again(hass, g, now, drops, f"log:{domain}:{g.template}")
+            for g, _ in errors
+        }
+        back_errors = [(g, n) for g, n in errors if state[g.template] == "back"]
+        errors = [(g, n) for g, n in errors if state[g.template] != "back"]
         name = integration_name(hass, domain)
-        for level_groups, is_error, word in ((errors, True, "error"), (warnings, False, "warning")):
+        for level_groups, is_error, word, back in (
+            (errors, True, "error", False),
+            (back_errors, True, "error", True),
+            (warnings, False, "warning", False),
+        ):
             if not level_groups:
                 continue
             total = sum(n for _, n in level_groups)
@@ -240,15 +291,17 @@ def check_log(
                 g.first_seen >= since and g.first_seen >= watching_since + NEW_ERROR_AFTER.total_seconds() and not g.startup_only(since)
                 for g, _ in level_groups
             )
-            severity = "warning" if is_error and not startup else "info"
-            if startup:
+            severity = "warning" if is_error and not startup and not back else "info"
+            if back:
+                detail = "It could not be reached for a while. It works again."
+            elif startup:
                 detail = "Only right after a restart. Usually harmless, but it hides real errors."
             elif causes == 1:
                 detail = "One cause, repeated."
             else:
                 detail = f"{causes} different causes."
             hints = [meaning_of(f"{g.template} {g.sample} {g.cause}") for g, _ in level_groups]
-            action, action_link, action_info = next_step(hass, domain, hints) if is_error else ("", "", "")
+            action, action_link, action_info = next_step(hass, domain, hints) if is_error and not back else ("", "", "")
             findings.append(
                 Finding(
                     kind="log_errors" if is_error else "log_warnings",
@@ -260,6 +313,7 @@ def check_log(
                     severity=severity,
                     integration=domain,
                     integration_name=name,
+                    back=back,
                     in_note=severity == "warning" and (len(hours) >= NOTE_HOURS or new),
                     link=f"/config/integrations/integration/{domain}" if domain else "/config/logs",
                     items=[
@@ -273,7 +327,13 @@ def check_log(
                                 if g.startup_only(since)
                                 else f"{_plural(n, 'time')}, last at {_clock(g.last_seen)}"
                             ),
-                            hint=meaning_of(f"{g.template} {g.sample} {g.cause}"),
+                            hint=(
+                                "flaky"
+                                if is_error and state.get(g.template) == "flaky"
+                                else meaning_of(f"{g.template} {g.sample} {g.cause}")
+                            ),
+                            back=back,
+                            back_from=g.first_seen if back and g.first_seen >= since else 0,
                             startup=g.startup_only(since),
                             times=n,
                             last=_clock(g.last_seen),
@@ -402,7 +462,8 @@ def check_leftovers(
 
 
 # A wall tablet's own entities (Browser Mod, Fully Kiosk) go unavailable when the tablet sleeps. That is not a fault.
-SLEEPING_PLATFORMS = frozenset({"browser_mod", "fully_kiosk"})
+# The sensors of a phone or a computer (the companion app) do the same when the device sleeps or the app is closed.
+SLEEPING_PLATFORMS = frozenset({"browser_mod", "fully_kiosk", "mobile_app"})
 
 
 @callback
@@ -434,15 +495,23 @@ def check_unavailable(
     lone: list[tuple[str, Any, datetime, bool]] = []  # entity id, registry entry, since, exact
     by_device: dict[str, list[tuple[str, Any, datetime, bool]]] = {}
     for state in hass.states.async_all():
-        if state.state != STATE_UNAVAILABLE or state.attributes.get(ATTR_RESTORED):
-            continue  # restored ones are leftovers or failed integrations, reported elsewhere
+        if state.state != STATE_UNAVAILABLE:
+            continue
+        noted = memory.get(state.entity_id)
+        # Restored ones are leftovers or failed integrations, reported elsewhere. But while Home Assistant is
+        # still starting, everything looks restored for a moment: what we already listed stays on the list.
+        if state.attributes.get(ATTR_RESTORED) and not (noted and not up_long):
+            continue
         entry = ent_reg.async_get(state.entity_id)
         if entry is not None and entry.platform in SLEEPING_PLATFORMS:
             continue
         since = state.last_changed
-        at_start = started_at is not None and since <= started_at + _START_SLACK
+        # Before Home Assistant has finished starting there is no start time yet: all of it is "since the start".
+        if started_at is None:
+            at_start = now - since < UNAVAILABLE_SINCE_START_AFTER
+        else:
+            at_start = since <= started_at + _START_SLACK
         exact = not at_start  # "since the start" only says: at least that long
-        noted = memory.get(state.entity_id)
         if noted and at_start and noted[0] < since.timestamp():
             since, exact = dt_util.utc_from_timestamp(noted[0]), bool(noted[1])
         if not (now - since >= UNAVAILABLE_AFTER or (up_long and at_start) or (noted and at_start)):
@@ -463,6 +532,27 @@ def check_unavailable(
         device = dev_reg.async_get(device_id)
         # One line for the device only when nothing of it works any more: every entity that is switched on is on the list.
         enabled = [e for e in er.async_entries_for_device(ent_reg, device_id) if e.disabled_by is None]
+        if device is not None and 1 < len(rows) < len(enabled):
+            # Part of the device is offline: still one line, so a device with many sensors does not fill the page.
+            rows = [r for r in rows if f"unavailable:{r[0]}" not in keep]
+            key = f"offline_parts:{device_id}"
+            if key in keep or not rows:
+                continue
+            _, _, since, exact = min(rows, key=lambda r: r[2])
+            items.append(
+                Item(
+                    key=key,
+                    name=device.name_by_user or device.name or "Unnamed device",
+                    id=device_id,
+                    info=f"{words(since, exact)} · {len(rows)} of {len(enabled)} entities",
+                    link=f"/config/devices/device/{device_id}",
+                    since=since.isoformat(),
+                    or_earlier=not exact,
+                    parts=len(rows),
+                    of=len(enabled),
+                )
+            )
+            continue
         if device is None or len(rows) < len(enabled):
             lone.extend(rows)
             continue
@@ -500,7 +590,7 @@ def check_unavailable(
         )
     if not items:
         return []
-    devices = sum(1 for i in items if i.fix == "disable")
+    devices = sum(1 for i in items if i.fix == "disable" or i.of)
     others = len(items) - devices
     if devices and not others:
         title = f"{_plural(devices, 'device')} offline for a long time"
@@ -1107,12 +1197,13 @@ def run_checks(
     run_start: float = 0.0,
     facts: YamlFacts | None = None,
     offline: dict[str, list[Any]] | None = None,
+    drops: dict[str, list[float]] | None = None,
 ) -> list[Finding]:
     kept = frozenset(keep)
     findings: list[Finding] = []
     for number, check in enumerate((
         lambda: check_failed_integrations(hass, kept),
-        lambda: check_log(hass, watch, now or time.time(), kept, watching_since, run_start),
+        lambda: check_log(hass, watch, now or time.time(), kept, watching_since, run_start, drops),
         lambda: check_broken_references(hass, kept, facts),
         lambda: check_leftovers(hass, kept, started_at),
         lambda: check_unavailable(hass, started_at, kept, offline),

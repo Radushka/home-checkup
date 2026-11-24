@@ -52,6 +52,7 @@ class Checkup:
         self._seen: dict[str, list[float]] = {}
         self._seen_since: float = 0.0
         self._offline: dict[str, list[Any]] = {}  # entity id -> [offline since, exact]; outlives restarts
+        self._drops: dict[str, list[float]] = {}  # log item key -> when it came back, this week
         self._seen_store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.seen")
         self._store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.keep")
         # The error history (counts and redacted samples only), so it survives a restart.
@@ -76,6 +77,7 @@ class Checkup:
         self._seen = seen.get("seen", {})
         self._seen_since = seen.get("since") or time.time()
         self._offline = seen.get("offline", {})
+        self._drops = seen.get("drops", {})
         log = await self._log_store.async_load() or {}
         self.watching_since = float(log.get("since") or time.time())
         self._acted = log.get("acted", {})
@@ -143,7 +145,7 @@ class Checkup:
         now = time.time()
         self.findings = run_checks(
             self.hass, self.watch, self.corpus, self.started_at, self.keep, now,
-            watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts, offline=self._offline,
+            watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts, offline=self._offline, drops=self._drops,
         )
         self.findings += self._stopped(now)
         self._mark_new(now)
@@ -165,7 +167,7 @@ class Checkup:
                 item.new = first > baseline_until and now - first < NEW_FOR.total_seconds()
         week = 7 * 86400
         self._seen = {k: v for k, v in self._seen.items() if now - v[1] < week}
-        self._seen_store.async_delay_save(lambda: {"seen": self._seen, "since": self._seen_since, "offline": self._offline}, 60)
+        self._seen_store.async_delay_save(lambda: {"seen": self._seen, "since": self._seen_since, "offline": self._offline, "drops": self._drops}, 60)
 
     def _log_data(self) -> dict[str, Any]:
         return {

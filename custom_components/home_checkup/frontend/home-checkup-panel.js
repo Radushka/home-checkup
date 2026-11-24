@@ -156,6 +156,13 @@ const WORDS = {
     "Something calls an action that does not exist.": "Quelque chose appelle une action qui n’existe pas.",
     "Check your automations and cards.": "Vérifiez vos automatisations et vos cartes.",
     "It asked for something that does not exist.": "Il a demandé quelque chose qui n’existe pas.",
+    "works again": "fonctionne à nouveau",
+    "It works again.": "Il fonctionne à nouveau.",
+    "Not reachable from {from} to {to}.": "Injoignable de {from} à {to}.",
+    "Last error at {to}.": "Dernière erreur à {to}.",
+    "{n} of {m} entities": "{n} entités sur {m}",
+    "It keeps dropping.": "La connexion se coupe souvent.",
+    "Check its power and its Wi-Fi signal.": "Vérifiez son alimentation et son signal Wi-Fi.",
     "A container uses an image that was removed.": "Un conteneur utilise une image qui a été supprimée.",
     "Recreate the container, for example in Portainer.": "Recréez le conteneur, par exemple dans Portainer.",
     "What it asked for was removed on the other side.": "Ce qu’il a demandé a été supprimé de l’autre côté.",
@@ -411,6 +418,13 @@ const WORDS = {
     "Something calls an action that does not exist.": "Etwas ruft eine Aktion auf, die es nicht gibt.",
     "Check your automations and cards.": "Prüfen Sie Ihre Automationen und Karten.",
     "It asked for something that does not exist.": "Es hat etwas angefragt, das es nicht gibt.",
+    "works again": "funktioniert wieder",
+    "It works again.": "Es funktioniert wieder.",
+    "Not reachable from {from} to {to}.": "Nicht erreichbar von {from} bis {to}.",
+    "Last error at {to}.": "Letzter Fehler um {to}.",
+    "{n} of {m} entities": "{n} von {m} Entitäten",
+    "It keeps dropping.": "Die Verbindung bricht immer wieder ab.",
+    "Check its power and its Wi-Fi signal.": "Prüfen Sie Stromversorgung und WLAN-Signal.",
     "A container uses an image that was removed.": "Ein Container nutzt ein Image, das entfernt wurde.",
     "Recreate the container, for example in Portainer.": "Erstellen Sie den Container neu, zum Beispiel in Portainer.",
     "What it asked for was removed on the other side.": "Das Angefragte wurde auf der anderen Seite entfernt.",
@@ -666,6 +680,13 @@ const WORDS = {
     "Something calls an action that does not exist.": "Algo llama a una acción que no existe.",
     "Check your automations and cards.": "Compruebe sus automatizaciones y tarjetas.",
     "It asked for something that does not exist.": "Pidió algo que no existe.",
+    "works again": "funciona de nuevo",
+    "It works again.": "Funciona de nuevo.",
+    "Not reachable from {from} to {to}.": "Sin conexión de {from} a {to}.",
+    "Last error at {to}.": "Último error a las {to}.",
+    "{n} of {m} entities": "{n} de {m} entidades",
+    "It keeps dropping.": "La conexión se corta a menudo.",
+    "Check its power and its Wi-Fi signal.": "Compruebe la alimentación y la señal Wi-Fi.",
     "A container uses an image that was removed.": "Un contenedor usa una imagen que fue eliminada.",
     "Recreate the container, for example in Portainer.": "Vuelva a crear el contenedor, por ejemplo en Portainer.",
     "What it asked for was removed on the other side.": "Lo que pidió fue eliminado en el otro lado.",
@@ -807,6 +828,7 @@ const MEANINGS = {
   missing: "Something points to an entity that no longer exists.",
   slowstart: "It starts slowly. Usually harmless.",
   unsupported: "The device cannot do what was asked.",
+  flaky: "It keeps dropping.",
   baddata: "It got an answer it could not read.",
   badvalue: "It got a value it cannot use.",
   database: "The history database had a problem. Your history may have a gap.",
@@ -836,6 +858,7 @@ const TRY = {
   template: "Check the template.",
   missing: "Change it to an entity that exists.",
   unsupported: "Check the automation or card that asked for it.",
+  flaky: "Check its power and its Wi-Fi signal.",
   baddata: "Update the integration.",
   badvalue: "Check the automation or card that sent it.",
   bug: "Update it. If the error stays, report it to its makers.",
@@ -1020,7 +1043,7 @@ class HomeCheckupPanel extends HTMLElement {
     if (f.kind === "log_stopped") return `${who}: ${this._t("The errors stopped")}`;
     if (f.kind === "unavailable") {
       // Whole devices are one line each. The title says what is on the list.
-      const devices = (f.items || []).filter((i) => i.fix === "disable").length;
+      const devices = (f.items || []).filter((i) => i.fix === "disable" || i.of).length;
       if (devices && devices === n) return this._tn(n, "{n} device offline for a long time", "{n} devices offline for a long time");
       if (devices) return this._t("{n} devices and entities offline for a long time", { n });
     }
@@ -1895,7 +1918,16 @@ class HomeCheckupPanel extends HTMLElement {
         const target = this._target(it);
         const tryText = it.hint && TRY[it.hint] ? `<span class="try">${esc(this._t("Try: {text}", { text: this._t(TRY[it.hint]) }))}</span>` : "";
         // Our words stand a little apart from the words of the log, as one block.
-        const mean = it.hint && MEANINGS[it.hint] ? `<span class="ours"><span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>${tryText}</span>` : "";
+        let mean = it.hint && MEANINGS[it.hint] ? `<span class="ours"><span class="mean">${esc(this._t(MEANINGS[it.hint]))}</span>${tryText}</span>` : "";
+        if (it.back) {
+          // Good news: nothing to try. The gap in plain words says more than a count.
+          const at = (t) => this._time(new Date(t * 1000).toISOString());
+          const gap =
+            it.back_from && it.last_at - it.back_from > 60
+              ? this._t("Not reachable from {from} to {to}.", { from: at(it.back_from), to: at(it.last_at) })
+              : this._t("Last error at {to}.", { to: at(it.last_at) });
+          mean = `<span class="ours"><span class="mean">${esc(this._t("It works again."))}</span><span class="try">${esc(gap)}</span></span>`;
+        }
         let infoText = isLog && it.times ? "" : it.info;
         if (f.kind === "broken_references") {
           // Plain words, no raw ids: what happened to the missing thing, then when the automation last ran.
@@ -1912,7 +1944,8 @@ class HomeCheckupPanel extends HTMLElement {
         if (f.kind === "unavailable" && it.since) {
           const date = new Date(it.since).toLocaleDateString(this._hass?.locale?.language || undefined, { day: "numeric", month: "short" });
           infoText = this._t(it.or_earlier ? "Offline since {date} or earlier" : "Offline since {date}", { date });
-          if (it.parts) infoText += ` · ${this._tn(it.parts, "{n} entity", "{n} entities")}`;
+          if (it.of) infoText += ` · ${this._t("{n} of {m} entities", { n: it.parts, m: it.of })}`;
+          else if (it.parts) infoText += ` · ${this._tn(it.parts, "{n} entity", "{n} entities")}`;
         }
         const news = this._asked().includes(it.key) ? this._news(it.key) : null;
         const newsLine = news?.text ? `<span class="fixnews">${esc(news.text)}</span>` : "";
@@ -1925,7 +1958,9 @@ class HomeCheckupPanel extends HTMLElement {
         // Fixed columns, so the marks line up from line to line: new, how often, when last.
         const pill = it.new ? `<span class="newpill">${esc(this._t("New"))}</span>` : "";
         const meta =
-          isLog && it.times
+          it.back
+            ? ""
+            : isLog && it.times
             ? `<span class="mc mnew">${pill}</span><span class="mc times ${it.times >= MANY_TIMES ? "many" : ""}">${it.times}×</span><span class="mc last">${esc(this._lastSeen(it))}</span>`
             : pill;
         // "Asked" is about our work, not about the error, so it sits with our words.
@@ -1943,7 +1978,7 @@ class HomeCheckupPanel extends HTMLElement {
             : "";
         // No safe fix for this line yet: the person can ask us for one. Nothing is sent before they read it and press Send.
         const askBtn =
-          !fixBtn && !chooseBtn && !it.file && ASK_KINDS.includes(f.kind) && !asked
+          !fixBtn && !chooseBtn && !it.file && !it.back && ASK_KINDS.includes(f.kind) && !asked
             ? `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
             : "";
         // The actions live in the opened line: first you look, then you choose what to do.
@@ -1967,6 +2002,7 @@ class HomeCheckupPanel extends HTMLElement {
     }
     let hint = this._t(HINTS[f.kind] ?? "");
     if (f.kind === "log_stopped") hint = this._t(STOPPED[f.action] ?? "No errors since you took the next step.");
+    else if (f.back) hint = "";
     else if (f.kind === "log_errors" && f.severity === "info") hint = this._t("Only right after a restart. Usually harmless, but it hides real errors.");
     // Only an update is news the lines below do not already say; then it takes the place of the grey hint.
     const stepLine =
@@ -1983,7 +2019,7 @@ class HomeCheckupPanel extends HTMLElement {
         ? `<button type="button" class="ignoreall" data-act="keepall" data-id="${esc(id)}">${esc(this._t("Ignore all"))}</button>`
         : "";
     const count = isLog
-      ? `<span class="gcount">${esc(f.kind === "log_errors" ? this._tn(items.length, "{n} error", "{n} errors") : this._tn(items.length, "{n} warning", "{n} warnings"))}</span>`
+      ? `<span class="gcount">${esc(f.back ? this._t("works again") : f.kind === "log_errors" ? this._tn(items.length, "{n} error", "{n} errors") : this._tn(items.length, "{n} warning", "{n} warnings"))}</span>`
       : "";
     const title = isLog ? f.integration_name || "Home Assistant" : this._title(f);
     const box = rows && f.kind !== "log_stopped";
@@ -2025,7 +2061,7 @@ class HomeCheckupPanel extends HTMLElement {
       // Not a log line: the id for people who want it, a way to the thing itself, and the actions.
       const link = item.link ? `<a class="dlink" href="${esc(item.link)}" data-act="go" data-link="${esc(item.link)}">${esc(this._t(placeName(item.link)))}${ARROW}</a>` : "";
       // A device has no id worth reading, so its opened line is only the way there and the actions.
-      const showId = item.id && item.fix !== "disable";
+      const showId = item.id && item.fix !== "disable" && !item.of;
       return `<div class="errdetail${showId ? "" : " bare"}">${showId ? `<div class="dmeta code">${esc(item.id)}</div>` : ""}${row(link, "")}</div>`;
     }
     if (d.error) return `<div class="errdetail"><div class="dmeta">${esc(d.error)}</div>${row("", "")}</div>`;

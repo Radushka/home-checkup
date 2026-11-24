@@ -70,3 +70,8 @@ TEMPLATE_HELPER_DOMAINS = (
     "switch_as_x", "trend", "filter", "history_stats", "integration", "tod", "generic_thermostat",
     "generic_hygrostat", "mold_indicator", "random", "combined_energy",
 )
+
+# A "could not reach it" log error is solved when its device works again and no new error came for this long.
+BACK_AFTER = timedelta(minutes=30)
+BACK_AFTER_UNNAMED = timedelta(hours=2)  # the error names no entity, so only time can tell
+KEEPS_DROPPING = 3  # this many drops in a week is a real problem again
