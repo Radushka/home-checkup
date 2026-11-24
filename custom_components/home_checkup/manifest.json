@@ -3,6 +3,7 @@
   "name": "Home Checkup",
   "after_dependencies": [
     "automation",
+    "dhcp",
     "frontend",
     "http",
     "script",
@@ -22,5 +23,5 @@
   "issue_tracker": "https://github.com/Radushka/home-checkup/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.6.19"
+  "version": "0.6.20"
 }
