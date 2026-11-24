@@ -31,6 +31,12 @@
       "status": "fixed",
       "fixed_in": "0.6.10",
       "about": "Camera does not support streaming: explained in plain words, with what to try."
+    },
+    {
+      "code": "8a596ad794054476f69194724716e64a6cb0a4409eed2525dae19a06249cecc3",
+      "status": "fixed",
+      "fixed_in": "0.6.16",
+      "about": "Portainer 'Resource not found' for a Docker image: the page says a container uses a removed image, and what to try."
     }
   ]
 }

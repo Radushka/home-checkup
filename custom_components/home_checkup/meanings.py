@@ -30,6 +30,10 @@ MEANINGS: tuple[tuple[str, re.Pattern[str]], ...] = tuple(
         ("server", r"\b(status|http|code|error)[ :=]*5\d\d\b|bad gateway|service unavailable|internal server error"),
         ("noaction", r"(service|action) [\w.]+ (was )?(not found|does not exist)|unknown (service|action)|servicenotfound"),
         ("missing", r"referenced entities .* missing|unable to find (referenced )?entit|entity .* (not found|does not exist)"),
+        # Asked the other side for one thing by its id, and that thing is gone there (cleaned up, updated, deleted).
+        ("image", r"/images/sha256|no such image|image .* (not found|does not exist)"),
+        ("removed", r"resource not found|no such (container|volume|file|object|device)|"
+         r"(has been|was) (deleted|removed)|no longer exists"),
         ("notfound", r"\b404\b|not found"),
         ("blocking", r"detected blocking call|blocking call to"),
         ("deprecated", r"deprecat"),
