@@ -15,6 +15,30 @@ STATIC_URL = "/home_checkup_static"
 
 # Setting: show one note in Repairs when something needs a look (on by default).
 CONF_REPAIRS_NOTE = "repairs_note"
+# Setting: where the weekly letter is sent. "off" (default), "persistent" (a Home Assistant notification),
+# or the name of a notify service (a phone). The letter is always on the page.
+CONF_WEEKLY_LETTER = "weekly_letter"
+# Settings behind the gear on the page.
+CONF_CHECKS_OFF = "checks_off"  # the checks the person turned off (names from CHECK_GROUPS)
+CONF_DAILY_HOUR = "daily_hour"  # local hour of the daily checkup
+CONF_AUTO_UPDATE = "auto_update"  # install a new version of Home Checkup at night (off by default)
+CONF_AUTO_RESTART = "auto_restart"  # after such an install, also restart Home Assistant (off by default)
+UPDATE_HOUR = 4  # local time of the nightly install
+
+# One switch per check on the page -> the lists it turns off.
+CHECK_GROUPS = {
+    "integrations": ("failed_integrations",),
+    "log": ("log_errors", "log_warnings", "log_stopped"),
+    "automations": ("broken_references", "idle_automations"),
+    "leftovers": ("leftover_entities", "leftover_devices"),
+    "offline": ("unavailable", "weak_signal"),
+    "helpers": ("unused_helpers",),
+    "batteries": ("low_batteries",),
+    "system": ("backup", "storage", "history"),
+    "updates": ("updates", "before_update"),
+    "areas": ("areas",),
+    "voice": ("voice_names",),
+}
 
 # When the full checkup runs: once a day at this local time, and once a few minutes after Home Assistant starts.
 DAILY_HOUR = 8
@@ -83,3 +107,16 @@ BACKUP_OLD = timedelta(days=14)
 STORAGE_FULL = 0.90  # used share of the disk
 STORAGE_SOON_DAYS = 45  # "full in about N days" is said when N is at most this
 DATABASE_BIG = 8 * 1024**3  # bytes
+
+# 0.6.23
+BACKUP_FRESH = timedelta(days=2)  # fresh enough to update right away
+CHATTY_EVERY = 10  # seconds: an entity that writes to the history more often than this is listed
+CHATTY_MIN_HOURS = 6  # watch this long before judging
+CHATTY_SHOWN = 5
+WEAK_AFTER = timedelta(days=1)  # weak this long, without one good reading
+WEAK_RSSI = -80  # dBm, for Wi-Fi and Bluetooth
+WEAK_LQI = 30  # Zigbee link quality, 0 to 255
+LETTER_WEEKDAY = 6  # Sunday, with the morning checkup
+LETTER_MIN_GAP = timedelta(days=3)  # a first letter needs at least this much of a week
+LETTER_SHOWN = timedelta(days=7)  # how long the letter stays on the page
+LETTER_NAMES = 4  # names per line, then "and N more"

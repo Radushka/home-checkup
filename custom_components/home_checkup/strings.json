@@ -33,10 +33,12 @@
         "title": "Home Checkup",
         "description": "The full list is always on the Home Checkup page in the sidebar.",
         "data": {
-          "repairs_note": "Show a note in Repairs when something needs a look"
+          "repairs_note": "Show a note in Repairs when something needs a look",
+          "weekly_letter": "Send the weekly letter to"
         },
         "data_description": {
-          "repairs_note": "One note only, never one per problem. It goes away by itself when all is well."
+          "repairs_note": "One note only, never one per problem. It goes away by itself when all is well.",
+          "weekly_letter": "Once a week, on Sunday morning: what went away and what is new. No letter in a week with no change. The letter is always on the Home Checkup page."
         }
       }
     }

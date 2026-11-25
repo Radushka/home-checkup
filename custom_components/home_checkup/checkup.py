@@ -8,13 +8,16 @@ The tablets only read one small sensor; the full report is sent only when someon
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 import time
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
@@ -29,6 +32,7 @@ from .checks import (
     integration_name,
     read_corpus,
     read_update_notes,
+    ChangeCounter,
     read_backup,
     read_storage,
     note_storage,
@@ -38,12 +42,99 @@ from .checks import (
 )
 from .checks import checked_counts
 from .fixes import Fixes
-from .const import DAILY_HOUR, DOMAIN, FIRST_SCAN_DELAY, NEW_FOR, REFRESH_EVERY, STARTUP_GRACE, STOPPED_AFTER, STOPPED_SHOWN
+from .const import (
+    CHECK_GROUPS,
+    CONF_AUTO_RESTART,
+    CONF_AUTO_UPDATE,
+    CONF_CHECKS_OFF,
+    CONF_DAILY_HOUR,
+    CONF_REPAIRS_NOTE,
+    CONF_WEEKLY_LETTER,
+    UPDATE_HOUR,
+)
+from .const import DAILY_HOUR, DOMAIN, FIRST_SCAN_DELAY, LETTER_MIN_GAP, LETTER_NAMES, LETTER_SHOWN, LETTER_WEEKDAY, NEW_FOR, REFRESH_EVERY, STARTUP_GRACE, STOPPED_AFTER, STOPPED_SHOWN
 from .logwatch import LogWatch
 from .repairs import async_mark_covered, async_sync_issues
 
 _LOGGER = logging.getLogger(__name__)
 STORE_VERSION = 1
+
+
+_LETTER_WORDS = {
+    "en": ("Home Checkup: your week", "Gone this week: {names}.", "New this week: {names}.", "and {n} more",
+           "1 other thing still waits.", "{n} other things still wait.", "Nothing else waits."),
+    "fr": ("Home Checkup : votre semaine", "Réglé cette semaine : {names}.", "Nouveau cette semaine : {names}.", "et {n} de plus",
+           "1 autre point attend encore.", "{n} autres points attendent encore.", "Rien d’autre n’attend."),
+    "de": ("Home Checkup: Ihre Woche", "Diese Woche erledigt: {names}.", "Neu in dieser Woche: {names}.", "und {n} weitere",
+           "1 weiterer Punkt wartet noch.", "{n} weitere Punkte warten noch.", "Sonst wartet nichts."),
+    "es": ("Home Checkup: tu semana", "Resuelto esta semana: {names}.", "Nuevo esta semana: {names}.", "y {n} más",
+           "1 cosa más sigue esperando.", "{n} cosas más siguen esperando.", "No espera nada más."),
+}
+
+
+def letter_text(letter: dict[str, Any], language: str = "en") -> tuple[str, str]:
+    """The weekly letter as a title and a few short lines. Names, not numbers."""
+    title, gone, new, more, one, many, none = _LETTER_WORDS.get((language or "en")[:2], _LETTER_WORDS["en"])
+
+    def names(key: str) -> str:
+        shown = letter.get(key, [])
+        extra = letter.get(f"{key}_n", len(shown)) - len(shown)
+        return ", ".join(shown) + (f" {more.format(n=extra)}" if extra > 0 else "")
+
+    lines = []
+    if letter.get("gone"):
+        lines.append(gone.format(names=names("gone")))
+    if letter.get("new"):
+        lines.append(new.format(names=names("new")))
+    still = letter.get("still", 0)
+    lines.append(none if still <= 0 else one if still == 1 else many.format(n=still))
+    return title, "\n".join(lines)
+
+
+@callback
+def letter_places(hass: HomeAssistant) -> dict[str, str]:
+    """Where the weekly letter can go: a Home Assistant notification, or a phone that exists here."""
+    places = {"off": "Off", "persistent": "Home Assistant notification"}
+    # Only phones and tablets with the Home Assistant app: a short list with readable names. A letter is read, not spoken.
+    for name in sorted(hass.services.async_services().get("notify", {})):
+        if name.startswith("mobile_app_"):
+            places[name] = name.removeprefix("mobile_app_").replace("_", " ").title()
+    return places
+
+
+@callback
+def own_update(hass: HomeAssistant) -> str | None:
+    """The update entity of Home Checkup itself (made by HACS), or None."""
+    for state in hass.states.async_all("update"):
+        names = f"{state.attributes.get('title') or ''} {state.attributes.get('friendly_name') or ''}".lower()
+        if "home checkup" in names:
+            return state.entity_id
+    return None
+
+
+def _version_on_disk() -> str:
+    try:
+        return str(json.loads((Path(__file__).parent / "manifest.json").read_text(encoding="utf-8")).get("version") or "")
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _code_print() -> str:
+    """A fingerprint of everything that needs a restart to change: the Python files and what the manifest asks for.
+
+    The page file, the words and the version number are left out: a new copy of those works with no restart."""
+    here = Path(__file__).parent
+    digest = hashlib.sha256()
+    try:
+        for file in sorted(here.glob("*.py")):
+            digest.update(file.name.encode())
+            digest.update(file.read_bytes())
+        manifest = json.loads((here / "manifest.json").read_text(encoding="utf-8"))
+        manifest.pop("version", None)
+        digest.update(json.dumps(manifest, sort_keys=True).encode())
+    except Exception:  # noqa: BLE001
+        return ""
+    return digest.hexdigest()
 
 
 def _counted(finding: Finding) -> bool:
@@ -71,6 +162,19 @@ class Checkup:
         self.backup: dict[str, Any] | None = None  # when the newest backup was made; read with the full check
         self.storage: dict[str, float] | None = None  # sizes only; read with the full check
         self._disk: list[list[float]] = []  # [when, used bytes], one per half day; outlives restarts
+        self._weak: dict[str, float] = {}  # entity id -> weak signal since; outlives restarts
+        self.changes = ChangeCounter()  # how often each entity changes; in memory only, only counts
+        # The weekly letter: what was open at the last letter (key -> name), and the last letter itself.
+        self.checks_off: set[str] = set()  # checks the person turned off behind the gear
+        self.daily_hour = DAILY_HOUR
+        self.auto_update = False
+        self.auto_restart = False
+        self.restart_wanted = ""  # a newer version is on the disk and its code changed: it starts after a restart
+        self._page_only = ""  # a newer version is on the disk and only its page changed: it already runs
+        self._unsub_daily: Callable[[], None] | None = None
+        self.weekly_letter = "off"  # where the letter is sent: "off", "persistent", or a notify service name
+        self._week: dict[str, Any] = {}
+        self.letter: dict[str, Any] | None = None
         self._seen_store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.seen")
         self._store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.keep")
         # The error history (counts and redacted samples only), so it survives a restart.
@@ -97,6 +201,10 @@ class Checkup:
         self._offline = seen.get("offline", {})
         self._drops = seen.get("drops", {})
         self._disk = seen.get("disk", [])
+        self._weak = seen.get("weak", {})
+        self._week = seen.get("week", {})
+        self.letter = seen.get("letter")
+        self._unsubs.append(self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._count_change))
         log = await self._log_store.async_load() or {}
         self.watching_since = float(log.get("since") or time.time())
         self._acted = log.get("acted", {})
@@ -110,7 +218,11 @@ class Checkup:
         logging.getLogger().addHandler(self.watch)
         self.watch.take_system_log(self.hass, after=float(log.get("saved_at") or 0))
         self._unsubs.append(async_track_time_interval(self.hass, self._hourly, REFRESH_EVERY))
-        self._unsubs.append(async_track_time_change(self.hass, self._daily, hour=DAILY_HOUR, minute=0, second=0))
+        self._track_daily()
+        # The code as it was loaded. Taken once per run of Home Assistant, so a reload cannot mistake new files for it.
+        if f"{DOMAIN}_code" not in self.hass.data:
+            self.hass.data[f"{DOMAIN}_code"] = await self.hass.async_add_executor_job(_code_print)
+        self._unsubs.append(async_track_time_change(self.hass, self._nightly, hour=UPDATE_HOUR, minute=0, second=0))
         if self.hass.state is CoreState.running:
             self._unsubs.append(async_call_later(self.hass, FIRST_SCAN_DELAY, self._daily))
         else:
@@ -118,11 +230,104 @@ class Checkup:
         self.refresh()
 
     @callback
+    def _track_daily(self) -> None:
+        if self._unsub_daily:
+            self._unsub_daily()
+        self._unsub_daily = async_track_time_change(self.hass, self._daily, hour=self.daily_hour, minute=0, second=0)
+
+    @callback
+    def apply_settings(self, options: dict[str, Any], started: bool = True) -> None:
+        """The settings behind the gear. A change applies at once, with no reload."""
+        self.repairs_note = options.get(CONF_REPAIRS_NOTE, True)
+        self.weekly_letter = options.get(CONF_WEEKLY_LETTER, "off")
+        self.checks_off = {name for name in options.get(CONF_CHECKS_OFF, []) if name in CHECK_GROUPS}
+        self.auto_update = bool(options.get(CONF_AUTO_UPDATE, False))
+        self.auto_restart = self.auto_update and bool(options.get(CONF_AUTO_RESTART, False))
+        hour = int(options.get(CONF_DAILY_HOUR, DAILY_HOUR))
+        if hour != self.daily_hour:
+            self.daily_hour = hour
+            if started:
+                self._track_daily()
+        if started:
+            self.refresh()
+
+    def settings(self) -> dict[str, Any]:
+        return {
+            CONF_REPAIRS_NOTE: self.repairs_note,
+            CONF_WEEKLY_LETTER: self.weekly_letter,
+            "places": [[key, label] for key, label in letter_places(self.hass).items()],
+            CONF_CHECKS_OFF: sorted(self.checks_off),
+            "checks": list(CHECK_GROUPS),
+            CONF_DAILY_HOUR: self.daily_hour,
+            CONF_AUTO_UPDATE: self.auto_update,
+            CONF_AUTO_RESTART: self.auto_restart,
+            "can_update": own_update(self.hass) is not None,
+        }
+
+    async def _nightly(self, _now: Any = None) -> None:
+        await self.async_auto_update()
+
+    async def async_auto_update(self) -> str:
+        """At night, only when the person turned it on: install a waiting version of Home Checkup itself.
+
+        Returns what happened: "off", "none", "failed", "installed" or "restarting"."""
+        if not self.auto_update:
+            return "off"
+        entity_id = own_update(self.hass)
+        state = self.hass.states.get(entity_id) if entity_id else None
+        if state is None or state.state != "on" or state.attributes.get("in_progress"):
+            return "none"
+        try:
+            await self.hass.services.async_call("update", "install", {"entity_id": entity_id}, blocking=True)
+        except Exception:  # noqa: BLE001 - HACS could not install it: nothing changed, HACS shows why
+            _LOGGER.debug("Could not install the update", exc_info=True)
+            return "failed"
+        await self._read_disk_version()
+        if not self.restart_wanted:
+            return "failed"
+        self.refresh()
+        if not self.auto_restart:
+            return "installed"
+        await self.hass.services.async_call("homeassistant", "restart", {})
+        return "restarting"
+
+    async def _read_disk_version(self) -> None:
+        from .panel import async_refresh_panel  # noqa: PLC0415
+
+        on_disk = await self.hass.async_add_executor_job(_version_on_disk)
+        loaded = self._loaded_version
+        self.restart_wanted = self._page_only = ""
+        if on_disk and loaded and on_disk != loaded:
+            code = await self.hass.async_add_executor_job(_code_print)
+            if code and code == self.hass.data.get(f"{DOMAIN}_code"):
+                self._page_only = on_disk  # only the page changed: it works at once
+            else:
+                self.restart_wanted = on_disk
+        try:
+            await async_refresh_panel(self.hass)
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Could not point the sidebar at the new page", exc_info=True)
+
+    async def async_restart(self) -> bool:
+        """The Restart button on the page. Only offered, and only allowed, while a new version waits for it."""
+        if not self.restart_wanted:
+            return False
+        await self.hass.services.async_call("homeassistant", "restart", {})
+        return True
+
+    @callback
+    def _count_change(self, event: Event) -> None:
+        self.changes.add(event.data["entity_id"])
+
+    @callback
     def async_stop(self) -> None:
         logging.getLogger().removeHandler(self.watch)
         if self._unsub_started is not None:
             self._unsub_started()
             self._unsub_started = None
+        if self._unsub_daily:
+            self._unsub_daily()
+            self._unsub_daily = None
         for unsub in self._unsubs:
             unsub()
         self._unsubs.clear()
@@ -142,6 +347,74 @@ class Checkup:
 
     async def _daily(self, _now: Any = None) -> None:
         await self.async_full_scan()
+        await self.async_weekly()
+
+    def _open_now(self) -> dict[str, str]:
+        """What needs a look right now: key -> name. Only what is counted; notes and things to watch stay out."""
+        return {i.key: i.name for f in self.findings if _counted(f) for i in f.items}
+
+    async def async_weekly(self, now: float | None = None, force: bool = False) -> dict[str, Any] | None:
+        """The weekly letter, on Sunday morning: what went away, what is new. No letter in a week with no change.
+
+        It is always kept for the page. It is sent to a phone only when the person chose where."""
+        now = now if now is not None else time.time()
+        if self.letter and now - self.letter.get("at", 0) > LETTER_SHOWN.total_seconds():
+            self.letter = None
+        open_now = self._open_now()
+        if not self._week:
+            self._week = {"start": now, "keys": open_now}
+            self._save_seen()
+            return None
+        due = dt_util.as_local(dt_util.utc_from_timestamp(now)).weekday() == LETTER_WEEKDAY
+        if not force and (not due or now - self._week.get("start", 0) < LETTER_MIN_GAP.total_seconds()):
+            return None
+        before: dict[str, str] = self._week.get("keys", {})
+        gone = sorted(name for key, name in before.items() if key not in open_now and key not in self.keep)
+        new = sorted(name for key, name in open_now.items() if key not in before)
+        self._week = {"start": now, "keys": open_now}
+        letter = None
+        if gone or new:
+            letter = {
+                "at": now,
+                "gone": gone[:LETTER_NAMES], "gone_n": len(gone),
+                "new": new[:LETTER_NAMES], "new_n": len(new),
+                "still": len(open_now) - len(new),
+            }
+            self.letter = letter
+            await self._send_letter(letter)
+        self._save_seen()
+        for listener in list(self._listeners):
+            listener()
+        return letter
+
+    async def _send_letter(self, letter: dict[str, Any]) -> None:
+        if self.weekly_letter in ("", "off"):
+            return
+        title, message = letter_text(letter, self.hass.config.language)
+        try:
+            if self.weekly_letter == "persistent":
+                await self.hass.services.async_call(
+                    "persistent_notification", "create",
+                    {"title": title, "message": message, "notification_id": f"{DOMAIN}_letter"},
+                )
+            elif self.hass.services.has_service("notify", self.weekly_letter):
+                await self.hass.services.async_call("notify", self.weekly_letter, {"title": title, "message": message})
+        except Exception:  # noqa: BLE001 - a letter that cannot be sent is still on the page
+            _LOGGER.debug("Could not send the weekly letter", exc_info=True)
+
+    def _page(self) -> str:
+        from .panel import page_version  # noqa: PLC0415
+
+        return page_version(self.hass)
+
+    def _seen_data(self) -> dict[str, Any]:
+        return {
+            "seen": self._seen, "since": self._seen_since, "offline": self._offline, "drops": self._drops,
+            "disk": self._disk, "weak": self._weak, "week": self._week, "letter": self.letter,
+        }
+
+    def _save_seen(self) -> None:
+        self._seen_store.async_delay_save(self._seen_data, 60)
 
     async def async_full_scan(self) -> None:
         """Read the configuration files (in a worker thread), then check everything."""
@@ -172,17 +445,26 @@ class Checkup:
         except Exception:  # noqa: BLE001
             _LOGGER.debug("Could not read the storage", exc_info=True)
             self.storage = None
+        try:
+            await self._read_disk_version()
+        except Exception:  # noqa: BLE001
+            self.restart_wanted = ""
         self.refresh()
 
     @callback
     def refresh(self) -> None:
         now = time.time()
+        self.changes.turn(now)
         self.findings = run_checks(
             self.hass, self.watch, self.corpus, self.started_at, self.keep, now,
             watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts, offline=self._offline, drops=self._drops, update_notes=self.update_notes,
             backup=self.backup, storage=self.storage, storage_samples=self._disk,
+            changes=self.changes, weak=self._weak,
         )
         self.findings += self._stopped(now)
+        if self.checks_off:
+            off = {kind for name in self.checks_off for kind in CHECK_GROUPS.get(name, ())}
+            self.findings = [f for f in self.findings if f.kind not in off]
         self._mark_new(now)
         async_mark_covered(self.hass, self.findings)
         self._log_store.async_delay_save(self._log_data, 60)
@@ -202,7 +484,7 @@ class Checkup:
                 item.new = first > baseline_until and now - first < NEW_FOR.total_seconds()
         week = 7 * 86400
         self._seen = {k: v for k, v in self._seen.items() if now - v[1] < week}
-        self._seen_store.async_delay_save(lambda: {"seen": self._seen, "since": self._seen_since, "offline": self._offline, "drops": self._drops, "disk": self._disk}, 60)
+        self._save_seen()
 
     def _log_data(self) -> dict[str, Any]:
         return {
@@ -279,6 +561,10 @@ class Checkup:
     @property
     def version(self) -> str:
         """This version of Home Checkup, for the page ("Ask for a fix" names it)."""
+        return self._page_only or self._loaded_version
+
+    @property
+    def _loaded_version(self) -> str:
         try:
             return str(async_get_loaded_integration(self.hass, DOMAIN).version or "")
         except Exception:  # noqa: BLE001 - not loaded through the loader (some tests)
@@ -338,4 +624,8 @@ class Checkup:
             "findings": [f.as_dict() for f in findings],
             "kept": sorted(self.keep),
             "labelled": ignored_by_label(self.hass)[2],
+            "letter": self.letter,
+            "off": sorted(self.checks_off),
+            "restart": self.restart_wanted,
+            "page": self._page(),
         }

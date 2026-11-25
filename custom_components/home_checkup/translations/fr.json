@@ -33,10 +33,12 @@
         "title": "Home Checkup",
         "description": "La liste complète est toujours sur la page Home Checkup dans la barre latérale.",
         "data": {
-          "repairs_note": "Afficher une note dans Réparations quand un point est à vérifier"
+          "repairs_note": "Afficher une note dans Réparations quand un point est à vérifier",
+          "weekly_letter": "Envoyer la lettre de la semaine à"
         },
         "data_description": {
-          "repairs_note": "Une seule note, jamais une par problème. Elle disparaît d’elle-même quand tout va bien."
+          "repairs_note": "Une seule note, jamais une par problème. Elle disparaît d’elle-même quand tout va bien.",
+          "weekly_letter": "Une fois par semaine, le dimanche matin : ce qui est réglé et ce qui est nouveau. Pas de lettre si rien n’a changé. La lettre est toujours sur la page Home Checkup."
         }
       }
     }

@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .checkup import Checkup
-from .const import CONF_REPAIRS_NOTE, DOMAIN
+from .const import DOMAIN
 from .panel import async_add_panel, async_remove_panel
 from .websocket import async_register_commands
 
@@ -34,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     started_at: datetime | None = None if hass.state is not CoreState.running else _guess_start(hass)
     checkup = Checkup(hass, started_at)
-    checkup.repairs_note = entry.options.get(CONF_REPAIRS_NOTE, True)
+    checkup.apply_settings(dict(entry.options), started=False)
     await checkup.async_start()
     entry.runtime_data = checkup
     hass.data[DOMAIN] = checkup
@@ -47,8 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _options_changed(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """A changed setting applies at once, with no reload."""
     checkup = entry.runtime_data
-    checkup.repairs_note = entry.options.get(CONF_REPAIRS_NOTE, True)
-    checkup.refresh()
+    checkup.apply_settings(dict(entry.options))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

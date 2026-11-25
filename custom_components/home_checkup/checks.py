@@ -30,7 +30,14 @@ from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BACKUP_FRESH,
     BACKUP_OLD,
+    CHATTY_EVERY,
+    CHATTY_MIN_HOURS,
+    CHATTY_SHOWN,
+    WEAK_AFTER,
+    WEAK_LQI,
+    WEAK_RSSI,
     BATTERY_LOW,
     DATABASE_BIG,
     IDLE_AFTER,
@@ -116,6 +123,8 @@ class Item:
     amount: float = 0
     total: float = 0
     days: int = 0
+    good: bool = False  # "Before you update": this point is fine
+    every: int = 0  # a chatty entity: it writes to the history about every N seconds
 
 
 @dataclass
@@ -1580,6 +1589,7 @@ def check_idle_automations(hass: HomeAssistant, keep: frozenset[str] = frozenset
         elif now - last < IDLE_AFTER:
             continue
         auto_id = state.attributes.get("id")
+        waits = waits_for(hass, state.entity_id)
         items.append(
             Item(
                 key=key,
@@ -1588,21 +1598,52 @@ def check_idle_automations(hass: HomeAssistant, keep: frozenset[str] = frozenset
                 info="Never ran" if last is None else f"Last ran {dt_util.as_local(last).strftime('%-d %b %Y')}",
                 link=f"/config/automation/edit/{auto_id}" if auto_id else "/config/automation/dashboard",
                 last_ran=last.isoformat() if last else "",
+                # One story from two lists: it does not run because what it waits for is offline.
+                hint="waits" if waits else "",
+                device=waits,
             )
         )
     if not items:
         return []
-    items.sort(key=lambda i: (i.last_ran != "", i.last_ran, i.name.lower()))
+    items.sort(key=lambda i: (i.hint != "waits", i.last_ran != "", i.last_ran, i.name.lower()))
     return [
         Finding(
             kind="idle_automations",
             title=f"{_plural(len(items), 'automation')} did not run for a long time",
-            detail="Switched on, but never triggered. Its trigger may be broken, or it is no longer needed.",
+            detail="Switched on, but it did not run for 90 days or more. Its trigger may be broken, or it is no longer needed.",
             severity="info",
             link="/config/automation/dashboard",
             items=items,
         )
     ]
+
+
+@callback
+def waits_for(hass: HomeAssistant, automation_id: str) -> str:
+    """The name of an offline thing this automation uses, or "". A device counts when nothing of it works."""
+    try:
+        from homeassistant.components import automation  # noqa: PLC0415
+
+        entities = automation.entities_in_automation(hass, automation_id)
+        devices = automation.devices_in_automation(hass, automation_id)
+    except Exception:  # noqa: BLE001
+        return ""
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    for device_id in devices:
+        device = dev_reg.async_get(device_id)
+        if device is not None and er.async_entries_for_device(ent_reg, device_id) and _down(hass, ent_reg, device_id):
+            return device.name_by_user or device.name or ""
+    for entity_id in entities:
+        state = hass.states.get(entity_id)
+        if state is None or state.state != STATE_UNAVAILABLE:
+            continue
+        entry = ent_reg.async_get(entity_id)
+        device = dev_reg.async_get(entry.device_id) if entry and entry.device_id else None
+        if device is not None and _down(hass, ent_reg, device.id):
+            return device.name_by_user or device.name or _entity_name(hass, entry, entity_id)
+        return _entity_name(hass, entry, entity_id)
+    return ""
 
 
 # ---- 11. Backup age -------------------------------------------------------------------------------------------
@@ -1739,6 +1780,269 @@ def check_storage(
     ]
 
 
+# ---- 13. What fills the history -----------------------------------------------------------------------------
+
+
+class ChangeCounter:
+    """Counts how often each entity changes, in memory only. Two half-day windows, so the picture stays fresh."""
+
+    def __init__(self) -> None:
+        self.now: dict[str, int] = {}
+        self.before: dict[str, int] = {}
+        self.started = time.time()
+        self.turned = self.started
+
+    def add(self, entity_id: str) -> None:
+        self.now[entity_id] = self.now.get(entity_id, 0) + 1
+
+    def turn(self, now: float) -> None:
+        if now - self.turned >= 12 * 3600:
+            self.before, self.now, self.turned = self.now, {}, now
+            self.started = max(self.started, now - 24 * 3600)
+
+    def hours(self, now: float) -> float:
+        return (now - self.started) / 3600
+
+    def per_day(self, now: float) -> dict[str, float]:
+        hours = self.hours(now)
+        if hours <= 0:
+            return {}
+        both = dict(self.before)
+        for entity_id, count in self.now.items():
+            both[entity_id] = both.get(entity_id, 0) + count
+        return {entity_id: count * 24 / hours for entity_id, count in both.items()}
+
+
+@callback
+def check_history(
+    hass: HomeAssistant, keep: frozenset[str] = frozenset(), changes: ChangeCounter | None = None, now: float | None = None
+) -> list[Finding]:
+    """The few entities that write most often to the history. Shown, not counted."""
+    now = now if now is not None else time.time()
+    if changes is None or changes.hours(now) < CHATTY_MIN_HOURS:
+        return []
+    recorded = None
+    try:
+        from homeassistant.components.recorder import get_instance  # noqa: PLC0415
+
+        recorded = get_instance(hass).entity_filter
+    except Exception:  # noqa: BLE001 - no recorder here: then nothing fills a history
+        return []
+    ent_reg = er.async_get(hass)
+    limit = 86400 / CHATTY_EVERY
+    items: list[Item] = []
+    for entity_id, per_day in sorted(changes.per_day(now).items(), key=lambda kv: -kv[1]):
+        if per_day < limit or len(items) >= CHATTY_SHOWN:
+            break
+        key = f"chatty:{entity_id}"
+        if key in keep or hass.states.get(entity_id) is None or (recorded is not None and not recorded(entity_id)):
+            continue
+        every = max(1, round(86400 / per_day))
+        items.append(
+            Item(
+                key=key,
+                name=_entity_name(hass, ent_reg.async_get(entity_id), entity_id),
+                id=entity_id,
+                info=f"Writes about every {_plural(every, 'second')}",
+                link="/config/entities",
+                hint="chatty",
+                every=every,
+            )
+        )
+    if not items:
+        return []
+    return [
+        Finding(
+            kind="history",
+            title=f"{_plural(len(items), 'entity writes', 'entities write')} to the history very often",
+            detail="They fill the history database fastest. If you do not need their history, stop recording them.",
+            severity="info",
+            link="/config/entities",
+            items=items,
+        )
+    ]
+
+
+# ---- 14. Weak signal, before it goes offline -----------------------------------------------------------------
+
+
+@callback
+def check_signal(
+    hass: HomeAssistant, keep: frozenset[str] = frozenset(), memory: dict[str, float] | None = None, now: float | None = None
+) -> list[Finding]:
+    """Devices whose own signal reading has been weak for a day or more. Shown, not counted.
+
+    `memory`: entity id -> since when it is weak. One good reading clears it, so a short dip never shows.
+    """
+    now = now if now is not None else time.time()
+    memory = memory if memory is not None else {}
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    weak_now: set[str] = set()
+    for state in hass.states.async_all("sensor"):
+        try:
+            value = float(state.state)
+        except (TypeError, ValueError):
+            continue
+        unit = str(state.attributes.get("unit_of_measurement") or "").lower()
+        if state.attributes.get("device_class") == "signal_strength" and unit == "dbm":
+            weak = value <= WEAK_RSSI and value < 0
+        elif unit == "lqi" or state.entity_id.endswith(("_linkquality", "_lqi")):
+            weak = 0 < value <= WEAK_LQI
+        else:
+            continue
+        if weak:
+            weak_now.add(state.entity_id)
+    for entity_id in list(memory):
+        if entity_id not in weak_now:
+            del memory[entity_id]
+    by_thing: dict[str, tuple[str, float, str]] = {}
+    for entity_id in weak_now:
+        since = memory.setdefault(entity_id, now)
+        if now - since < WEAK_AFTER.total_seconds():
+            continue
+        entry = ent_reg.async_get(entity_id)
+        device = dev_reg.async_get(entry.device_id) if entry and entry.device_id else None
+        thing = device.id if device else entity_id
+        name = (device.name_by_user or device.name) if device else _entity_name(hass, entry, entity_id)
+        link = f"/config/devices/device/{device.id}" if device else "/config/entities"
+        if thing not in by_thing or since < by_thing[thing][1]:
+            by_thing[thing] = (name or entity_id, since, link)
+    items = [
+        Item(key=f"signal:{thing}", name=name, id=thing, info=f"Weak signal since {_day(since)}", link=link,
+             hint="weaksignal", since=dt_util.utc_from_timestamp(since).isoformat())
+        for thing, (name, since, link) in sorted(by_thing.items(), key=lambda kv: kv[1][1])
+        if f"signal:{thing}" not in keep
+    ]
+    if not items:
+        return []
+    return [
+        Finding(
+            kind="weak_signal",
+            title=f"{_plural(len(items), 'device has', 'devices have')} a weak signal",
+            detail="It still works, but it may drop soon.",
+            severity="info",
+            link="/config/devices/dashboard",
+            items=items,
+        )
+    ]
+
+
+# ---- 15. Names that confuse voice ----------------------------------------------------------------------------
+
+_ASSISTANTS = ("conversation", "cloud.alexa", "cloud.google_assistant")
+
+
+@callback
+def check_voice_names(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> list[Finding]:
+    """Two things with the same name that a voice assistant can reach. Shown, not counted.
+
+    Assist tells same-named things apart by their area, so there only the same area (or no area) is a clash.
+    """
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    # Only the saved choice is read. Asking Home Assistant would make it save a choice, and this check only reads.
+    assistants = [a for a in _ASSISTANTS if a == "conversation" or "cloud" in hass.config.components]
+    by_name: dict[tuple[str, str], list[tuple[str, str | None]]] = defaultdict(list)
+    thing_of: dict[str, str] = {}  # entity -> its device. Two parts of one device (a TV and its remote) are no clash.
+    for state in hass.states.async_all():
+        if state.domain in ("automation", "script", "scene", "update", "sensor", "binary_sensor", "button", "event"):
+            continue
+        name = " ".join(str(state.attributes.get(ATTR_FRIENDLY_NAME) or "").lower().split())
+        if not name:
+            continue
+        entry = ent_reg.async_get(state.entity_id)
+        if entry is None:
+            continue
+        thing_of[state.entity_id] = entry.device_id or state.entity_id
+        area = entry.area_id
+        if not area and entry.device_id and (device := dev_reg.async_get(entry.device_id)):
+            area = device.area_id
+        for assistant in assistants:
+            if (entry.options.get(assistant) or {}).get("should_expose") is True:
+                by_name[(assistant, name)].append((state.entity_id, area))
+    clashes: dict[str, set[str]] = {}
+    for (assistant, name), found in by_name.items():
+        if len(found) < 2:
+            continue
+        if assistant == "conversation":
+            areas = [a for _, a in found]
+            same = {e for e, a in found if a is None or areas.count(a) > 1}
+            if len(same) < 2:
+                continue
+            found = [(e, a) for e, a in found if e in same]
+        if len({thing_of[e] for e, _ in found}) < 2:
+            continue
+        clashes.setdefault(name, set()).update(e for e, _ in found)
+    items = []
+    for name, entities in sorted(clashes.items()):
+        key = f"voice:{name}"
+        if key in keep:
+            continue
+        ids = sorted(entities)
+        shown = str(hass.states.get(ids[0]).attributes.get(ATTR_FRIENDLY_NAME))
+        items.append(Item(key=key, name=shown, id=ids[0], info=", ".join(ids), link="/config/entities", hint="samename",
+                          used_by=ids[:4], used_n=len(ids)))
+    if not items:
+        return []
+    return [
+        Finding(
+            kind="voice_names",
+            title=f"{_plural(len(items), 'name is', 'names are')} used twice for voice",
+            detail="A voice assistant cannot tell them apart.",
+            severity="info",
+            link="/config/voice-assistants/expose",
+            items=items,
+        )
+    ]
+
+
+# ---- 16. Before you update -----------------------------------------------------------------------------------
+
+
+@callback
+def check_before_update(
+    hass: HomeAssistant, findings: list[Finding], backup: dict[str, Any] | None, now: float | None = None,
+    keep: frozenset[str] = frozenset(),
+) -> list[Finding]:
+    """One calm answer when updates are waiting: is the backup fresh, has the storage room, do the notes warn?"""
+    now = now if now is not None else time.time()
+    waiting = [s for s in hass.states.async_all("update") if s.state == "on"]
+    if not waiting:
+        return []
+    items: list[Item] = []
+    last = (backup or {}).get("last")
+    if backup is not None:
+        fresh = last is not None and now - last <= BACKUP_FRESH.total_seconds()
+        items.append(Item(key="before:backup", name="Backup", id="backup", link="/config/backup", good=fresh,
+                          hint="upd_backup_ok" if fresh else "upd_backup",
+                          info="Fresh" if fresh else "Make one first",
+                          since=dt_util.utc_from_timestamp(last).isoformat() if last else ""))
+    storage = next((f for f in findings if f.kind == "storage" and f.severity == "warning"), None)
+    items.append(Item(key="before:storage", name="Storage", id="storage", link="/config/storage", good=storage is None,
+                      hint="upd_storage_ok" if storage is None else "upd_storage",
+                      info="Has room" if storage is None else "Free some space first"))
+    risky = next((f for f in findings if f.kind == "updates"), None)
+    names = [i.name for i in risky.items] if risky else []
+    items.append(Item(key="before:notes", name="Release notes", id="notes", link="/config/updates", good=not names,
+                      hint="upd_notes_ok" if not names else "upd_notes",
+                      info="No breaking change found" if not names else f"Read first: {', '.join(names[:3])}",
+                      used_by=names[:3], used_n=len(names)))
+    items = [i for i in items if i.key not in keep]
+    if not items:
+        return []
+    return [
+        Finding(
+            kind="before_update",
+            title=f"{_plural(len(waiting), 'update is', 'updates are')} waiting",
+            detail="Safe to update when all three are fine.",
+            severity="info",
+            link="/config/updates",
+            items=items,
+        )
+    ]
+
+
 @callback
 def ignored_by_label(hass: HomeAssistant) -> tuple[set[str], set[str], int]:
     """What carries the label "checkup_ignore": entity ids, device ids, and how many labels were set by hand.
@@ -1782,6 +2086,8 @@ def run_checks(
     backup: dict[str, Any] | None = None,
     storage: dict[str, float] | None = None,
     storage_samples: list[list[float]] | None = None,
+    changes: ChangeCounter | None = None,
+    weak: dict[str, float] | None = None,
 ) -> list[Finding]:
     # The label "checkup_ignore" works like "Ignore" on the page, for a whole device or area at once.
     try:
@@ -1789,9 +2095,9 @@ def run_checks(
     except Exception:  # noqa: BLE001
         no_entities, no_devices = set(), set()
     kept = frozenset(keep) | frozenset(
-        f"{kind}:{entity_id}" for entity_id in no_entities for kind in ("unavailable", "entity", "battery", "helper", "idle")
+        f"{kind}:{entity_id}" for entity_id in no_entities for kind in ("unavailable", "entity", "battery", "helper", "idle", "chatty", "signal")
     ) | frozenset(
-        f"{kind}:{device_id}" for device_id in no_devices for kind in ("offline_device", "offline_parts", "device", "area")
+        f"{kind}:{device_id}" for device_id in no_devices for kind in ("offline_device", "offline_parts", "device", "area", "signal")
     )
     hidden = no_entities | no_devices
     findings: list[Finding] = []
@@ -1808,6 +2114,9 @@ def run_checks(
         lambda: check_idle_automations(hass, kept),
         lambda: check_backup(hass, kept, backup),
         lambda: check_storage(kept, storage, storage_samples, now),
+        lambda: check_history(hass, kept, changes, now),
+        lambda: check_signal(hass, kept, weak, now),
+        lambda: check_voice_names(hass, kept),
     )):
         try:
             findings.extend(check())
@@ -1818,6 +2127,11 @@ def run_checks(
                 _LOGGER.warning("A Home Checkup check could not run. Please report it.", exc_info=True)
             else:
                 _LOGGER.debug("A Home Checkup check failed", exc_info=True)
+    try:
+        # Last, because it reads the other answers.
+        findings.extend(check_before_update(hass, findings, backup, now, kept))
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("The before-update check failed", exc_info=True)
     if hidden:
         # The lists that are not keyed by the thing itself (waiting updates, broken steps of an automation).
         for finding in findings:

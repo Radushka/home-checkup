@@ -5,6 +5,90 @@
 const WORDS = {
   en: {},
   fr: {
+    "Settings": "Réglages",
+    "Could not load the settings.": "Impossible de charger les réglages.",
+    "Could not save the setting.": "Impossible d’enregistrer le réglage.",
+    "Off": "Désactivé",
+    "Home Assistant notification": "Notification Home Assistant",
+    "Areas": "Pièces",
+    "Voice names": "Noms pour la voix",
+    "Update Home Checkup by itself": "Mettre à jour Home Checkup automatiquement",
+    "A new version is installed at night. It starts after the next restart.": "Une nouvelle version est installée la nuit. Elle démarre après le prochain redémarrage.",
+    "Also restart Home Assistant": "Redémarrer aussi Home Assistant",
+    "At 4 AM, only after such an install. Your home is not reachable for about two minutes.": "À 4 h, seulement après une telle installation. Votre maison n’est pas joignable pendant environ deux minutes.",
+    "This works when Home Checkup was installed with HACS.": "Cela fonctionne quand Home Checkup a été installé avec HACS.",
+    "Tell me": "M’avertir",
+    "Note in Repairs": "Note dans Réparations",
+    "One note only, when something needs a look.": "Une seule note, quand un point est à vérifier.",
+    "Weekly letter": "Lettre de la semaine",
+    "On Sunday morning. Never in a week with no change.": "Le dimanche matin. Jamais si rien n’a changé dans la semaine.",
+    "Checks": "Vérifications",
+    "Daily check": "Vérification quotidienne",
+    "Version {v} is installed. It starts after a restart of Home Assistant.": "La version {v} est installée. Elle démarre après un redémarrage de Home Assistant.",
+    "Restart": "Redémarrer",
+    "Restarting…": "Redémarrage…",
+    "What's new": "Nouveautés",
+    "Version {v}": "Version {v}",
+    "Show me": "Montrer",
+    "A weekly line: what went away and what is new. You can also get it as a notification: open the gear.": "Une ligne par semaine : ce qui est réglé et ce qui est nouveau. Vous pouvez aussi la recevoir en notification : ouvrez la roue dentée.",
+    "No letter yet. The first one comes on a Sunday.": "Pas encore de lettre. La première arrive un dimanche.",
+    "Before you update: is the backup fresh, is there room, do the notes warn?": "Avant de mettre à jour : la sauvegarde est-elle récente, y a-t-il de la place, les notes avertissent-elles ?",
+    "No update is waiting in your home.": "Aucune mise à jour n’attend chez vous.",
+    "An automation that did not run says so when it waits for something offline.": "Une automatisation qui n’a pas tourné le dit quand elle attend un appareil hors ligne.",
+    "All your automations ran lately.": "Toutes vos automatisations ont tourné récemment.",
+    "Devices with a weak signal, before they drop.": "Les appareils au signal faible, avant qu’ils ne décrochent.",
+    "No weak signal in your home.": "Aucun signal faible chez vous.",
+    "The entities that fill the history fastest.": "Les entités qui remplissent le plus vite l’historique.",
+    "Nothing fills your history very fast.": "Rien ne remplit très vite votre historique.",
+    "Names used twice for a voice assistant.": "Les noms utilisés deux fois pour un assistant vocal.",
+    "No name is used twice for voice.": "Aucun nom n’est utilisé deux fois pour la voix.",
+    "Automations that did not run for a long time.": "Les automatisations qui n’ont pas tourné depuis longtemps.",
+    "The age of your last backup.": "L’âge de votre dernière sauvegarde.",
+    "Your backup is fresh.": "Votre sauvegarde est récente.",
+    "Storage that is filling up.": "Un stockage qui se remplit.",
+    "Your storage has room.": "Votre stockage a de la place.",
+    "An offline device says which automations use it.": "Un appareil hors ligne dit quelles automatisations l’utilisent.",
+    "Nothing is offline for a long time.": "Rien n’est hors ligne depuis longtemps.",
+    "A Reload button for an integration that did not start.": "Un bouton Recharger pour une intégration qui n’a pas démarré.",
+    "All your integrations started.": "Toutes vos intégrations ont démarré.",
+    "The label checkup_ignore hides a device, an entity or an area from the checks.": "L’étiquette checkup_ignore exclut un appareil, une entité ou une pièce des vérifications.",
+    "Voice": "Voix",
+    "Every change is saved in the history.": "Chaque changement est enregistré dans l’historique.",
+    "It still works, but it may drop soon.": "Il fonctionne encore, mais il peut bientôt décrocher.",
+    "A voice assistant cannot tell them apart.": "Un assistant vocal ne peut pas les distinguer.",
+    "If you do not need its history, leave it out of the recorder.": "Si son historique ne vous sert pas, excluez-le de l’enregistreur (recorder).",
+    "Move it closer, or move what stands in between.": "Rapprochez-le, ou déplacez ce qui se trouve entre les deux.",
+    "Rename one, or put them in different areas.": "Renommez-en un, ou placez-les dans des pièces différentes.",
+    "{n} entity writes to the history very often": "{n} entité écrit très souvent dans l’historique",
+    "{n} entities write to the history very often": "{n} entités écrivent très souvent dans l’historique",
+    "{n} device has a weak signal": "{n} appareil a un signal faible",
+    "{n} devices have a weak signal": "{n} appareils ont un signal faible",
+    "{n} name is used twice for voice": "{n} nom est utilisé deux fois pour la voix",
+    "{n} names are used twice for voice": "{n} noms sont utilisés deux fois pour la voix",
+    "Shown, not counted. These fill the history database fastest.": "Affiché, non compté. Ce sont elles qui remplissent le plus vite l’historique.",
+    "Shown, not counted. Weak for a full day or more.": "Affiché, non compté. Faible depuis un jour entier ou plus.",
+    "Shown, not counted. Only what you share with a voice assistant is compared.": "Affiché, non compté. Seul ce que vous partagez avec un assistant vocal est comparé.",
+    "Updates are waiting. This is what to check first.": "Des mises à jour attendent. Voici ce qu’il faut vérifier avant.",
+    "Before you update": "Avant de mettre à jour",
+    "It waits for {name}, which is offline.": "Elle attend {name}, qui est hors ligne.",
+    "Bring {name} back first.": "Remettez d’abord {name} en service.",
+    "Writes about every minute": "Écrit environ chaque minute",
+    "Writes about every second": "Écrit environ chaque seconde",
+    "Writes about every {n} seconds": "Écrit environ toutes les {n} secondes",
+    "Weak since {date}": "Faible depuis le {date}",
+    "Last backup {date}. Make a new one first.": "Dernière sauvegarde le {date}. Faites-en une nouvelle avant.",
+    "No backup yet. Make one first.": "Pas encore de sauvegarde. Faites-en une avant.",
+    "There is room": "Il y a de la place",
+    "Free some space first": "Libérez d’abord de la place",
+    "No breaking change found in the notes": "Aucun changement cassant trouvé dans les notes",
+    "Read first: {names}": "À lire avant : {names}",
+    "Fine": "Bon",
+    "First": "D’abord",
+    "Release notes": "Notes de version",
+    "This week": "Cette semaine",
+    "Gone this week: {names}.": "Réglé cette semaine : {names}.",
+    "New this week: {names}.": "Nouveau cette semaine : {names}.",
+    "and {n} more": "et {n} de plus",
     "Home Checkup": "Bilan de la maison",
     "Home is healthy": "La maison va bien",
     "{n} thing needs a look": "{n} point à vérifier",
@@ -325,6 +409,90 @@ const WORDS = {
     "Only right after a restart. Usually harmless, but it hides real errors.": "Seulement juste après un redémarrage. En général sans gravité, mais cela cache les vraies erreurs.",
   },
   de: {
+    "Settings": "Einstellungen",
+    "Could not load the settings.": "Die Einstellungen konnten nicht geladen werden.",
+    "Could not save the setting.": "Die Einstellung konnte nicht gespeichert werden.",
+    "Off": "Aus",
+    "Home Assistant notification": "Home Assistant Benachrichtigung",
+    "Areas": "Bereiche",
+    "Voice names": "Namen für Sprache",
+    "Update Home Checkup by itself": "Home Checkup von selbst aktualisieren",
+    "A new version is installed at night. It starts after the next restart.": "Eine neue Version wird nachts installiert. Sie startet nach dem nächsten Neustart.",
+    "Also restart Home Assistant": "Auch Home Assistant neu starten",
+    "At 4 AM, only after such an install. Your home is not reachable for about two minutes.": "Um 4 Uhr, nur nach einer solchen Installation. Ihr Zuhause ist etwa zwei Minuten nicht erreichbar.",
+    "This works when Home Checkup was installed with HACS.": "Das geht, wenn Home Checkup mit HACS installiert wurde.",
+    "Tell me": "Mir Bescheid geben",
+    "Note in Repairs": "Hinweis in Reparaturen",
+    "One note only, when something needs a look.": "Nur ein Hinweis, wenn etwas einen Blick braucht.",
+    "Weekly letter": "Wochenbrief",
+    "On Sunday morning. Never in a week with no change.": "Am Sonntagmorgen. Nie in einer Woche ohne Änderung.",
+    "Checks": "Prüfungen",
+    "Daily check": "Tägliche Prüfung",
+    "Version {v} is installed. It starts after a restart of Home Assistant.": "Version {v} ist installiert. Sie startet nach einem Neustart von Home Assistant.",
+    "Restart": "Neu starten",
+    "Restarting…": "Startet neu…",
+    "What's new": "Was ist neu",
+    "Version {v}": "Version {v}",
+    "Show me": "Zeigen",
+    "A weekly line: what went away and what is new. You can also get it as a notification: open the gear.": "Eine Zeile pro Woche: was erledigt ist und was neu ist. Sie können sie auch als Benachrichtigung bekommen: Öffnen Sie das Zahnrad.",
+    "No letter yet. The first one comes on a Sunday.": "Noch kein Brief. Der erste kommt an einem Sonntag.",
+    "Before you update: is the backup fresh, is there room, do the notes warn?": "Vor dem Update: Ist das Backup frisch, ist Platz da, warnen die Hinweise?",
+    "No update is waiting in your home.": "Bei Ihnen wartet kein Update.",
+    "An automation that did not run says so when it waits for something offline.": "Eine Automatisierung, die nicht lief, sagt es, wenn sie auf etwas wartet, das offline ist.",
+    "All your automations ran lately.": "Alle Ihre Automatisierungen liefen vor Kurzem.",
+    "Devices with a weak signal, before they drop.": "Geräte mit schwachem Signal, bevor sie ausfallen.",
+    "No weak signal in your home.": "Kein schwaches Signal bei Ihnen.",
+    "The entities that fill the history fastest.": "Die Entitäten, die den Verlauf am schnellsten füllen.",
+    "Nothing fills your history very fast.": "Nichts füllt Ihren Verlauf sehr schnell.",
+    "Names used twice for a voice assistant.": "Namen, die für einen Sprachassistenten doppelt verwendet werden.",
+    "No name is used twice for voice.": "Kein Name wird für Sprache doppelt verwendet.",
+    "Automations that did not run for a long time.": "Automatisierungen, die lange nicht liefen.",
+    "The age of your last backup.": "Das Alter Ihres letzten Backups.",
+    "Your backup is fresh.": "Ihr Backup ist frisch.",
+    "Storage that is filling up.": "Speicher, der voll läuft.",
+    "Your storage has room.": "Ihr Speicher hat Platz.",
+    "An offline device says which automations use it.": "Ein Gerät, das offline ist, sagt, welche Automatisierungen es nutzen.",
+    "Nothing is offline for a long time.": "Nichts ist seit Langem offline.",
+    "A Reload button for an integration that did not start.": "Eine Schaltfläche Neu laden für eine Integration, die nicht gestartet ist.",
+    "All your integrations started.": "Alle Ihre Integrationen sind gestartet.",
+    "The label checkup_ignore hides a device, an entity or an area from the checks.": "Das Label checkup_ignore nimmt ein Gerät, eine Entität oder einen Bereich aus den Prüfungen.",
+    "Voice": "Sprache",
+    "Every change is saved in the history.": "Jede Änderung wird im Verlauf gespeichert.",
+    "It still works, but it may drop soon.": "Es funktioniert noch, kann aber bald ausfallen.",
+    "A voice assistant cannot tell them apart.": "Ein Sprachassistent kann sie nicht unterscheiden.",
+    "If you do not need its history, leave it out of the recorder.": "Wenn Sie den Verlauf nicht brauchen, schließen Sie es vom Recorder aus.",
+    "Move it closer, or move what stands in between.": "Stellen Sie es näher, oder räumen Sie weg, was dazwischen steht.",
+    "Rename one, or put them in different areas.": "Benennen Sie eines um, oder legen Sie sie in verschiedene Bereiche.",
+    "{n} entity writes to the history very often": "{n} Entität schreibt sehr oft in den Verlauf",
+    "{n} entities write to the history very often": "{n} Entitäten schreiben sehr oft in den Verlauf",
+    "{n} device has a weak signal": "{n} Gerät hat ein schwaches Signal",
+    "{n} devices have a weak signal": "{n} Geräte haben ein schwaches Signal",
+    "{n} name is used twice for voice": "{n} Name wird für Sprache doppelt verwendet",
+    "{n} names are used twice for voice": "{n} Namen werden für Sprache doppelt verwendet",
+    "Shown, not counted. These fill the history database fastest.": "Angezeigt, nicht gezählt. Diese füllen die Verlaufsdatenbank am schnellsten.",
+    "Shown, not counted. Weak for a full day or more.": "Angezeigt, nicht gezählt. Seit einem ganzen Tag oder länger schwach.",
+    "Shown, not counted. Only what you share with a voice assistant is compared.": "Angezeigt, nicht gezählt. Verglichen wird nur, was Sie mit einem Sprachassistenten teilen.",
+    "Updates are waiting. This is what to check first.": "Updates warten. Das sollten Sie vorher prüfen.",
+    "Before you update": "Vor dem Update",
+    "It waits for {name}, which is offline.": "Sie wartet auf {name}, das offline ist.",
+    "Bring {name} back first.": "Bringen Sie zuerst {name} zurück.",
+    "Writes about every minute": "Schreibt etwa jede Minute",
+    "Writes about every second": "Schreibt etwa jede Sekunde",
+    "Writes about every {n} seconds": "Schreibt etwa alle {n} Sekunden",
+    "Weak since {date}": "Schwach seit {date}",
+    "Last backup {date}. Make a new one first.": "Letztes Backup am {date}. Machen Sie zuerst ein neues.",
+    "No backup yet. Make one first.": "Noch kein Backup. Machen Sie zuerst eines.",
+    "There is room": "Es ist Platz",
+    "Free some space first": "Schaffen Sie zuerst Platz",
+    "No breaking change found in the notes": "Keine einschneidende Änderung in den Hinweisen gefunden",
+    "Read first: {names}": "Zuerst lesen: {names}",
+    "Fine": "In Ordnung",
+    "First": "Zuerst",
+    "Release notes": "Versionshinweise",
+    "This week": "Diese Woche",
+    "Gone this week: {names}.": "Diese Woche erledigt: {names}.",
+    "New this week: {names}.": "Neu in dieser Woche: {names}.",
+    "and {n} more": "und {n} weitere",
     "Home Checkup": "Zuhause-Check",
     "Home is healthy": "Dem Zuhause geht es gut",
     "{n} thing needs a look": "{n} Punkt zum Ansehen",
@@ -645,6 +813,90 @@ const WORDS = {
     "Only right after a restart. Usually harmless, but it hides real errors.": "Nur direkt nach einem Neustart. Meist harmlos, aber es verdeckt echte Fehler.",
   },
   es: {
+    "Settings": "Ajustes",
+    "Could not load the settings.": "No se pudieron cargar los ajustes.",
+    "Could not save the setting.": "No se pudo guardar el ajuste.",
+    "Off": "Desactivado",
+    "Home Assistant notification": "Notificación de Home Assistant",
+    "Areas": "Áreas",
+    "Voice names": "Nombres para la voz",
+    "Update Home Checkup by itself": "Actualizar Home Checkup por sí solo",
+    "A new version is installed at night. It starts after the next restart.": "Una versión nueva se instala por la noche. Empieza tras el próximo reinicio.",
+    "Also restart Home Assistant": "Reiniciar también Home Assistant",
+    "At 4 AM, only after such an install. Your home is not reachable for about two minutes.": "A las 4:00, solo después de una instalación así. Su casa no responde durante unos dos minutos.",
+    "This works when Home Checkup was installed with HACS.": "Funciona cuando Home Checkup se instaló con HACS.",
+    "Tell me": "Avisarme",
+    "Note in Repairs": "Nota en Reparaciones",
+    "One note only, when something needs a look.": "Una sola nota, cuando algo necesita atención.",
+    "Weekly letter": "Carta semanal",
+    "On Sunday morning. Never in a week with no change.": "El domingo por la mañana. Nunca en una semana sin cambios.",
+    "Checks": "Revisiones",
+    "Daily check": "Revisión diaria",
+    "Version {v} is installed. It starts after a restart of Home Assistant.": "La versión {v} está instalada. Empieza tras reiniciar Home Assistant.",
+    "Restart": "Reiniciar",
+    "Restarting…": "Reiniciando…",
+    "What's new": "Novedades",
+    "Version {v}": "Versión {v}",
+    "Show me": "Mostrar",
+    "A weekly line: what went away and what is new. You can also get it as a notification: open the gear.": "Una línea por semana: lo que se resolvió y lo que es nuevo. También puede recibirla como notificación: abra el engranaje.",
+    "No letter yet. The first one comes on a Sunday.": "Aún no hay carta. La primera llega un domingo.",
+    "Before you update: is the backup fresh, is there room, do the notes warn?": "Antes de actualizar: ¿la copia es reciente, hay espacio, avisan las notas?",
+    "No update is waiting in your home.": "No hay actualizaciones en espera en su casa.",
+    "An automation that did not run says so when it waits for something offline.": "Una automatización que no se ejecutó lo dice cuando espera algo sin conexión.",
+    "All your automations ran lately.": "Todas sus automatizaciones se ejecutaron hace poco.",
+    "Devices with a weak signal, before they drop.": "Dispositivos con señal débil, antes de que se caigan.",
+    "No weak signal in your home.": "No hay señal débil en su casa.",
+    "The entities that fill the history fastest.": "Las entidades que más rápido llenan el historial.",
+    "Nothing fills your history very fast.": "Nada llena su historial muy rápido.",
+    "Names used twice for a voice assistant.": "Nombres usados dos veces para un asistente de voz.",
+    "No name is used twice for voice.": "Ningún nombre se usa dos veces para la voz.",
+    "Automations that did not run for a long time.": "Automatizaciones que no se ejecutan desde hace mucho.",
+    "The age of your last backup.": "La antigüedad de su última copia.",
+    "Your backup is fresh.": "Su copia es reciente.",
+    "Storage that is filling up.": "Almacenamiento que se está llenando.",
+    "Your storage has room.": "Su almacenamiento tiene espacio.",
+    "An offline device says which automations use it.": "Un dispositivo sin conexión dice qué automatizaciones lo usan.",
+    "Nothing is offline for a long time.": "Nada lleva mucho tiempo sin conexión.",
+    "A Reload button for an integration that did not start.": "Un botón Recargar para una integración que no se inició.",
+    "All your integrations started.": "Todas sus integraciones se iniciaron.",
+    "The label checkup_ignore hides a device, an entity or an area from the checks.": "La etiqueta checkup_ignore excluye un dispositivo, una entidad o un área de las revisiones.",
+    "Voice": "Voz",
+    "Every change is saved in the history.": "Cada cambio se guarda en el historial.",
+    "It still works, but it may drop soon.": "Aún funciona, pero puede caerse pronto.",
+    "A voice assistant cannot tell them apart.": "Un asistente de voz no puede distinguirlos.",
+    "If you do not need its history, leave it out of the recorder.": "Si no necesita su historial, exclúyalo del registrador (recorder).",
+    "Move it closer, or move what stands in between.": "Acérquelo, o mueva lo que está en medio.",
+    "Rename one, or put them in different areas.": "Cambie el nombre de uno, o póngalos en áreas distintas.",
+    "{n} entity writes to the history very often": "{n} entidad escribe muy a menudo en el historial",
+    "{n} entities write to the history very often": "{n} entidades escriben muy a menudo en el historial",
+    "{n} device has a weak signal": "{n} dispositivo tiene señal débil",
+    "{n} devices have a weak signal": "{n} dispositivos tienen señal débil",
+    "{n} name is used twice for voice": "{n} nombre se usa dos veces para la voz",
+    "{n} names are used twice for voice": "{n} nombres se usan dos veces para la voz",
+    "Shown, not counted. These fill the history database fastest.": "Se muestra, no se cuenta. Son las que más rápido llenan el historial.",
+    "Shown, not counted. Weak for a full day or more.": "Se muestra, no se cuenta. Débil desde hace un día entero o más.",
+    "Shown, not counted. Only what you share with a voice assistant is compared.": "Se muestra, no se cuenta. Solo se compara lo que comparte con un asistente de voz.",
+    "Updates are waiting. This is what to check first.": "Hay actualizaciones en espera. Esto es lo que conviene revisar antes.",
+    "Before you update": "Antes de actualizar",
+    "It waits for {name}, which is offline.": "Espera a {name}, que está sin conexión.",
+    "Bring {name} back first.": "Recupere primero {name}.",
+    "Writes about every minute": "Escribe más o menos cada minuto",
+    "Writes about every second": "Escribe más o menos cada segundo",
+    "Writes about every {n} seconds": "Escribe más o menos cada {n} segundos",
+    "Weak since {date}": "Débil desde el {date}",
+    "Last backup {date}. Make a new one first.": "Última copia el {date}. Haga una nueva antes.",
+    "No backup yet. Make one first.": "Aún no hay copia. Haga una antes.",
+    "There is room": "Hay espacio",
+    "Free some space first": "Libere espacio primero",
+    "No breaking change found in the notes": "No se encontró ningún cambio importante en las notas",
+    "Read first: {names}": "Lea primero: {names}",
+    "Fine": "Bien",
+    "First": "Primero",
+    "Release notes": "Notas de la versión",
+    "This week": "Esta semana",
+    "Gone this week: {names}.": "Resuelto esta semana: {names}.",
+    "New this week: {names}.": "Nuevo esta semana: {names}.",
+    "and {n} more": "y {n} más",
     "Home Checkup": "Chequeo del hogar",
     "Home is healthy": "La casa está bien",
     "{n} thing needs a look": "{n} cosa para revisar",
@@ -966,15 +1218,38 @@ const WORDS = {
   },
 };
 
+/** What is new, newest first. It travels inside the version: nothing is fetched. Each line: the words, the card it
+ *  jumps to, and what to say when this home has nothing for it. */
+const NEWS = [
+  ["0.6.23", [
+    ["A weekly line: what went away and what is new. You can also get it as a notification: open the gear.", "letter", "No letter yet. The first one comes on a Sunday."],
+    ["Before you update: is the backup fresh, is there room, do the notes warn?", "before_update", "No update is waiting in your home."],
+    ["An automation that did not run says so when it waits for something offline.", "idle_automations", "All your automations ran lately."],
+    ["Devices with a weak signal, before they drop.", "weak_signal", "No weak signal in your home."],
+    ["The entities that fill the history fastest.", "history", "Nothing fills your history very fast."],
+    ["Names used twice for a voice assistant.", "voice_names", "No name is used twice for voice."],
+  ]],
+  ["0.6.22", [
+    ["Automations that did not run for a long time.", "idle_automations", "All your automations ran lately."],
+    ["The age of your last backup.", "backup", "Your backup is fresh."],
+    ["Storage that is filling up.", "storage", "Your storage has room."],
+  ]],
+  ["0.6.21", [
+    ["An offline device says which automations use it.", "unavailable", "Nothing is offline for a long time."],
+    ["A Reload button for an integration that did not start.", "failed_integrations", "All your integrations started."],
+    ["The label checkup_ignore hides a device, an entity or an area from the checks.", "", ""],
+  ]],
+];
+
 const CHECKS = [
   ["Integrations", ["failed_integrations"]],
   ["Log", ["log_errors", "log_warnings", "log_stopped"]],
   ["Automations", ["broken_references"]],
   ["Leftovers", ["leftover_entities", "leftover_devices"]],
-  ["Offline", ["unavailable"]],
+  ["Offline", ["unavailable", "weak_signal"]],
   ["Helpers", ["unused_helpers"]],
   ["Batteries", ["low_batteries"]],
-  ["System", ["backup", "storage"]],
+  ["System", ["backup", "storage", "history"]],
 ];
 
 /** What a log error means, by the code Home Checkup gives it. */
@@ -1011,6 +1286,9 @@ const MEANINGS = {
   storagefull: "Home Assistant may stop recording soon.",
   storagefilling: "There is still time to act.",
   bigdatabase: "The history takes much of your storage.",
+  chatty: "Every change is saved in the history.",
+  weaksignal: "It still works, but it may drop soon.",
+  samename: "A voice assistant cannot tell them apart.",
   baddata: "It got an answer it could not read.",
   badvalue: "It got a value it cannot use.",
   database: "The history database had a problem. Your history may have a gap.",
@@ -1048,6 +1326,9 @@ const TRY = {
   storagefull: "Remove old backups, or keep fewer days of history.",
   storagefilling: "Remove old backups, or keep fewer days of history.",
   bigdatabase: "Keep fewer days of history, or record fewer entities.",
+  chatty: "If you do not need its history, leave it out of the recorder.",
+  weaksignal: "Move it closer, or move what stands in between.",
+  samename: "Rename one, or put them in different areas.",
   baddata: "Update the integration.",
   badvalue: "Check the automation or card that sent it.",
   bug: "Update it. If the error stays, report it to its makers.",
@@ -1076,6 +1357,9 @@ const TITLES = {
   updates: ["{n} update to read before you install", "{n} updates to read before you install"],
   areas: ["{n} device could have an area", "{n} devices could have an area"],
   idle_automations: ["{n} automation did not run for a long time", "{n} automations did not run for a long time"],
+  history: ["{n} entity writes to the history very often", "{n} entities write to the history very often"],
+  weak_signal: ["{n} device has a weak signal", "{n} devices have a weak signal"],
+  voice_names: ["{n} name is used twice for voice", "{n} names are used twice for voice"],
 };
 
 const HINTS = {
@@ -1092,6 +1376,10 @@ const HINTS = {
   idle_automations: "Shown, not counted. A seasonal automation can be ignored.",
   backup: "A fresh backup lets you go back when an update goes wrong.",
   storage: "When the storage is full, Home Assistant stops recording and updates fail.",
+  history: "Shown, not counted. These fill the history database fastest.",
+  weak_signal: "Shown, not counted. Weak for a full day or more.",
+  voice_names: "Shown, not counted. Only what you share with a voice assistant is compared.",
+  before_update: "Updates are waiting. This is what to check first.",
 };
 
 /** The one next step for a group of log errors: [the line, the button]. */
@@ -1108,6 +1396,7 @@ const PLACES = [
   ["/config/logs", "Log"],
   ["/config/updates", "Updates"],
   ["/config/backup", "Backups"],
+  ["/config/voice-assistants", "Voice"],
   ["/config/storage", "Storage"],
   ["/config/integrations/integration/", "Integration"],
   ["/config/integrations", "Integrations"],
@@ -1131,6 +1420,15 @@ const STOPPED = {
   devices: "No errors since you checked the devices.",
   template: "No errors since you fixed the template.",
 };
+
+/** The version of this page file, from its own address. Compared with what the report says is on the disk. */
+const LOADED_PAGE = (() => {
+  try {
+    return new URL(import.meta.url).searchParams.get("v") || "";
+  } catch {
+    return "";
+  }
+})();
 
 const SHOWN = 8;
 
@@ -1248,6 +1546,7 @@ class HomeCheckupPanel extends HTMLElement {
       if (devices && devices === n) return this._tn(n, "{n} device offline for a long time", "{n} devices offline for a long time");
       if (devices) return this._t("{n} devices and entities offline for a long time", { n });
     }
+    if (f.kind === "before_update") return this._t("Before you update");
     const pair = TITLES[f.kind];
     return pair ? this._tn(n, pair[0], pair[1]) : this._t(f.title);
   }
@@ -1302,11 +1601,25 @@ class HomeCheckupPanel extends HTMLElement {
     try {
       this._report = await this._hass.callWS(msg);
       this._error = "";
+      this._freshPage();
       this._checkNews();
     } catch (err) {
       this._error = err?.code === "not_loaded" ? "not_loaded" : "failed";
     }
     this._render();
+  }
+
+  /** An update that changed only this page: load the new page once, by itself. No restart is needed for it. */
+  _freshPage() {
+    const page = this._report?.page;
+    if (!page || !LOADED_PAGE || page === LOADED_PAGE) return;
+    try {
+      if (sessionStorage.getItem("home_checkup.page") === page) return;
+      sessionStorage.setItem("home_checkup.page", page);
+    } catch {
+      return;
+    }
+    location.reload();
   }
 
   _load() {
@@ -1357,6 +1670,123 @@ class HomeCheckupPanel extends HTMLElement {
     } catch {
       return it.last || "";
     }
+  }
+
+  async _openSettings() {
+    this._settings = { busy: true };
+    this._render();
+    try {
+      this._settings = await this._hass.callWS({ type: "home_checkup/settings" });
+    } catch {
+      this._settings = null;
+      this._say({ text: this._t("Could not load the settings.") });
+      return;
+    }
+    this._render();
+  }
+
+  /** Every change is saved at once, in the options of the integration. */
+  async _set(change) {
+    try {
+      const reply = await this._hass.callWS({ type: "home_checkup/set_settings", ...change });
+      this._settings = reply.settings;
+      this._report = reply.report;
+    } catch {
+      this._say({ text: this._t("Could not save the setting.") });
+    }
+    this._render();
+  }
+
+  _settingsHtml() {
+    const s = this._settings;
+    if (!s) return "";
+    const title = this._t("Settings");
+    if (s.busy) return `<div class="scrim" data-act="setclose"></div><div class="sheet setsheet" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="stitle">${esc(title)}</div><div class="stext">…</div></div>`;
+    const sw = (key, on, extra = "", off = false) =>
+      `<input type="checkbox" class="sw" data-act="set" data-k="${key}" ${extra} ${on ? "checked" : ""} ${off ? "disabled" : ""}>`;
+    const row = (name, hint, control, cls = "") =>
+      `<label class="srow ${cls}"><span class="swords"><span class="sname">${esc(name)}</span>${hint ? `<span class="shint">${esc(hint)}</span>` : ""}</span>${control}</label>`;
+    const placeName = { off: "Off", persistent: "Home Assistant notification" };
+    const places = `<select data-act="set" data-k="weekly_letter">${s.places
+      .map(([key, label]) => `<option value="${esc(key)}" ${key === s.weekly_letter ? "selected" : ""}>${esc(placeName[key] ? this._t(placeName[key]) : label)}</option>`)
+      .join("")}</select>`;
+    const hourName = (h) => new Date(2000, 0, 1, h).toLocaleTimeString(this._hass?.locale?.language || undefined, { hour: "numeric", minute: "2-digit" });
+    const hours = `<select data-act="set" data-k="daily_hour">${[...Array(24).keys()].map((h) => `<option value="${h}" ${h === s.daily_hour ? "selected" : ""}>${esc(hourName(h))}</option>`).join("")}</select>`;
+    const names = { integrations: "Integrations", log: "Log", automations: "Automations", leftovers: "Leftovers", offline: "Offline", helpers: "Helpers", batteries: "Batteries", system: "System", updates: "Updates", areas: "Areas", voice: "Voice names" };
+    const checks = s.checks
+      .map((key) => `<label class="ccheck"><span>${esc(this._t(names[key] ?? key))}</span>${sw("checks_off", !s.checks_off.includes(key), `data-check="${key}"`)}</label>`)
+      .join("");
+    const update = s.can_update
+      ? row(this._t("Update Home Checkup by itself"), this._t("A new version is installed at night. It starts after the next restart."), sw("auto_update", s.auto_update)) +
+        row(this._t("Also restart Home Assistant"), this._t("At 4 AM, only after such an install. Your home is not reachable for about two minutes."), sw("auto_restart", s.auto_restart, "", !s.auto_update), s.auto_update ? "sub" : "sub dim")
+      : row(this._t("Update Home Checkup by itself"), this._t("This works when Home Checkup was installed with HACS."), sw("auto_update", false, "", true), "dim");
+    return `<div class="scrim" data-act="setclose"></div>
+      <div class="sheet setsheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="stitle">${esc(title)}</div>
+        <div class="nbody">
+          <div class="nver">${esc(this._t("Tell me"))}</div>
+          ${row(this._t("Note in Repairs"), this._t("One note only, when something needs a look."), sw("repairs_note", s.repairs_note))}
+          ${row(this._t("Weekly letter"), this._t("On Sunday morning. Never in a week with no change."), places)}
+          <div class="nver">${esc(this._t("Checks"))}</div>
+          ${row(this._t("Daily check"), "", hours)}
+          <div class="cgrid">${checks}</div>
+          <div class="nver">${esc(this._t("Updates"))}</div>
+          ${update}
+        </div>
+        <div class="sbuttons"><button type="button" class="send" data-act="setclose">${esc(this._t("Done"))}</button></div>
+      </div>`;
+  }
+
+  _newsSeen() {
+    try {
+      return localStorage.getItem("home_checkup.news") === NEWS[0][0];
+    } catch {
+      return true;
+    }
+  }
+
+  _openNews() {
+    try {
+      localStorage.setItem("home_checkup.news", NEWS[0][0]);
+    } catch {
+      // Private window: the dot simply stays.
+    }
+    this._newsOpen = true;
+    this._render();
+  }
+
+  /** "Show me": jump to the card of that feature on this home, or say in one line that there is nothing for it. */
+  _newsGo(kind, none) {
+    this._newsOpen = false;
+    const has = kind === "letter" ? !!this.shadowRoot.querySelector(".letter") : (this._report?.findings ?? []).some((f) => f.kind === kind);
+    if (!has) {
+      this._say({ text: this._t(none) });
+      return;
+    }
+    this._render();
+    const card = this.shadowRoot.querySelector(kind === "letter" ? ".letter" : `section.finding[data-kind="${kind}"]`);
+    card?.scrollIntoView({ behavior: "smooth", block: "start" });
+    card?.classList.add("flash");
+    setTimeout(() => card?.classList.remove("flash"), 1200);
+  }
+
+  _newsHtml() {
+    if (!this._newsOpen) return "";
+    const title = this._t("What's new");
+    const blocks = NEWS.map(
+      ([version, lines], i) => `<div class="nver">${esc(this._t("Version {v}", { v: version }))}</div><ul class="nlist">${lines
+        .map(
+          ([text, kind, none], j) =>
+            `<li><span>${esc(this._t(text))}</span>${kind ? `<button type="button" class="link" data-act="newsgo" data-kind="${esc(kind)}" data-v="${i}" data-i="${j}">${esc(this._t("Show me"))}</button>` : ""}</li>`,
+        )
+        .join("")}</ul>`,
+    ).join("");
+    return `<div class="scrim" data-act="newsclose"></div>
+      <div class="sheet newssheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+        <div class="stitle">${esc(title)}</div>
+        <div class="nbody">${blocks}</div>
+        <div class="sbuttons"><button type="button" class="send" data-act="newsclose">${esc(this._t("Done"))}</button></div>
+      </div>`;
   }
 
   _say(toast) {
@@ -1992,7 +2422,9 @@ class HomeCheckupPanel extends HTMLElement {
           <div class="toolbar">
             <span class="menu"></span>
             <div class="name"></div>
+            <button class="news" type="button"></button>
             <button class="scan" type="button"></button>
+            <button class="gear" type="button"></button>
           </div>
           <div class="content"></div>
         </div>`;
@@ -2001,6 +2433,8 @@ class HomeCheckupPanel extends HTMLElement {
       this._menu.narrow = this._narrow;
       root.querySelector(".menu").append(this._menu);
       root.querySelector(".scan").addEventListener("click", () => this._scan(true));
+      root.querySelector(".news").addEventListener("click", () => this._openNews());
+      root.querySelector(".gear").addEventListener("click", () => this._openSettings());
       root.querySelector(".content").addEventListener("click", (e) => this._click(e));
       root.querySelector(".content").addEventListener("change", (e) => this._click(e));
       root.querySelector(".content").addEventListener("input", (e) => {
@@ -2020,6 +2454,17 @@ class HomeCheckupPanel extends HTMLElement {
     scan.classList.toggle("onbar", this._barIsAccent());
     scan.disabled = this._scanning || this._error === "not_loaded";
     scan.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true" class="${this._scanning ? "spin" : ""}"><path d="M17.65 6.35A7.96 7.96 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg><span>${esc(this._t(this._scanning ? "Checking…" : "Check now"))}</span>`;
+    const news = root.querySelector(".news");
+    news.classList.toggle("onbar", this._barIsAccent());
+    // A small dot until the window was opened once for this version. The window never opens by itself.
+    news.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3zM18.5 15l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1z"/></svg><span>${esc(this._t("What's new"))}</span>${this._newsSeen() ? "" : `<i class="dot" aria-label="${esc(this._t("New"))}"></i>`}`;
+    news.setAttribute("aria-label", this._t("What's new"));
+    const gear = root.querySelector(".gear");
+    gear.classList.toggle("onbar", this._barIsAccent());
+    gear.setAttribute("aria-label", this._t("Settings"));
+    gear.title = this._t("Settings");
+    gear.disabled = this._error === "not_loaded";
+    gear.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.14 12.94a7.07 7.07 0 0 0 0-1.88l2.03-1.58a.5.5 0 0 0 .12-.61l-1.92-3.32a.5.5 0 0 0-.59-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84a.48.48 0 0 0-.48.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.59.22L2.74 8.87a.48.48 0 0 0 .12.61l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32a.5.5 0 0 0-.12-.61l-2.01-1.58zM12 15.6A3.6 3.6 0 1 1 12 8.4a3.6 3.6 0 0 1 0 7.2z"/></svg>`;
     root.querySelector(".content").innerHTML = this._body();
     this._fillChips();
     if (!this._chipWatch && typeof ResizeObserver !== "undefined") {
@@ -2058,7 +2503,7 @@ class HomeCheckupPanel extends HTMLElement {
 
     // The chips are a small menu: one with a problem shows how many and jumps to its card, a green one says what
     // was checked, so a green mark shows the work behind it.
-    const chips = CHECKS.map(([label, kinds]) => {
+    const chips = CHECKS.filter(([label]) => !(r.off ?? []).includes(label.toLowerCase())).map(([label, kinds]) => {
       const mine = findings.filter((f) => kinds.includes(f.kind));
       const counted = mine.filter((f) => f.severity === "warning" && f.in_note !== false);
       const state = counted.length ? "warn" : mine.length ? "note" : "fine";
@@ -2082,7 +2527,8 @@ class HomeCheckupPanel extends HTMLElement {
         <div class="headline">${headline}</div>
         <div class="checked">${watch.length ? `${esc(this._t("{n} to watch", { n: watch.length }))} · ` : ""}${esc(checked)}</div>
       </div>
-      <div class="chips">${chips}</div>${chipLine ? `<div class="chipline" role="status">${esc(chipLine)}</div>` : ""}`;
+      ${r.restart ? `<div class="restartline" role="status"><span>${esc(this._t("Version {v} is installed. It starts after a restart of Home Assistant.", { v: r.restart }))}</span><button type="button" class="fixbtn" data-act="restart" ${this._restarting ? "disabled" : ""}>${esc(this._t(this._restarting ? "Restarting…" : "Restart"))}</button></div>` : ""}
+      <div class="chips">${chips}</div>${chipLine ? `<div class="chipline" role="status">${esc(chipLine)}</div>` : ""}${this._letterHtml(r.letter)}`;
     if (warnings.length) html += `<div class="section">${esc(this._t("Needs a look"))}</div><div class="grid">${warnings.map((f) => this._finding(f, false)).join("")}</div>`;
     if (watch.length) {
       html += `<div class="section">${esc(this._t("To watch"))}</div><div class="keephint">${esc(this._t("Seen only briefly. These count when they keep coming back."))}</div><div class="grid">${watch.map((f) => this._finding(f, false)).join("")}</div>`;
@@ -2122,6 +2568,8 @@ class HomeCheckupPanel extends HTMLElement {
     html += this._sheetHtml();
     html += this._askHtml();
     html += this._chooseHtml();
+    html += this._newsHtml();
+    html += this._settingsHtml();
     return html;
   }
 
@@ -2132,6 +2580,16 @@ class HomeCheckupPanel extends HTMLElement {
     const [text, ...keys] = CHECKED[label];
     if (keys.some((k) => c[k] === undefined)) return "";
     return this._t(text, Object.fromEntries(keys.map((k, i) => [["n", "m"][i], c[k]])));
+  }
+
+  /** The weekly letter: one quiet line. Good news first, names instead of numbers. */
+  _letterHtml(letter) {
+    if (!letter || (!(letter.gone || []).length && !(letter.new || []).length)) return "";
+    const names = (list, n) => list.join(", ") + (n > list.length ? ` ${this._t("and {n} more", { n: n - list.length })}` : "");
+    const parts = [];
+    if ((letter.gone || []).length) parts.push(`<span class="lgone">${esc(this._t("Gone this week: {names}.", { names: names(letter.gone, letter.gone_n) }))}</span>`);
+    if ((letter.new || []).length) parts.push(`<span>${esc(this._t("New this week: {names}.", { names: names(letter.new, letter.new_n) }))}</span>`);
+    return `<div class="letter" role="note"><span class="lhead">${esc(this._t("This week"))}</span>${parts.join(" ")}</div>`;
   }
 
   _finding(f, note) {
@@ -2161,6 +2619,10 @@ class HomeCheckupPanel extends HTMLElement {
         if (it.hint === "moved" && it.seen_at) {
           // Proof, not a guess: the same hardware is seen at another address than the one the integration uses.
           mean = `<span class="ours"><span class="mean">${esc(this._t("{name} now answers at {ip}. The integration still uses the old address.", { name: it.device, ip: it.seen_at }))}</span><span class="try">${esc(this._t("Try: {text}", { text: this._t("Set the new address in the integration.") }))}</span></span>`;
+        }
+        if (it.hint === "waits" && it.device) {
+          // One story from two lists: it does not run because the thing it waits for is offline.
+          mean = `<span class="ours"><span class="mean">${esc(this._t("It waits for {name}, which is offline.", { name: it.device }))}</span><span class="try">${esc(this._t("Try: {text}", { text: this._t("Bring {name} back first.", { name: it.device }) }))}</span></span>`;
         }
         if (it.back) {
           // Good news: nothing to try. The gap in plain words says more than a count.
@@ -2200,6 +2662,24 @@ class HomeCheckupPanel extends HTMLElement {
           else if (it.hint === "storagefull") infoText = this._t("{free} GB free of {total} GB", { free: it.amount, total: it.total });
           else infoText = `${it.amount} GB`;
         }
+        if (f.kind === "history") infoText = it.every >= 60 ? this._t("Writes about every minute") : this._tn(it.every, "Writes about every second", "Writes about every {n} seconds");
+        if (f.kind === "weak_signal" && it.since) {
+          const date = new Date(it.since).toLocaleDateString(this._hass?.locale?.language || undefined, { day: "numeric", month: "short" });
+          infoText = this._t("Weak since {date}", { date });
+        }
+        if (f.kind === "voice_names") infoText = (it.used_by || []).join(" · ") + (it.used_n > (it.used_by || []).length ? " …" : "");
+        if (f.kind === "before_update") {
+          const date = it.since ? new Date(it.since).toLocaleDateString(this._hass?.locale?.language || undefined, { day: "numeric", month: "short" }) : "";
+          const words = {
+            upd_backup_ok: this._t("Last backup {date}", { date }),
+            upd_backup: date ? this._t("Last backup {date}. Make a new one first.", { date }) : this._t("No backup yet. Make one first."),
+            upd_storage_ok: this._t("There is room"),
+            upd_storage: this._t("Free some space first"),
+            upd_notes_ok: this._t("No breaking change found in the notes"),
+            upd_notes: this._t("Read first: {names}", { names: (it.used_by || []).join(", ") + (it.used_n > (it.used_by || []).length ? " …" : "") }),
+          };
+          infoText = words[it.hint] ?? it.info;
+        }
         if (f.kind === "areas" && it.to_name) infoText = this._t("Suggested area: {name}", { name: it.to_name });
         const news = this._asked().includes(it.key) ? this._news(it.key) : null;
         const newsLine = news?.text ? `<span class="fixnews">${esc(news.text)}</span>` : "";
@@ -2210,7 +2690,14 @@ class HomeCheckupPanel extends HTMLElement {
         const asked = this._asked().includes(it.key) && !news?.again;
         // At a glance, on the right: new or asked, how often, and when last.
         // Fixed columns, so the marks line up from line to line: new, how often, when last.
-        const pill = it.new ? `<span class="newpill">${esc(this._t("New"))}</span>` : "";
+        const pill =
+          f.kind === "before_update"
+            ? it.good
+              ? `<svg class="rowok" viewBox="0 0 24 24" role="img" aria-label="${esc(this._t("Fine"))}"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`
+              : `<span class="rowfirst">${esc(this._t("First"))}</span>`
+            : it.new
+              ? `<span class="newpill">${esc(this._t("New"))}</span>`
+              : "";
         const meta =
           it.back
             ? ""
@@ -2237,9 +2724,11 @@ class HomeCheckupPanel extends HTMLElement {
             ? `<button type="button" class="ghost ask" data-act="ask" data-kind="${esc(f.kind)}" data-key="${esc(it.key)}">${esc(this._t("Ask"))}</button>`
             : "";
         // The actions live in the opened line: first you look, then you choose what to do.
+        const names = { Backup: 1, Storage: 1, "Release notes": 1 };
+        const rowName = f.kind === "before_update" && names[it.name] ? this._t(it.name) : it.name;
         const actions = `${fixBtn}${chooseBtn}${askBtn}<button type="button" class="ghost" data-act="keep" data-key="${esc(it.key)}">${esc(this._t("Ignore"))}</button>`;
         const opened = detail ? this._detailHtml(it.key, detail, actions, isLog ? null : it) : "";
-        return `<li class="${detail ? "on" : ""}"><button type="button" class="what rowbtn" data-act="detail" data-key="${esc(it.key)}" data-log="${isLog ? "1" : ""}" aria-expanded="${detail ? "true" : "false"}"><span class="rtop"><span class="nm">${esc(it.name)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>${meta ? `<span class="rmeta ${isLog && it.times ? `cols${this._days ? " days" : ""}` : ""}">${meta}</span>` : ""}</span>${info}</button>${opened}</li>`;
+        return `<li class="${detail ? "on" : ""}"><button type="button" class="what rowbtn" data-act="detail" data-key="${esc(it.key)}" data-log="${isLog ? "1" : ""}" aria-expanded="${detail ? "true" : "false"}"><span class="rtop"><span class="nm">${esc(rowName)}${target ? `<span class="to"> · ${esc(target)}</span>` : ""}</span>${meta ? `<span class="rmeta ${isLog && it.times ? `cols${this._days ? " days" : ""}` : ""}">${meta}</span>` : ""}</span>${info}</button>${opened}</li>`;
       })
       .join("");
     const more =
@@ -2461,6 +2950,29 @@ class HomeCheckupPanel extends HTMLElement {
       this._render();
     } else if (act === "ask") {
       this._openAsk(el.dataset.kind, el.dataset.key);
+    } else if (act === "setclose") {
+      this._settings = null;
+      this._render();
+    } else if (act === "set") {
+      if (e.type !== "change") return;
+      const k = el.dataset.k;
+      if (k === "checks_off") {
+        const off = new Set(this._settings.checks_off);
+        el.checked ? off.delete(el.dataset.check) : off.add(el.dataset.check);
+        this._set({ checks_off: [...off] });
+      } else if (k === "daily_hour") this._set({ daily_hour: Number(el.value) });
+      else if (k === "weekly_letter") this._set({ weekly_letter: el.value });
+      else this._set({ [k]: el.checked });
+    } else if (act === "restart") {
+      this._restarting = true;
+      this._render();
+      this._hass.callWS({ type: "home_checkup/restart" }).catch(() => {});
+    } else if (act === "newsclose") {
+      this._newsOpen = false;
+      this._render();
+    } else if (act === "newsgo") {
+      const line = NEWS[+el.dataset.v][1][+el.dataset.i];
+      this._newsGo(line[1], line[2]);
     } else if (act === "askclose") {
       if (!this._ask?.busy) {
         const stale = this._ask?.stale;
@@ -2508,6 +3020,47 @@ const STYLE = `
   .scan.onbar:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
   .scan:disabled { opacity: .6; cursor: default; }
   .scan svg { width: 20px; height: 20px; fill: currentColor; }
+  .gear { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; margin-left: 2px; border: 0; border-radius: 50%; cursor: pointer;
+    color: var(--dim); background: transparent; }
+  .gear:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+  .gear.onbar { color: var(--app-header-text-color, #fff); }
+  .gear svg { width: 20px; height: 20px; fill: currentColor; }
+  .restartline { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+  .restartline span { flex: 1; }
+  .srow { display: flex; align-items: center; gap: 16px; padding: 10px 0; cursor: pointer; }
+  .srow.sub { padding-left: 16px; }
+  .srow.dim { opacity: .55; cursor: default; }
+  .swords { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .sname { font-size: 15px; }
+  .shint { font-size: 13px; color: var(--dim); }
+  .setsheet select { flex: none; height: 36px; max-width: 220px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--line); background: transparent; color: inherit; font: inherit; font-size: 14px; }
+  .setsheet select option { color: #111; }
+  .sw { flex: none; appearance: none; -webkit-appearance: none; width: 40px; height: 24px; margin: 0; border-radius: 12px; background: color-mix(in srgb, var(--dim) 45%, transparent);
+    position: relative; cursor: pointer; transition: background .15s; }
+  .sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .sw:checked { background: var(--primary-color); }
+  .sw:checked::after { transform: translateX(16px); }
+  .sw:disabled { cursor: default; }
+  .cgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+  .ccheck { display: flex; align-items: center; gap: 12px; padding: 8px 0; font-size: 15px; cursor: pointer; }
+  .ccheck span { flex: 1; }
+  @media (max-width: 560px) { .cgrid { grid-template-columns: minmax(0, 1fr); } }
+  .news { position: relative; display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 0; border-radius: 18px; cursor: pointer;
+    font: inherit; font-size: 14px; font-weight: 500; color: var(--dim); background: transparent; }
+  .news:hover { background: color-mix(in srgb, currentColor 10%, transparent); }
+  .news.onbar { color: var(--app-header-text-color, #fff); }
+  .news svg { width: 20px; height: 20px; fill: currentColor; }
+  .news .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color); margin-left: -2px; }
+  .news.onbar .dot { background: currentColor; }
+  @media (max-width: 560px) { .scan span { display: none; } .scan { padding: 0 8px; } .news span { display: none; } .news { padding: 0 8px; } .news .dot { position: absolute; top: 6px; right: 4px; margin: 0; } }
+  .letter.flash { box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 60%, transparent); border-radius: 6px; transition: box-shadow 0.3s; }
+  .nbody { flex: 1; overflow-y: auto; margin-top: 4px; }
+  .nver { margin-top: 16px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); }
+  ul.nlist { list-style: none; margin: 4px 0 0; padding: 0; }
+  ul.nlist li { display: flex; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 15px; line-height: 1.4; }
+  ul.nlist li:first-child { border-top: 0; }
+  ul.nlist li span { flex: 1; }
+  ul.nlist .link { flex: none; white-space: nowrap; }
   .spin { animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .content { flex: 1; overflow-y: auto; padding: 24px 24px 48px; box-sizing: border-box; width: 100%; max-width: 948px; margin: 0 auto;
@@ -2542,6 +3095,11 @@ const STYLE = `
   section.finding { scroll-margin-top: 12px; }
   section.finding.flash { box-shadow: 0 0 0 2px color-mix(in srgb, var(--warn) 60%, transparent); transition: box-shadow 0.3s; }
   .keephint { font-size: 13px; color: var(--dim); }
+  .letter { font-size: 14px; line-height: 1.45; color: var(--dim); }
+  .letter .lhead { display: block; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; margin-bottom: 2px; }
+  .letter .lgone { color: var(--primary-text-color); }
+  .rowok { width: 18px; height: 18px; fill: none; stroke: var(--good, #2e9e5b); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .rowfirst { font-size: 12px; font-weight: 600; color: var(--warn); }
 
   /* One card under the other: the page reads top to bottom, with no holes beside a tall card. */
   .grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }

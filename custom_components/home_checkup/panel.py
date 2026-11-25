@@ -17,6 +17,7 @@ from .const import DOMAIN, PANEL_ELEMENT, PANEL_ICON, PANEL_URL, STATIC_URL
 _LOGGER = logging.getLogger(__name__)
 _FOLDER = Path(__file__).parent / "frontend"
 _STATIC_DONE = f"{DOMAIN}_static_registered"
+_PAGE = f"{DOMAIN}_page"  # the version of the page file the sidebar points at
 
 
 def _version() -> str:
@@ -40,6 +41,7 @@ async def async_add_panel(hass: HomeAssistant) -> bool:
         await hass.http.async_register_static_paths([StaticPathConfig(STATIC_URL, str(_FOLDER), False)])
         hass.data[_STATIC_DONE] = True
     version = await hass.async_add_executor_job(_version)
+    hass.data[_PAGE] = version
     try:
         await panel_custom.async_register_panel(
             hass,
@@ -52,6 +54,21 @@ async def async_add_panel(hass: HomeAssistant) -> bool:
         )
     except ValueError:  # already there, for example after a quick reload
         _LOGGER.debug("Home Checkup page was already in the sidebar")
+    return True
+
+
+def page_version(hass: HomeAssistant) -> str:
+    return str(hass.data.get(_PAGE) or "")
+
+
+async def async_refresh_panel(hass: HomeAssistant) -> bool:
+    """A new page file is on the disk (an update with no code change): point the sidebar at it. No restart."""
+    if not hass.data.get(_PAGE):
+        return False
+    if await hass.async_add_executor_job(_version) == hass.data[_PAGE]:
+        return False
+    async_remove_panel(hass)
+    await async_add_panel(hass)
     return True
 
 

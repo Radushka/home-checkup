@@ -33,10 +33,12 @@
         "title": "Home Checkup",
         "description": "La lista completa está siempre en la página Home Checkup de la barra lateral.",
         "data": {
-          "repairs_note": "Mostrar una nota en Reparaciones cuando algo necesita atención"
+          "repairs_note": "Mostrar una nota en Reparaciones cuando algo necesita atención",
+          "weekly_letter": "Enviar la carta semanal a"
         },
         "data_description": {
-          "repairs_note": "Una sola nota, nunca una por problema. Desaparece sola cuando todo está bien."
+          "repairs_note": "Una sola nota, nunca una por problema. Desaparece sola cuando todo está bien.",
+          "weekly_letter": "Una vez por semana, el domingo por la mañana: lo que se resolvió y lo que es nuevo. No hay carta si nada cambió. La carta está siempre en la página Home Checkup."
         }
       }
     }

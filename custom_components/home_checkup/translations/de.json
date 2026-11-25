@@ -33,10 +33,12 @@
         "title": "Home Checkup",
         "description": "Die ganze Liste steht immer auf der Seite Home Checkup in der Seitenleiste.",
         "data": {
-          "repairs_note": "Einen Hinweis in Reparaturen zeigen, wenn etwas einen Blick braucht"
+          "repairs_note": "Einen Hinweis in Reparaturen zeigen, wenn etwas einen Blick braucht",
+          "weekly_letter": "Den Wochenbrief senden an"
         },
         "data_description": {
-          "repairs_note": "Nur ein Hinweis, nie einer pro Problem. Er verschwindet von selbst, wenn alles gut ist."
+          "repairs_note": "Nur ein Hinweis, nie einer pro Problem. Er verschwindet von selbst, wenn alles gut ist.",
+          "weekly_letter": "Einmal pro Woche, am Sonntagmorgen: was erledigt ist und was neu ist. Kein Brief in einer Woche ohne Änderung. Der Brief steht immer auf der Seite Home Checkup."
         }
       }
     }

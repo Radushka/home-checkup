@@ -7,6 +7,7 @@
     "dhcp",
     "frontend",
     "http",
+    "recorder",
     "script",
     "system_log"
   ],
@@ -24,5 +25,5 @@
   "issue_tracker": "https://github.com/Radushka/home-checkup/issues",
   "requirements": [],
   "single_config_entry": true,
-  "version": "0.6.22"
+  "version": "0.6.23"
 }

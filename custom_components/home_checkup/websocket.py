@@ -12,7 +12,16 @@ from homeassistant.core import HomeAssistant, callback
 
 from homeassistant.loader import async_get_loaded_integration
 
-from .const import DOMAIN
+from .const import (
+    CHECK_GROUPS,
+    CONF_AUTO_RESTART,
+    CONF_AUTO_UPDATE,
+    CONF_CHECKS_OFF,
+    CONF_DAILY_HOUR,
+    CONF_REPAIRS_NOTE,
+    CONF_WEEKLY_LETTER,
+    DOMAIN,
+)
 from .fixes import FIX_KINDS, FixError
 
 
@@ -30,6 +39,9 @@ def async_register_commands(hass: HomeAssistant) -> None:
         ws_fix_device,
         ws_fix_area,
         ws_reload_entry,
+        ws_settings,
+        ws_set_settings,
+        ws_restart,
         ws_fix_helpers_start,
         ws_fix_helpers_finish,
         ws_fix_helpers_saved,
@@ -318,3 +330,57 @@ def ws_fix_automation_saved(hass: HomeAssistant, connection: websocket_api.Activ
             connection.send_result(msg["id"], checkup.fixes.automation_backup(msg["fix_id"]))
         except FixError as err:
             connection.send_error(msg["id"], "fix_failed", str(err))
+
+
+# ---- the settings behind the gear ---------------------------------------------------------------------------
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/settings"})
+@callback
+def ws_settings(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    if checkup := _checkup(hass, connection, msg):
+        connection.send_result(msg["id"], checkup.settings())
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): f"{DOMAIN}/set_settings",
+        vol.Optional(CONF_REPAIRS_NOTE): bool,
+        vol.Optional(CONF_WEEKLY_LETTER): vol.All(str, vol.Length(max=200)),
+        vol.Optional(CONF_CHECKS_OFF): [vol.In(list(CHECK_GROUPS))],
+        vol.Optional(CONF_DAILY_HOUR): vol.All(int, vol.Range(min=0, max=23)),
+        vol.Optional(CONF_AUTO_UPDATE): bool,
+        vol.Optional(CONF_AUTO_RESTART): bool,
+    }
+)
+@websocket_api.async_response
+async def ws_set_settings(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    """Save the settings in the options of the integration, where Home Assistant keeps them."""
+    from .checkup import letter_places  # noqa: PLC0415
+
+    if not (checkup := _checkup(hass, connection, msg)):
+        return
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        connection.send_error(msg["id"], "not_loaded", "Home Checkup is not set up.")
+        return
+    changes = {key: value for key, value in msg.items() if key not in ("id", "type")}
+    if CONF_WEEKLY_LETTER in changes and changes[CONF_WEEKLY_LETTER] not in letter_places(hass):
+        connection.send_error(msg["id"], "unknown_place", "That place does not exist.")
+        return
+    options = {**entries[0].options, **changes}
+    if not options.get(CONF_AUTO_UPDATE):
+        options[CONF_AUTO_RESTART] = False
+    hass.config_entries.async_update_entry(entries[0], options=options)
+    checkup.apply_settings(options)
+    connection.send_result(msg["id"], {"settings": checkup.settings(), "report": _report(checkup, connection)})
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/restart"})
+@websocket_api.async_response
+async def ws_restart(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+    if checkup := _checkup(hass, connection, msg):
+        connection.send_result(msg["id"], {"started": await checkup.async_restart()})
