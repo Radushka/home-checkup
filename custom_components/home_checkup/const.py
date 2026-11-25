@@ -75,3 +75,11 @@ TEMPLATE_HELPER_DOMAINS = (
 BACK_AFTER = timedelta(minutes=30)
 BACK_AFTER_UNNAMED = timedelta(hours=2)  # the error names no entity, so only time can tell
 KEEPS_DROPPING = 3  # this many drops in a week is a real problem again
+
+# 0.6.22
+IDLE_AFTER = timedelta(days=90)  # an automation that is on and did not run this long
+IDLE_NEW = timedelta(days=30)  # a never-run automation younger than this has had no chance yet
+BACKUP_OLD = timedelta(days=14)
+STORAGE_FULL = 0.90  # used share of the disk
+STORAGE_SOON_DAYS = 45  # "full in about N days" is said when N is at most this
+DATABASE_BIG = 8 * 1024**3  # bytes

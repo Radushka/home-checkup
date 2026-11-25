@@ -24,12 +24,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers import label_registry as lr
 from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    BACKUP_OLD,
     BATTERY_LOW,
+    DATABASE_BIG,
+    IDLE_AFTER,
+    IDLE_NEW,
+    STORAGE_FULL,
+    STORAGE_SOON_DAYS,
     LOG_WINDOW,
     NEW_ERROR_AFTER,
     NOTE_HOURS,
@@ -105,6 +112,10 @@ class Item:
     # For things that are offline: the automations and scripts that use them (names), and how many in all.
     used_by: list[str] = field(default_factory=list)
     used_n: int = 0
+    # For storage: how much (GB), of how much, and in about how many days it is full at this rate.
+    amount: float = 0
+    total: float = 0
+    days: int = 0
 
 
 @dataclass
@@ -1539,6 +1550,195 @@ def checked_counts(hass: HomeAssistant) -> dict[str, int]:
     }
 
 
+# ---- 10. Automations that never run -------------------------------------------------------------------------
+
+
+@callback
+def check_idle_automations(hass: HomeAssistant, keep: frozenset[str] = frozenset()) -> list[Finding]:
+    """Automations that are switched on but never ran, or did not run for a long time. Shown, not counted.
+
+    Some are seasonal (holiday lights), so this is a quiet list with "Ignore", never an alarm.
+    """
+    now = dt_util.utcnow()
+    ent_reg = er.async_get(hass)
+    items: list[Item] = []
+    for state in hass.states.async_all("automation"):
+        if state.state != "on" or state.attributes.get(ATTR_RESTORED):
+            continue
+        key = f"idle:{state.entity_id}"
+        if key in keep:
+            continue
+        last = state.attributes.get("last_triggered")
+        if isinstance(last, str):
+            last = dt_util.parse_datetime(last)
+        entry = ent_reg.async_get(state.entity_id)
+        if last is None:
+            # A new automation has had no chance yet. Without a known age, we say nothing.
+            created = getattr(entry, "created_at", None) if entry else None
+            if created is None or created.timestamp() <= 0 or now - created < IDLE_NEW:
+                continue
+        elif now - last < IDLE_AFTER:
+            continue
+        auto_id = state.attributes.get("id")
+        items.append(
+            Item(
+                key=key,
+                name=str(state.attributes.get(ATTR_FRIENDLY_NAME) or state.entity_id),
+                id=state.entity_id,
+                info="Never ran" if last is None else f"Last ran {dt_util.as_local(last).strftime('%-d %b %Y')}",
+                link=f"/config/automation/edit/{auto_id}" if auto_id else "/config/automation/dashboard",
+                last_ran=last.isoformat() if last else "",
+            )
+        )
+    if not items:
+        return []
+    items.sort(key=lambda i: (i.last_ran != "", i.last_ran, i.name.lower()))
+    return [
+        Finding(
+            kind="idle_automations",
+            title=f"{_plural(len(items), 'automation')} did not run for a long time",
+            detail="Switched on, but never triggered. Its trigger may be broken, or it is no longer needed.",
+            severity="info",
+            link="/config/automation/dashboard",
+            items=items,
+        )
+    ]
+
+
+# ---- 11. Backup age -------------------------------------------------------------------------------------------
+
+
+async def read_backup(hass: HomeAssistant) -> dict[str, Any] | None:
+    """When the newest backup was made, from Home Assistant's own backup list. None: backups are not set up here.
+
+    Every backup counts, also one made by hand or by an add-on. Only dates are read, never the content.
+    """
+    if "backup" not in hass.config.components:
+        return None
+    from homeassistant.components.backup import async_get_manager  # noqa: PLC0415
+
+    backups, _errors = await async_get_manager(hass).async_get_backups()
+    dates = [d for d in (dt_util.parse_datetime(str(b.date)) for b in backups.values()) if d is not None]
+    return {"last": max(dates).timestamp() if dates else None}
+
+
+@callback
+def check_backup(hass: HomeAssistant, keep: frozenset[str] = frozenset(), backup: dict[str, Any] | None = None) -> list[Finding]:
+    if backup is None or "backup:old" in keep:
+        return []
+    # Home Assistant tells about a failed backup itself (Repairs). Then we do not say it a second time.
+    if any(i.domain == "backup" and i.active and not i.dismissed_version for i in ir.async_get(hass).issues.values()):
+        return []
+    last = backup.get("last")
+    now = time.time()
+    if last is not None and now - last < BACKUP_OLD.total_seconds():
+        return []
+    return [
+        Finding(
+            kind="backup",
+            title="There is no backup yet" if last is None else "The last backup is old",
+            detail="A fresh backup lets you go back when an update goes wrong.",
+            link="/config/backup",
+            items=[
+                Item(
+                    key="backup:old",
+                    name="Backup",
+                    id="backup",
+                    info="No backup yet" if last is None else f"Last backup {_day(last)}",
+                    link="/config/backup",
+                    since=dt_util.utc_from_timestamp(last).isoformat() if last else "",
+                    hint="nobackup" if last is None else "oldbackup",
+                )
+            ],
+        )
+    ]
+
+
+def _day(when: float) -> str:
+    return dt_util.as_local(dt_util.utc_from_timestamp(when)).strftime("%-d %b")
+
+
+# ---- 12. Storage ----------------------------------------------------------------------------------------------
+
+_GB = 1024**3
+
+
+def read_storage(config_dir: str) -> dict[str, float] | None:
+    """How full the storage is, and how big the history database is. Runs outside the event loop. Only sizes."""
+    import shutil  # noqa: PLC0415
+
+    try:
+        usage = shutil.disk_usage(config_dir)
+    except OSError:
+        return None
+    database = 0
+    for name in ("home-assistant_v2.db", "home-assistant_v2.db-wal"):
+        try:
+            database += os.path.getsize(os.path.join(config_dir, name))
+        except OSError:
+            pass
+    return {"total": float(usage.total), "used": float(usage.total - usage.free), "free": float(usage.free), "database": float(database)}
+
+
+def note_storage(samples: list[list[float]], storage: dict[str, float] | None, now: float) -> None:
+    """Keep one reading of the used space per half day, for a month. From these the page can say how fast it fills."""
+    if storage is None:
+        return
+    if not samples or now - samples[-1][0] >= 12 * 3600:
+        samples.append([now, storage["used"]])
+    del samples[:-60]
+
+
+@callback
+def check_storage(
+    keep: frozenset[str] = frozenset(),
+    storage: dict[str, float] | None = None,
+    samples: list[list[float]] | None = None,
+    now: float | None = None,
+) -> list[Finding]:
+    if not storage or storage["total"] <= 0:
+        return []
+    now = now if now is not None else time.time()
+    total, used, free = storage["total"], storage["used"], storage["free"]
+    items: list[Item] = []
+    full = used / total >= STORAGE_FULL
+    if full:
+        items.append(Item(key="storage:full", name="Storage", id="storage", hint="storagefull",
+                          info=f"{free / _GB:.1f} GB free of {total / _GB:.0f} GB", link="/config/storage",
+                          amount=round(free / _GB, 1), total=round(total / _GB)))
+    else:
+        # Not full yet, but filling: say when, so there is time to act. Needs at least 3 days of readings.
+        old = next((s for s in (samples or []) if now - s[0] >= 3 * 86400), None)
+        first = (samples or [None])[0]
+        if old is not None and first is not None and now > first[0]:
+            per_day = (used - first[1]) / ((now - first[0]) / 86400)
+            if per_day > 0 and free / per_day <= STORAGE_SOON_DAYS:
+                days = max(1, int(free / per_day))
+                items.append(Item(key="storage:filling", name="Storage", id="storage", hint="storagefilling",
+                                  info=f"Full in about {_plural(days, 'day')} at this rate", link="/config/storage",
+                                  amount=round(free / _GB, 1), total=round(total / _GB), days=days))
+    counted = bool(items)
+    database = storage.get("database", 0)
+    if database >= DATABASE_BIG or (database >= _GB and database >= 0.25 * total):
+        items.append(Item(key="storage:database", name="History database", id="recorder", hint="bigdatabase",
+                          info=f"{database / _GB:.1f} GB", link="/config/storage", amount=round(database / _GB, 1),
+                          total=round(total / _GB)))
+    items = [i for i in items if i.key not in keep]
+    if not items:
+        return []
+    counted = counted and any(i.key != "storage:database" for i in items)
+    return [
+        Finding(
+            kind="storage",
+            title="The storage is almost full" if full and counted else "The storage is filling up" if counted else "The history database is big",
+            detail="When the storage is full, Home Assistant stops recording and updates fail.",
+            severity="warning" if counted else "info",
+            link="/config/storage",
+            items=items,
+        )
+    ]
+
+
 @callback
 def ignored_by_label(hass: HomeAssistant) -> tuple[set[str], set[str], int]:
     """What carries the label "checkup_ignore": entity ids, device ids, and how many labels were set by hand.
@@ -1579,6 +1779,9 @@ def run_checks(
     offline: dict[str, list[Any]] | None = None,
     drops: dict[str, list[float]] | None = None,
     update_notes: dict[str, list[str]] | None = None,
+    backup: dict[str, Any] | None = None,
+    storage: dict[str, float] | None = None,
+    storage_samples: list[list[float]] | None = None,
 ) -> list[Finding]:
     # The label "checkup_ignore" works like "Ignore" on the page, for a whole device or area at once.
     try:
@@ -1586,7 +1789,7 @@ def run_checks(
     except Exception:  # noqa: BLE001
         no_entities, no_devices = set(), set()
     kept = frozenset(keep) | frozenset(
-        f"{kind}:{entity_id}" for entity_id in no_entities for kind in ("unavailable", "entity", "battery", "helper")
+        f"{kind}:{entity_id}" for entity_id in no_entities for kind in ("unavailable", "entity", "battery", "helper", "idle")
     ) | frozenset(
         f"{kind}:{device_id}" for device_id in no_devices for kind in ("offline_device", "offline_parts", "device", "area")
     )
@@ -1602,6 +1805,9 @@ def run_checks(
         lambda: check_batteries(hass, kept),
         lambda: check_updates(hass, kept, update_notes),
         lambda: check_areas(hass, kept),
+        lambda: check_idle_automations(hass, kept),
+        lambda: check_backup(hass, kept, backup),
+        lambda: check_storage(kept, storage, storage_samples, now),
     )):
         try:
             findings.extend(check())

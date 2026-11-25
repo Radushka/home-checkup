@@ -103,6 +103,16 @@ To set something aside without the page, give it the label `checkup_ignore` in H
 the label covers all its entities. On an area, it covers everything in that area. The page shows one quiet
 line with how many things carry the label, so nothing is forgotten.
 
+Three quiet checks look at the system itself:
+
+1. Automations that are switched on but never ran, or did not run for 90 days. Shown, not counted. A seasonal
+   automation can be ignored.
+2. Backup age. When the newest backup is older than 14 days, or there is none, the page says so. Every backup
+   counts, also one made by hand or by an add-on. Only dates are read. When Home Assistant itself reports a
+   backup problem in Repairs, Home Checkup stays silent.
+3. Storage. The page warns when the storage is almost full, and earlier when it fills fast: "Full in about
+   3 weeks at this rate". A big history database is shown too. Only sizes are read.
+
 The release notes of a waiting update are read through Home Assistant's own update entities, the same way
 as when you open an update. Nothing about your home is sent for this.
 

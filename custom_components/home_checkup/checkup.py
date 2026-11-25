@@ -29,6 +29,9 @@ from .checks import (
     integration_name,
     read_corpus,
     read_update_notes,
+    read_backup,
+    read_storage,
+    note_storage,
     read_yaml_facts,
     run_checks,
     ignored_by_label,
@@ -65,6 +68,9 @@ class Checkup:
         self._seen_since: float = 0.0
         self._offline: dict[str, list[Any]] = {}  # entity id -> [offline since, exact]; outlives restarts
         self._drops: dict[str, list[float]] = {}  # log item key -> when it came back, this week
+        self.backup: dict[str, Any] | None = None  # when the newest backup was made; read with the full check
+        self.storage: dict[str, float] | None = None  # sizes only; read with the full check
+        self._disk: list[list[float]] = []  # [when, used bytes], one per half day; outlives restarts
         self._seen_store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.seen")
         self._store: Store[dict[str, Any]] = Store(hass, STORE_VERSION, f"{DOMAIN}.keep")
         # The error history (counts and redacted samples only), so it survives a restart.
@@ -90,6 +96,7 @@ class Checkup:
         self._seen_since = seen.get("since") or time.time()
         self._offline = seen.get("offline", {})
         self._drops = seen.get("drops", {})
+        self._disk = seen.get("disk", [])
         log = await self._log_store.async_load() or {}
         self.watching_since = float(log.get("since") or time.time())
         self._acted = log.get("acted", {})
@@ -154,6 +161,17 @@ class Checkup:
             self.update_notes = await read_update_notes(self.hass, self.update_notes)
         except Exception:  # noqa: BLE001 - without the notes, only the version step is judged
             _LOGGER.debug("Could not read release notes", exc_info=True)
+        try:
+            self.backup = await read_backup(self.hass)
+        except Exception:  # noqa: BLE001 - without the list, nothing is said about backups
+            _LOGGER.debug("Could not read the backup list", exc_info=True)
+            self.backup = None
+        try:
+            self.storage = await self.hass.async_add_executor_job(read_storage, self.hass.config.config_dir)
+            note_storage(self._disk, self.storage, time.time())
+        except Exception:  # noqa: BLE001
+            _LOGGER.debug("Could not read the storage", exc_info=True)
+            self.storage = None
         self.refresh()
 
     @callback
@@ -162,6 +180,7 @@ class Checkup:
         self.findings = run_checks(
             self.hass, self.watch, self.corpus, self.started_at, self.keep, now,
             watching_since=self.watching_since, run_start=self.run_start, facts=self.yaml_facts, offline=self._offline, drops=self._drops, update_notes=self.update_notes,
+            backup=self.backup, storage=self.storage, storage_samples=self._disk,
         )
         self.findings += self._stopped(now)
         self._mark_new(now)
@@ -183,7 +202,7 @@ class Checkup:
                 item.new = first > baseline_until and now - first < NEW_FOR.total_seconds()
         week = 7 * 86400
         self._seen = {k: v for k, v in self._seen.items() if now - v[1] < week}
-        self._seen_store.async_delay_save(lambda: {"seen": self._seen, "since": self._seen_since, "offline": self._offline, "drops": self._drops}, 60)
+        self._seen_store.async_delay_save(lambda: {"seen": self._seen, "since": self._seen_since, "offline": self._offline, "drops": self._drops, "disk": self._disk}, 60)
 
     def _log_data(self) -> dict[str, Any]:
         return {

@@ -63,6 +63,36 @@ const WORDS = {
     "Added {name} to {area}": "{name} ajouté à {area}",
     "Updates": "Mises à jour",
     "Disabled. Nothing was deleted.": "Désactivé. Rien n’a été supprimé.",
+    "System": "Système",
+    "Backups": "Sauvegardes",
+    "Storage": "Stockage",
+    "Backup": "Sauvegarde",
+    "History database": "Base de données de l’historique",
+    "Backups and storage were checked. All good.": "Les sauvegardes et le stockage ont été vérifiés. Tout va bien.",
+    "{n} automation did not run for a long time": "{n} automatisation n’a pas tourné depuis longtemps",
+    "{n} automations did not run for a long time": "{n} automatisations n’ont pas tourné depuis longtemps",
+    "Shown, not counted. A seasonal automation can be ignored.": "Affiché, non compté. Une automatisation saisonnière peut être ignorée.",
+    "There is no backup yet": "Il n’y a pas encore de sauvegarde",
+    "The last backup is old": "La dernière sauvegarde est ancienne",
+    "The storage is almost full": "Le stockage est presque plein",
+    "The storage is filling up": "Le stockage se remplit",
+    "The history database is big": "La base de données de l’historique est grande",
+    "A fresh backup lets you go back when an update goes wrong.": "Une sauvegarde récente permet de revenir en arrière si une mise à jour échoue.",
+    "When the storage is full, Home Assistant stops recording and updates fail.": "Quand le stockage est plein, Home Assistant arrête d’enregistrer et les mises à jour échouent.",
+    "No backup yet": "Pas encore de sauvegarde",
+    "Last backup {date}": "Dernière sauvegarde le {date}",
+    "{free} GB free of {total} GB": "{free} Go libres sur {total} Go",
+    "Full in about {n} days at this rate": "Plein dans environ {n} jours à ce rythme",
+    "Full in about {n} weeks at this rate": "Plein dans environ {n} semaines à ce rythme",
+    "Nothing protects your setup yet.": "Rien ne protège encore votre installation.",
+    "Changes since then are not protected.": "Les changements faits depuis ne sont pas protégés.",
+    "Open Backups and turn on automatic backups.": "Ouvrez Sauvegardes et activez les sauvegardes automatiques.",
+    "Open Backups and make one, or turn on automatic backups.": "Ouvrez Sauvegardes et créez-en une, ou activez les sauvegardes automatiques.",
+    "Home Assistant may stop recording soon.": "Home Assistant pourrait bientôt arrêter d’enregistrer.",
+    "There is still time to act.": "Il reste du temps pour agir.",
+    "Remove old backups, or keep fewer days of history.": "Supprimez d’anciennes sauvegardes, ou gardez moins de jours d’historique.",
+    "The history takes much of your storage.": "L’historique prend une grande part de votre stockage.",
+    "Keep fewer days of history, or record fewer entities.": "Gardez moins de jours d’historique, ou enregistrez moins d’entités.",
     "Used by {names}.": "Utilisé par {names}.",
     "Used by {names} and {n} more.": "Utilisé par {names} et {n} de plus.",
     "These may not work while it is offline.": "Ils peuvent ne pas fonctionner tant qu’il est hors ligne.",
@@ -353,6 +383,36 @@ const WORDS = {
     "Added {name} to {area}": "{name} zu {area} hinzugefügt",
     "Updates": "Updates",
     "Disabled. Nothing was deleted.": "Deaktiviert. Nichts wurde gelöscht.",
+    "System": "System",
+    "Backups": "Backups",
+    "Storage": "Speicher",
+    "Backup": "Backup",
+    "History database": "Verlaufsdatenbank",
+    "Backups and storage were checked. All good.": "Backups und Speicher wurden geprüft. Alles in Ordnung.",
+    "{n} automation did not run for a long time": "{n} Automatisierung lief lange nicht",
+    "{n} automations did not run for a long time": "{n} Automatisierungen liefen lange nicht",
+    "Shown, not counted. A seasonal automation can be ignored.": "Angezeigt, nicht gezählt. Eine saisonale Automatisierung können Sie ignorieren.",
+    "There is no backup yet": "Es gibt noch kein Backup",
+    "The last backup is old": "Das letzte Backup ist alt",
+    "The storage is almost full": "Der Speicher ist fast voll",
+    "The storage is filling up": "Der Speicher füllt sich",
+    "The history database is big": "Die Verlaufsdatenbank ist groß",
+    "A fresh backup lets you go back when an update goes wrong.": "Mit einem frischen Backup können Sie zurück, wenn ein Update schiefgeht.",
+    "When the storage is full, Home Assistant stops recording and updates fail.": "Ist der Speicher voll, zeichnet Home Assistant nichts mehr auf und Updates schlagen fehl.",
+    "No backup yet": "Noch kein Backup",
+    "Last backup {date}": "Letztes Backup am {date}",
+    "{free} GB free of {total} GB": "{free} GB frei von {total} GB",
+    "Full in about {n} days at this rate": "In etwa {n} Tagen voll, wenn es so weitergeht",
+    "Full in about {n} weeks at this rate": "In etwa {n} Wochen voll, wenn es so weitergeht",
+    "Nothing protects your setup yet.": "Noch schützt nichts Ihre Einrichtung.",
+    "Changes since then are not protected.": "Änderungen seitdem sind nicht geschützt.",
+    "Open Backups and turn on automatic backups.": "Öffnen Sie Backups und schalten Sie automatische Backups ein.",
+    "Open Backups and make one, or turn on automatic backups.": "Öffnen Sie Backups und erstellen Sie eines, oder schalten Sie automatische Backups ein.",
+    "Home Assistant may stop recording soon.": "Home Assistant zeichnet vielleicht bald nichts mehr auf.",
+    "There is still time to act.": "Es ist noch Zeit zu handeln.",
+    "Remove old backups, or keep fewer days of history.": "Entfernen Sie alte Backups, oder behalten Sie weniger Tage Verlauf.",
+    "The history takes much of your storage.": "Der Verlauf belegt viel von Ihrem Speicher.",
+    "Keep fewer days of history, or record fewer entities.": "Behalten Sie weniger Tage Verlauf, oder zeichnen Sie weniger Entitäten auf.",
     "Used by {names}.": "Genutzt von {names}.",
     "Used by {names} and {n} more.": "Genutzt von {names} und {n} weiteren.",
     "These may not work while it is offline.": "Diese funktionieren vielleicht nicht, solange es offline ist.",
@@ -643,6 +703,36 @@ const WORDS = {
     "Added {name} to {area}": "{name} añadido a {area}",
     "Updates": "Actualizaciones",
     "Disabled. Nothing was deleted.": "Desactivado. No se borró nada.",
+    "System": "Sistema",
+    "Backups": "Copias de seguridad",
+    "Storage": "Almacenamiento",
+    "Backup": "Copia de seguridad",
+    "History database": "Base de datos del historial",
+    "Backups and storage were checked. All good.": "Se revisaron las copias de seguridad y el almacenamiento. Todo bien.",
+    "{n} automation did not run for a long time": "{n} automatización no se ejecuta desde hace mucho",
+    "{n} automations did not run for a long time": "{n} automatizaciones no se ejecutan desde hace mucho",
+    "Shown, not counted. A seasonal automation can be ignored.": "Se muestra, no se cuenta. Una automatización de temporada se puede ignorar.",
+    "There is no backup yet": "Todavía no hay copia de seguridad",
+    "The last backup is old": "La última copia de seguridad es antigua",
+    "The storage is almost full": "El almacenamiento está casi lleno",
+    "The storage is filling up": "El almacenamiento se está llenando",
+    "The history database is big": "La base de datos del historial es grande",
+    "A fresh backup lets you go back when an update goes wrong.": "Una copia reciente le permite volver atrás si una actualización falla.",
+    "When the storage is full, Home Assistant stops recording and updates fail.": "Cuando el almacenamiento está lleno, Home Assistant deja de registrar y las actualizaciones fallan.",
+    "No backup yet": "Aún sin copia de seguridad",
+    "Last backup {date}": "Última copia el {date}",
+    "{free} GB free of {total} GB": "{free} GB libres de {total} GB",
+    "Full in about {n} days at this rate": "Lleno en unos {n} días a este ritmo",
+    "Full in about {n} weeks at this rate": "Lleno en unas {n} semanas a este ritmo",
+    "Nothing protects your setup yet.": "Nada protege aún su instalación.",
+    "Changes since then are not protected.": "Los cambios desde entonces no están protegidos.",
+    "Open Backups and turn on automatic backups.": "Abra Copias de seguridad y active las copias automáticas.",
+    "Open Backups and make one, or turn on automatic backups.": "Abra Copias de seguridad y cree una, o active las copias automáticas.",
+    "Home Assistant may stop recording soon.": "Home Assistant podría dejar de registrar pronto.",
+    "There is still time to act.": "Aún hay tiempo para actuar.",
+    "Remove old backups, or keep fewer days of history.": "Quite copias antiguas, o conserve menos días de historial.",
+    "The history takes much of your storage.": "El historial ocupa gran parte de su almacenamiento.",
+    "Keep fewer days of history, or record fewer entities.": "Conserve menos días de historial, o registre menos entidades.",
     "Used by {names}.": "Lo usa {names}.",
     "Used by {names} and {n} more.": "Lo usan {names} y {n} más.",
     "These may not work while it is offline.": "Puede que no funcionen mientras esté sin conexión.",
@@ -884,6 +974,7 @@ const CHECKS = [
   ["Offline", ["unavailable"]],
   ["Helpers", ["unused_helpers"]],
   ["Batteries", ["low_batteries"]],
+  ["System", ["backup", "storage"]],
 ];
 
 /** What a log error means, by the code Home Checkup gives it. */
@@ -915,6 +1006,11 @@ const MEANINGS = {
   flaky: "It keeps dropping.",
   address: "It cannot be reached at its address.",
   closed: "The device is on, but it refused this connection.",
+  nobackup: "Nothing protects your setup yet.",
+  oldbackup: "Changes since then are not protected.",
+  storagefull: "Home Assistant may stop recording soon.",
+  storagefilling: "There is still time to act.",
+  bigdatabase: "The history takes much of your storage.",
   baddata: "It got an answer it could not read.",
   badvalue: "It got a value it cannot use.",
   database: "The history database had a problem. Your history may have a gap.",
@@ -947,6 +1043,11 @@ const TRY = {
   flaky: "Check its power and its Wi-Fi signal.",
   address: "Check its power. If its address changed, set the new one in the integration.",
   closed: "Check that this service is turned on in the app of the device.",
+  nobackup: "Open Backups and turn on automatic backups.",
+  oldbackup: "Open Backups and make one, or turn on automatic backups.",
+  storagefull: "Remove old backups, or keep fewer days of history.",
+  storagefilling: "Remove old backups, or keep fewer days of history.",
+  bigdatabase: "Keep fewer days of history, or record fewer entities.",
   baddata: "Update the integration.",
   badvalue: "Check the automation or card that sent it.",
   bug: "Update it. If the error stays, report it to its makers.",
@@ -961,6 +1062,7 @@ const CHECKED = {
   Offline: ["{n} entities checked. None was offline for a long time.", "states"],
   Helpers: ["{n} helpers checked. All are in use.", "helpers"],
   Batteries: ["{n} batteries checked. None is low.", "batteries"],
+  System: ["Backups and storage were checked. All good."],
 };
 
 const TITLES = {
@@ -973,6 +1075,7 @@ const TITLES = {
   low_batteries: ["{n} battery running low", "{n} batteries running low"],
   updates: ["{n} update to read before you install", "{n} updates to read before you install"],
   areas: ["{n} device could have an area", "{n} devices could have an area"],
+  idle_automations: ["{n} automation did not run for a long time", "{n} automations did not run for a long time"],
 };
 
 const HINTS = {
@@ -986,6 +1089,9 @@ const HINTS = {
   low_batteries: "Change them before the device stops working.",
   updates: "Shown, not counted. Routine updates are not listed here.",
   areas: "Shown, not counted. Only clear matches are suggested.",
+  idle_automations: "Shown, not counted. A seasonal automation can be ignored.",
+  backup: "A fresh backup lets you go back when an update goes wrong.",
+  storage: "When the storage is full, Home Assistant stops recording and updates fail.",
 };
 
 /** The one next step for a group of log errors: [the line, the button]. */
@@ -1001,6 +1107,8 @@ const STEPS = {
 const PLACES = [
   ["/config/logs", "Log"],
   ["/config/updates", "Updates"],
+  ["/config/backup", "Backups"],
+  ["/config/storage", "Storage"],
   ["/config/integrations/integration/", "Integration"],
   ["/config/integrations", "Integrations"],
   ["/config/devices/device/", "Device"],
@@ -1141,7 +1249,7 @@ class HomeCheckupPanel extends HTMLElement {
       if (devices) return this._t("{n} devices and entities offline for a long time", { n });
     }
     const pair = TITLES[f.kind];
-    return pair ? this._tn(n, pair[0], pair[1]) : f.title;
+    return pair ? this._tn(n, pair[0], pair[1]) : this._t(f.title);
   }
 
   _headline(n) {
@@ -2081,6 +2189,16 @@ class HomeCheckupPanel extends HTMLElement {
           infoText = this._t(it.or_earlier ? "Offline since {date} or earlier" : "Offline since {date}", { date });
           if (it.of) infoText += ` · ${this._t("{n} of {m} entities", { n: it.parts, m: it.of })}`;
           else if (it.parts) infoText += ` · ${this._tn(it.parts, "{n} entity", "{n} entities")}`;
+        }
+        if (f.kind === "idle_automations") infoText = this._lastRan(it.last_ran);
+        if (f.kind === "backup") {
+          const date = it.since ? new Date(it.since).toLocaleDateString(this._hass?.locale?.language || undefined, { day: "numeric", month: "short" }) : "";
+          infoText = date ? this._t("Last backup {date}", { date }) : this._t("No backup yet");
+        }
+        if (f.kind === "storage") {
+          if (it.days) infoText = it.days >= 14 ? this._t("Full in about {n} weeks at this rate", { n: Math.round(it.days / 7) }) : this._t("Full in about {n} days at this rate", { n: it.days });
+          else if (it.hint === "storagefull") infoText = this._t("{free} GB free of {total} GB", { free: it.amount, total: it.total });
+          else infoText = `${it.amount} GB`;
         }
         if (f.kind === "areas" && it.to_name) infoText = this._t("Suggested area: {name}", { name: it.to_name });
         const news = this._asked().includes(it.key) ? this._news(it.key) : null;
