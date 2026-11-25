@@ -93,6 +93,16 @@ It shows the exact list first, makes a backup, and can be undone for 30 days.
 An offline device has a "Disable" button. It only switches the device off in Home Assistant. Nothing is
 deleted, the device keeps its settings, and Undo switches it on again.
 
+An offline device or entity that an automation or script uses says so, with the names: "Used by Hall lights
+at night, Alarm when away and 2 more." These lines come first. Switched-off automations are left out.
+
+An integration that did not start has a "Reload" button. It does what "Reload" in Home Assistant's own menu
+does, and then tells you if the integration started.
+
+To set something aside without the page, give it the label `checkup_ignore` in Home Assistant. On a device,
+the label covers all its entities. On an area, it covers everything in that area. The page shows one quiet
+line with how many things carry the label, so nothing is forgotten.
+
 The release notes of a waiting update are read through Home Assistant's own update entities, the same way
 as when you open an update. Nothing about your home is sent for this.
 

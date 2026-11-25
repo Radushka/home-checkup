@@ -37,6 +37,12 @@
       "status": "fixed",
       "fixed_in": "0.6.16",
       "about": "Portainer 'Resource not found' for a Docker image: the page says a container uses a removed image, and what to try."
+    },
+    {
+      "code": "e62ecd8dc39aff72fd2d3bb7f32b7e901221c87e939218f3a217923fc279fa7d",
+      "status": "fixed",
+      "fixed_in": "0.6.20",
+      "about": "An integration cannot reach a local device (ONVIF camera): the page says if the device moved to a new address, if the address may be wrong, or if the device is on and refused the connection."
     }
   ]
 }

@@ -63,6 +63,14 @@ const WORDS = {
     "Added {name} to {area}": "{name} ajouté à {area}",
     "Updates": "Mises à jour",
     "Disabled. Nothing was deleted.": "Désactivé. Rien n’a été supprimé.",
+    "Used by {names}.": "Utilisé par {names}.",
+    "Used by {names} and {n} more.": "Utilisé par {names} et {n} de plus.",
+    "These may not work while it is offline.": "Ils peuvent ne pas fonctionner tant qu’il est hors ligne.",
+    "Reload": "Recharger",
+    "Reloaded. It started.": "Rechargé. Elle a démarré.",
+    "Reloaded. It still does not start.": "Rechargé. Elle ne démarre toujours pas.",
+    "{n} thing with the label checkup_ignore is not checked.": "{n} élément avec l’étiquette checkup_ignore n’est pas vérifié.",
+    "{n} things with the label checkup_ignore are not checked.": "{n} éléments avec l’étiquette checkup_ignore ne sont pas vérifiés.",
     "Disabled {name}": "{name} désactivé",
     "{n} helper nothing seems to use": "{n} entrée que rien ne semble utiliser",
     "{n} helpers nothing seems to use": "{n} entrées que rien ne semble utiliser",
@@ -345,6 +353,14 @@ const WORDS = {
     "Added {name} to {area}": "{name} zu {area} hinzugefügt",
     "Updates": "Updates",
     "Disabled. Nothing was deleted.": "Deaktiviert. Nichts wurde gelöscht.",
+    "Used by {names}.": "Genutzt von {names}.",
+    "Used by {names} and {n} more.": "Genutzt von {names} und {n} weiteren.",
+    "These may not work while it is offline.": "Diese funktionieren vielleicht nicht, solange es offline ist.",
+    "Reload": "Neu laden",
+    "Reloaded. It started.": "Neu geladen. Sie ist gestartet.",
+    "Reloaded. It still does not start.": "Neu geladen. Sie startet immer noch nicht.",
+    "{n} thing with the label checkup_ignore is not checked.": "{n} Eintrag mit dem Label checkup_ignore wird nicht geprüft.",
+    "{n} things with the label checkup_ignore are not checked.": "{n} Einträge mit dem Label checkup_ignore werden nicht geprüft.",
     "Disabled {name}": "{name} deaktiviert",
     "{n} helper nothing seems to use": "{n} Helfer, den nichts zu nutzen scheint",
     "{n} helpers nothing seems to use": "{n} Helfer, die nichts zu nutzen scheint",
@@ -627,6 +643,14 @@ const WORDS = {
     "Added {name} to {area}": "{name} añadido a {area}",
     "Updates": "Actualizaciones",
     "Disabled. Nothing was deleted.": "Desactivado. No se borró nada.",
+    "Used by {names}.": "Lo usa {names}.",
+    "Used by {names} and {n} more.": "Lo usan {names} y {n} más.",
+    "These may not work while it is offline.": "Puede que no funcionen mientras esté sin conexión.",
+    "Reload": "Recargar",
+    "Reloaded. It started.": "Recargada. Se inició.",
+    "Reloaded. It still does not start.": "Recargada. Sigue sin iniciarse.",
+    "{n} thing with the label checkup_ignore is not checked.": "{n} elemento con la etiqueta checkup_ignore no se revisa.",
+    "{n} things with the label checkup_ignore are not checked.": "{n} elementos con la etiqueta checkup_ignore no se revisan.",
     "Disabled {name}": "{name} desactivado",
     "{n} helper nothing seems to use": "{n} ayudante que nada parece usar",
     "{n} helpers nothing seems to use": "{n} ayudantes que nada parece usar",
@@ -1361,6 +1385,14 @@ class HomeCheckupPanel extends HTMLElement {
         this._render();
         return;
       }
+      if (item.fix === "reload") {
+        // Home Assistant's own Reload. Nothing to undo: the line says if the integration started.
+        const result = await this._hass.callWS({ type: "home_checkup/reload_entry", key });
+        this._report = result.report;
+        this._fixing = null;
+        this._say({ text: this._t(result.started ? "Reloaded. It started." : "Reloaded. It still does not start.") });
+        return;
+      }
       if (item.fix === "disable") {
         // An offline device: Home Assistant keeps it and its settings, it only stops listing it as offline.
         const result = await this._hass.callWS({ type: "home_checkup/fix_device", key });
@@ -1959,6 +1991,10 @@ class HomeCheckupPanel extends HTMLElement {
           .join("")}</ul>`;
       }
     }
+    if (r.labelled) {
+      // What a label hides must stay in sight: one quiet line, so nothing is forgotten.
+      html += `<div class="keephint foot">${esc(this._tn(r.labelled, "{n} thing with the label checkup_ignore is not checked.", "{n} things with the label checkup_ignore are not checked."))}</div>`;
+    }
     html += `<div class="foot">${esc(this._t("Home Checkup never changes anything by itself. A fix happens only when you tap it."))}</div>`;
     if (this._toast) {
       const t = this._toast;
@@ -2006,6 +2042,13 @@ class HomeCheckupPanel extends HTMLElement {
           // A waiting update: why it is worth reading first. Never a count, never an alarm.
           const why = it.risk === "breaking" ? "Its notes mention a breaking change." : "A big version step.";
           mean = `<span class="ours"><span class="mean">${esc(this._t(why))}</span><span class="try">${esc(this._t("Read the notes before you update."))}</span></span>`;
+        }
+        if (f.kind === "unavailable" && it.used_n) {
+          // Names, not a count: the person sees at once what stops working.
+          const names = (it.used_by || []).slice(0, 2).join(", ");
+          const more = it.used_n - Math.min(2, (it.used_by || []).length);
+          const used = more > 0 ? this._t("Used by {names} and {n} more.", { names, n: more }) : this._t("Used by {names}.", { names });
+          mean = `<span class="ours"><span class="mean">${esc(used)}</span><span class="try">${esc(this._t("These may not work while it is offline."))}</span></span>`;
         }
         if (it.hint === "moved" && it.seen_at) {
           // Proof, not a guess: the same hardware is seen at another address than the one the integration uses.
@@ -2060,7 +2103,7 @@ class HomeCheckupPanel extends HTMLElement {
         const askedLine = asked && !newsLine ? `<span class="askedline">${esc(this._t("Asked"))}</span>` : "";
         const info = (infoText ? `<span class="info">${esc(infoText)}</span>` : "") + mean + where + newsLine + askedLine;
         const detail = this._details[it.key];
-        const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : it.fix === "disable" ? "Disable" : "";
+        const fixLabel = it.fix === "use_new" ? "Use the new one" : it.fix === "remove_step" ? "Remove this step" : it.fix === "turn_off" ? "Turn off" : it.fix === "disable" ? "Disable" : it.fix === "reload" ? "Reload" : "";
         const fixWords = it.fix === "set_area" ? this._t("Add to {name}", { name: it.to_name }) : fixLabel ? this._t(fixLabel) : "";
         const fixBtn = fixWords
           ? `<button type="button" class="fixbtn" data-act="autofix" data-key="${esc(it.key)}" ${this._fixing ? "disabled" : ""}>${esc(this._fixing === it.key ? "…" : fixWords)}</button>`

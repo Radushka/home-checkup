@@ -31,6 +31,7 @@ from .checks import (
     read_update_notes,
     read_yaml_facts,
     run_checks,
+    ignored_by_label,
 )
 from .checks import checked_counts
 from .fixes import Fixes
@@ -290,6 +291,19 @@ class Checkup:
         lines += [f.title + "." for f in self.findings if not _counted(f)]
         return lines or ["Nothing needs a look today."]
 
+    async def async_reload_entry(self, key: str) -> bool:
+        """Home Assistant's own Reload for an integration that did not start. True when it runs afterwards."""
+        from homeassistant.config_entries import ConfigEntryState  # noqa: PLC0415
+
+        entry = self.hass.config_entries.async_get_entry(key.removeprefix("entry:"))
+        if entry is None or not any(i.key == key and i.fix == "reload" for f in self.findings for i in f.items):
+            return False
+        try:
+            await self.hass.config_entries.async_reload(entry.entry_id)
+        except Exception:  # noqa: BLE001 - a reload that is not allowed right now changes nothing
+            _LOGGER.debug("Could not reload %s", entry.domain, exc_info=True)
+        return entry.state is ConfigEntryState.LOADED
+
     def report(self) -> dict[str, Any]:
         findings = sorted(self.findings, key=lambda f: 0 if _counted(f) else 1 if f.severity == "warning" else 2)
         return {
@@ -304,4 +318,5 @@ class Checkup:
             "checked": checked_counts(self.hass),
             "findings": [f.as_dict() for f in findings],
             "kept": sorted(self.keep),
+            "labelled": ignored_by_label(self.hass)[2],
         }

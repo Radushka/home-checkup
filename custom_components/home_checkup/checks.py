@@ -24,6 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import label_registry as lr
 from homeassistant.loader import async_get_loaded_integration
 from homeassistant.util import dt as dt_util
 
@@ -51,6 +52,8 @@ from .meanings import meaning_of
 
 _LOGGER = logging.getLogger(__name__)
 
+RELOADABLE_STATES = {ConfigEntryState.SETUP_ERROR, ConfigEntryState.SETUP_RETRY}
+IGNORE_LABEL = "checkup_ignore"
 FAILED_STATES = {
     ConfigEntryState.SETUP_ERROR,
     ConfigEntryState.SETUP_RETRY,
@@ -99,6 +102,9 @@ class Item:
     # hint "moved": the device Home Assistant now sees at another address than the one the integration uses.
     device: str = ""
     seen_at: str = ""
+    # For things that are offline: the automations and scripts that use them (names), and how many in all.
+    used_by: list[str] = field(default_factory=list)
+    used_n: int = 0
 
 
 @dataclass
@@ -509,6 +515,8 @@ def check_failed_integrations(hass: HomeAssistant, keep: frozenset[str] = frozen
                 hint=hint,
                 device=device,
                 seen_at=seen_at,
+                # Home Assistant's own "Reload", one tap away. Only where a reload is allowed.
+                fix="reload" if entry.state in RELOADABLE_STATES else "",
             )
         )
     items = [i for i in items if i.key not in keep]
@@ -613,6 +621,31 @@ def check_leftovers(
 # A wall tablet's own entities (Browser Mod, Fully Kiosk) go unavailable when the tablet sleeps. That is not a fault.
 # The sensors of a phone or a computer (the companion app) do the same when the device sleeps or the app is closed.
 SLEEPING_PLATFORMS = frozenset({"browser_mod", "fully_kiosk", "mobile_app"})
+USED_BY_SHOWN = 4
+
+
+@callback
+def used_by(hass: HomeAssistant, entity_ids: list[str], device_id: str | None) -> list[str]:
+    """The names of the automations and scripts that use these entities or this device. Switched-off ones are left out."""
+    owners: dict[str, None] = {}
+    try:
+        from homeassistant.components import automation, script  # noqa: PLC0415
+
+        for entity_id in entity_ids:
+            for owner in (*automation.automations_with_entity(hass, entity_id), *script.scripts_with_entity(hass, entity_id)):
+                owners[owner] = None
+        if device_id:
+            for owner in (*automation.automations_with_device(hass, device_id), *script.scripts_with_device(hass, device_id)):
+                owners[owner] = None
+    except Exception:  # noqa: BLE001 - automations or scripts are not set up: then nothing uses it
+        return []
+    names = []
+    for owner in owners:
+        state = hass.states.get(owner)
+        if state is None or (owner.startswith("automation.") and state.state == "off"):
+            continue
+        names.append(str(state.attributes.get(ATTR_FRIENDLY_NAME) or owner))
+    return sorted(names, key=str.lower)
 
 
 @callback
@@ -739,6 +772,16 @@ def check_unavailable(
         )
     if not items:
         return []
+    for item in items:
+        if item.key.startswith("unavailable:"):
+            users = used_by(hass, [item.id], None)
+        else:
+            mine = [r[0] for r in by_device.get(item.id, [])]
+            users = used_by(hass, mine, item.id)
+        item.used_n = len(users)
+        item.used_by = users[:USED_BY_SHOWN]
+    # What an automation waits for comes first: there an offline thing does harm.
+    items.sort(key=lambda i: 0 if i.used_n else 1)
     devices = sum(1 for i in items if i.fix == "disable" or i.of)
     others = len(items) - devices
     if devices and not others:
@@ -1496,6 +1539,33 @@ def checked_counts(hass: HomeAssistant) -> dict[str, int]:
     }
 
 
+@callback
+def ignored_by_label(hass: HomeAssistant) -> tuple[set[str], set[str], int]:
+    """What carries the label "checkup_ignore": entity ids, device ids, and how many labels were set by hand.
+
+    A label on a device covers its entities. A label on an area covers its devices and entities.
+    """
+    try:
+        if lr.async_get(hass).async_get_label(IGNORE_LABEL) is None:
+            return set(), set(), 0
+    except Exception:  # noqa: BLE001 - no labels on this Home Assistant
+        return set(), set(), 0
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    areas = {a.id for a in ar.async_get(hass).async_list_areas() if IGNORE_LABEL in a.labels}
+    devices = {d.id for d in dev_reg.devices.values() if IGNORE_LABEL in d.labels}
+    by_hand = len(areas) + len(devices)
+    devices |= {d.id for d in dev_reg.devices.values() if d.area_id in areas}
+    entities: set[str] = set()
+    for entry in ent_reg.entities.values():
+        if IGNORE_LABEL in entry.labels:
+            by_hand += 1
+            entities.add(entry.entity_id)
+        elif entry.device_id in devices or (entry.area_id in areas):
+            entities.add(entry.entity_id)
+    return entities, devices, by_hand
+
+
 def run_checks(
     hass: HomeAssistant,
     watch: LogWatch,
@@ -1510,7 +1580,17 @@ def run_checks(
     drops: dict[str, list[float]] | None = None,
     update_notes: dict[str, list[str]] | None = None,
 ) -> list[Finding]:
-    kept = frozenset(keep)
+    # The label "checkup_ignore" works like "Ignore" on the page, for a whole device or area at once.
+    try:
+        no_entities, no_devices, _ = ignored_by_label(hass)
+    except Exception:  # noqa: BLE001
+        no_entities, no_devices = set(), set()
+    kept = frozenset(keep) | frozenset(
+        f"{kind}:{entity_id}" for entity_id in no_entities for kind in ("unavailable", "entity", "battery", "helper")
+    ) | frozenset(
+        f"{kind}:{device_id}" for device_id in no_devices for kind in ("offline_device", "offline_parts", "device", "area")
+    )
+    hidden = no_entities | no_devices
     findings: list[Finding] = []
     for number, check in enumerate((
         lambda: check_failed_integrations(hass, kept),
@@ -1532,4 +1612,10 @@ def run_checks(
                 _LOGGER.warning("A Home Checkup check could not run. Please report it.", exc_info=True)
             else:
                 _LOGGER.debug("A Home Checkup check failed", exc_info=True)
+    if hidden:
+        # The lists that are not keyed by the thing itself (waiting updates, broken steps of an automation).
+        for finding in findings:
+            if finding.kind in ("updates", "broken_references"):
+                finding.items = [i for i in finding.items if i.id not in hidden]
+        findings = [f for f in findings if f.items]
     return findings
