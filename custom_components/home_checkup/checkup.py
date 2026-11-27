@@ -560,7 +560,7 @@ class Checkup:
 
     @property
     def version(self) -> str:
-        """This version of Home Checkup, for the page ("Ask for a fix" names it)."""
+        """This version of Home Checkup, for the page ("Ask for help" names it)."""
         return self._page_only or self._loaded_version
 
     @property

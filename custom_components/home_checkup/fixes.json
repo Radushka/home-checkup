@@ -43,6 +43,12 @@
       "status": "fixed",
       "fixed_in": "0.6.20",
       "about": "An integration cannot reach a local device (ONVIF camera): the page says if the device moved to a new address, if the address may be wrong, or if the device is on and refused the connection."
+    },
+    {
+      "code": "c198201acf25d7cfd7d9b3c0f9c9d1ee3f4414ca5029024894ae9f62840d5a32",
+      "status": "fixed",
+      "fixed_in": "0.6.24",
+      "about": "Eufy 'device_livestream_not_running': the page says it was asked to stop something that was not running, usually harmless."
     }
   ]
 }

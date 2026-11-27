@@ -17,6 +17,7 @@ MEANINGS: tuple[tuple[str, re.Pattern[str]], ...] = tuple(
         ("slowdown", r"\b429\b|rate.?limit|too many requests|quota"),
         ("certificate", r"\bssl\b|certificate|\btls\b handshake"),
         ("already", r"already[ _](running|started|in progress|active|exists?|configured|connected|open)"),
+        ("notrunning", r"_not_running\b|nothing to stop"),
         ("storage", r"no space left|disk (is )?full|errno 28"),
         ("memory", r"memoryerror|out of memory|cannot allocate memory"),
         ("permission", r"permission denied|permissionerror|errno 13\b"),

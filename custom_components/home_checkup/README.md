@@ -119,16 +119,18 @@ as when you open an update. Nothing about your home is sent for this.
 Helpers written in YAML files are listed, but the button cannot remove them. The page marks them, and you remove
 their lines from your YAML files yourself.
 
-## Ask for a fix
+## Ask for help
 
-Some lines have no fix button yet. On those you can press "Ask" to tell us that you want a fix.
+Some lines have no fix button yet. On those you can press "Ask" to ask us for help. We read every request.
+You may get a new button that fixes it in a later version, or clear steps to solve it yourself. Some problems
+are outside what Home Checkup can change, and then the steps are the help.
 
 1. Nothing is sent by itself. A small sheet shows every word first, and it is sent only when you press Send.
 2. What is sent: the kind of problem, the name of the integration, the error text as you see and can edit it,
    the versions of Home Checkup and Home Assistant, and your language. A note and an email address are optional.
 3. What is never sent: names of devices, people or places, addresses, tokens, or anything about your account.
 4. The request goes to lukaps.com, to the makers of Home Checkup. The server keeps no IP address.
-5. We count how many homes ask for the same fix, and build the most wanted ones first.
+5. We count how many homes ask about the same problem, and work on the most wanted ones first.
 
 After you asked, the page can tell you what happened: "A fix is planned" or "A fix arrived in version X".
 For this, the page sends only the codes of your own requests to lukaps.com, at most once every few hours and
@@ -158,7 +160,7 @@ Home Checkup adds to Home Assistant; it does not replace or change any part of i
 Home Checkup is built with your privacy in mind. This is exactly what it does and does not do.
 
 1. Everything stays in your home, with one exception that you control: a request that you send yourself with
-   "Ask" (see "Ask for a fix" above). Without it, Home Checkup sends nothing to any server, ours included.
+   "Ask" (see "Ask for help" above). Without it, Home Checkup sends nothing to any server, ours included.
    For a waiting update it asks Home Assistant for the release notes, the same way the update screen does.
    Home Assistant may fetch them from the maker of that update. That request says nothing about your home.
 2. It never opens `secrets.yaml`, or any file named like a secret, password, token or key file.

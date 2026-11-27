@@ -5,6 +5,8 @@
 const WORDS = {
   en: {},
   fr: {
+    "\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.": "« Demander un correctif » devient « Demander de l’aide ». Vous recevrez peut-être un nouveau bouton qui règle le problème, ou des étapes claires pour le résoudre vous-même.",
+    "It was asked to stop something that was not running. Usually harmless.": "On lui a demandé d’arrêter quelque chose qui ne tournait pas. Généralement sans gravité.",
     "Settings": "Réglages",
     "Could not load the settings.": "Impossible de charger les réglages.",
     "Could not save the setting.": "Impossible d’enregistrer le réglage.",
@@ -343,12 +345,12 @@ const WORDS = {
     "This script lives in a YAML file. Open it to change it.": "Ce script se trouve dans un fichier YAML. Ouvrez-le pour le modifier.",
     "Showing the first {n}. Search to find more.": "Les {n} premiers sont affichés. Recherchez pour en trouver d’autres.",
     "Ask": "Demander",
-    "Ask sends us a request for a fix. You read it first.": "Demander nous envoie une demande de correctif. Vous la lisez d’abord.",
-    "Ask for a fix": "Demander un correctif",
+    "Ask sends us a request for help. You read it first.": "Demander nous envoie une demande d’aide. Vous la lisez d’abord.",
+    "Ask for help": "Demander de l’aide",
     "Asked": "Demandé",
-    "A fix arrived in version {version}. Update to get it.": "Un correctif est arrivé dans la version {version}. Mettez à jour pour l’obtenir.",
-    "A fix arrived.": "Un correctif est arrivé.",
-    "A fix is planned.": "Un correctif est prévu.",
+    "Help arrived in version {version}. Update to get it.": "L’aide est arrivée dans la version {version}. Mettez à jour pour l’obtenir.",
+    "Help arrived.": "L’aide est arrivée.",
+    "We are working on this.": "Nous y travaillons.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Ceci est envoyé aux créateurs de Home Checkup. Seul ce que vous voyez ici est envoyé, et seulement quand vous appuyez sur Envoyer.",
     "Problem": "Problème",
     "Integration": "Intégration",
@@ -362,8 +364,8 @@ const WORDS = {
     "Sending…": "Envoi…",
     "Done": "Terminé",
     "Thank you. Your request was received.": "Merci. Votre demande a été reçue.",
-    "We read every request and build the most wanted fixes first.": "Nous lisons chaque demande et créons d’abord les correctifs les plus demandés.",
-    "A fix for this is already planned.": "Un correctif est déjà prévu.",
+    "We read every request. You may get a new button that fixes it, or clear steps to solve it yourself.": "Nous lisons chaque demande. Vous recevrez peut-être un nouveau bouton qui règle le problème, ou des étapes claires pour le résoudre vous-même.",
+    "We are already working on this.": "Nous y travaillons déjà.",
     "Good news: this is fixed in version {version}.": "Bonne nouvelle : c’est corrigé dans la version {version}.",
     "Too many requests. Please try again in an hour.": "Trop de demandes. Réessayez dans une heure.",
     "The email address does not look right.": "L’adresse e-mail ne semble pas correcte.",
@@ -409,6 +411,8 @@ const WORDS = {
     "Only right after a restart. Usually harmless, but it hides real errors.": "Seulement juste après un redémarrage. En général sans gravité, mais cela cache les vraies erreurs.",
   },
   de: {
+    "\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.": "„Um eine Lösung bitten“ heißt jetzt „Um Hilfe bitten“. Sie bekommen vielleicht eine neue Schaltfläche, die es behebt, oder klare Schritte, um es selbst zu lösen.",
+    "It was asked to stop something that was not running. Usually harmless.": "Es sollte etwas stoppen, das nicht lief. Meist harmlos.",
     "Settings": "Einstellungen",
     "Could not load the settings.": "Die Einstellungen konnten nicht geladen werden.",
     "Could not save the setting.": "Die Einstellung konnte nicht gespeichert werden.",
@@ -747,12 +751,12 @@ const WORDS = {
     "This script lives in a YAML file. Open it to change it.": "Dieses Skript liegt in einer YAML-Datei. Öffnen Sie es, um es zu ändern.",
     "Showing the first {n}. Search to find more.": "Die ersten {n} werden gezeigt. Suchen Sie, um mehr zu finden.",
     "Ask": "Anfragen",
-    "Ask sends us a request for a fix. You read it first.": "Anfragen sendet uns eine Bitte um eine Lösung. Sie lesen sie zuerst.",
-    "Ask for a fix": "Um eine Lösung bitten",
+    "Ask sends us a request for help. You read it first.": "Anfragen sendet uns eine Bitte um Hilfe. Sie lesen sie zuerst.",
+    "Ask for help": "Um Hilfe bitten",
     "Asked": "Angefragt",
-    "A fix arrived in version {version}. Update to get it.": "Eine Lösung ist in Version {version} angekommen. Aktualisieren Sie, um sie zu erhalten.",
-    "A fix arrived.": "Eine Korrektur ist da.",
-    "A fix is planned.": "Eine Lösung ist geplant.",
+    "Help arrived in version {version}. Update to get it.": "Hilfe ist in Version {version} angekommen. Aktualisieren Sie, um sie zu erhalten.",
+    "Help arrived.": "Hilfe ist da.",
+    "We are working on this.": "Wir arbeiten daran.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Das geht an die Macher von Home Checkup. Nur was Sie hier sehen, wird gesendet, und nur wenn Sie auf Senden drücken.",
     "Problem": "Problem",
     "Integration": "Integration",
@@ -766,8 +770,8 @@ const WORDS = {
     "Sending…": "Wird gesendet…",
     "Done": "Fertig",
     "Thank you. Your request was received.": "Danke. Ihre Anfrage ist angekommen.",
-    "We read every request and build the most wanted fixes first.": "Wir lesen jede Anfrage und bauen die meistgewünschten Lösungen zuerst.",
-    "A fix for this is already planned.": "Eine Lösung dafür ist bereits geplant.",
+    "We read every request. You may get a new button that fixes it, or clear steps to solve it yourself.": "Wir lesen jede Anfrage. Sie bekommen vielleicht eine neue Schaltfläche, die es behebt, oder klare Schritte, um es selbst zu lösen.",
+    "We are already working on this.": "Wir arbeiten bereits daran.",
     "Good news: this is fixed in version {version}.": "Gute Nachricht: Das ist in Version {version} behoben.",
     "Too many requests. Please try again in an hour.": "Zu viele Anfragen. Bitte versuchen Sie es in einer Stunde erneut.",
     "The email address does not look right.": "Die E-Mail-Adresse sieht nicht richtig aus.",
@@ -813,6 +817,8 @@ const WORDS = {
     "Only right after a restart. Usually harmless, but it hides real errors.": "Nur direkt nach einem Neustart. Meist harmlos, aber es verdeckt echte Fehler.",
   },
   es: {
+    "\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.": "«Pedir una solución» ahora es «Pedir ayuda». Puede recibir un botón nuevo que lo arregla, o pasos claros para resolverlo usted mismo.",
+    "It was asked to stop something that was not running. Usually harmless.": "Se le pidió detener algo que no estaba en marcha. Normalmente inofensivo.",
     "Settings": "Ajustes",
     "Could not load the settings.": "No se pudieron cargar los ajustes.",
     "Could not save the setting.": "No se pudo guardar el ajuste.",
@@ -1151,12 +1157,12 @@ const WORDS = {
     "This script lives in a YAML file. Open it to change it.": "Este script está en un archivo YAML. Ábralo para cambiarlo.",
     "Showing the first {n}. Search to find more.": "Se muestran los primeros {n}. Busque para encontrar más.",
     "Ask": "Pedir",
-    "Ask sends us a request for a fix. You read it first.": "Pedir nos envía una solicitud de solución. Usted la lee primero.",
-    "Ask for a fix": "Pedir una solución",
+    "Ask sends us a request for help. You read it first.": "Pedir nos envía una solicitud de ayuda. Usted la lee primero.",
+    "Ask for help": "Pedir ayuda",
     "Asked": "Pedido",
-    "A fix arrived in version {version}. Update to get it.": "Llegó una solución en la versión {version}. Actualice para obtenerla.",
-    "A fix arrived.": "Llegó una corrección.",
-    "A fix is planned.": "Hay una solución prevista.",
+    "Help arrived in version {version}. Update to get it.": "La ayuda llegó en la versión {version}. Actualice para obtenerla.",
+    "Help arrived.": "La ayuda llegó.",
+    "We are working on this.": "Estamos trabajando en ello.",
     "This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send.": "Esto se envía a los creadores de Home Checkup. Solo se envía lo que ve aquí, y solo cuando pulsa Enviar.",
     "Problem": "Problema",
     "Integration": "Integración",
@@ -1170,8 +1176,8 @@ const WORDS = {
     "Sending…": "Enviando…",
     "Done": "Listo",
     "Thank you. Your request was received.": "Gracias. Hemos recibido su solicitud.",
-    "We read every request and build the most wanted fixes first.": "Leemos cada solicitud y creamos primero las soluciones más pedidas.",
-    "A fix for this is already planned.": "Ya hay una solución prevista.",
+    "We read every request. You may get a new button that fixes it, or clear steps to solve it yourself.": "Leemos cada solicitud. Puede recibir un botón nuevo que lo arregla, o pasos claros para resolverlo usted mismo.",
+    "We are already working on this.": "Ya estamos trabajando en ello.",
     "Good news: this is fixed in version {version}.": "Buenas noticias: está resuelto en la versión {version}.",
     "Too many requests. Please try again in an hour.": "Demasiadas solicitudes. Inténtelo de nuevo en una hora.",
     "The email address does not look right.": "La dirección de correo no parece correcta.",
@@ -1221,6 +1227,9 @@ const WORDS = {
 /** What is new, newest first. It travels inside the version: nothing is fetched. Each line: the words, the card it
  *  jumps to, and what to say when this home has nothing for it. */
 const NEWS = [
+  ["0.6.24", [
+    ["\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.", "", ""],
+  ]],
   ["0.6.23", [
     ["A weekly line: what went away and what is new. You can also get it as a notification: open the gear.", "letter", "No letter yet. The first one comes on a Sunday."],
     ["Before you update: is the backup fresh, is there room, do the notes warn?", "before_update", "No update is waiting in your home."],
@@ -1261,6 +1270,7 @@ const MEANINGS = {
   slowdown: "The service asked Home Assistant to slow down.",
   certificate: "A secure connection failed.",
   already: "It was asked to start something that was already running. Usually harmless.",
+  notrunning: "It was asked to stop something that was not running. Usually harmless.",
   storage: "The storage is full.",
   memory: "Home Assistant ran out of memory.",
   permission: "Home Assistant is not allowed to open a file.",
@@ -1464,7 +1474,7 @@ function newerVersion(a, b) {
   return false;
 }
 
-// "Ask for a fix": where a request goes when someone presses Send, and which kinds of line offer it.
+// "Ask for help": where a request goes when someone presses Send, and which kinds of line offer it.
 const ASK_URL = "https://lukaps.com/homecheckup/api/ask.php";
 const STATUS_URL = "https://lukaps.com/homecheckup/api/status.php";
 const CHOOSE_SHOWN = 40; // choices shown at once in "Choose another"
@@ -2125,7 +2135,7 @@ class HomeCheckupPanel extends HTMLElement {
     this._render();
   }
 
-  // ---- ask for a fix ------------------------------------------------------------------------------------------
+  // ---- ask for help -------------------------------------------------------------------------------------------
 
   /** Lines this browser already asked about, so the button says "Asked". Kept in the browser only. */
   _asked() {
@@ -2187,13 +2197,13 @@ class HomeCheckupPanel extends HTMLElement {
   _news(key) {
     const news = (this._newsStatus || {})[this._askCodes()[key]];
     if (!news) return null;
-    if (news.status === "planned") return { text: this._t("A fix is planned."), again: false };
+    if (news.status === "planned") return { text: this._t("We are working on this."), again: false };
     if (news.status !== "fixed") return null;
     // Fixed, but the version was not given: say so, and let the person ask again when the line is still here.
-    if (!/^[0-9][0-9A-Za-z.\-+]{0,19}$/.test(news.fixed_in || "")) return { text: this._t("A fix arrived."), again: true };
+    if (!/^[0-9][0-9A-Za-z.\-+]{0,19}$/.test(news.fixed_in || "")) return { text: this._t("Help arrived."), again: true };
     // The fix is in a version this home already has, and the line is still here: let the person ask again.
     if (!newerVersion(news.fixed_in, this._report?.version || "")) return { text: "", again: true };
-    return { text: this._t("A fix arrived in version {version}. Update to get it.", { version: news.fixed_in }), again: false };
+    return { text: this._t("Help arrived in version {version}. Update to get it.", { version: news.fixed_in }), again: false };
   }
 
   /** What would be sent for one line. No names of devices, people or places: only the kind of problem. */
@@ -2280,14 +2290,14 @@ class HomeCheckupPanel extends HTMLElement {
   _askHtml() {
     const a = this._ask;
     if (!a) return "";
-    const title = this._t("Ask for a fix");
+    const title = this._t("Ask for help");
     if (a.done) {
       const more =
         a.done.status === "fixed" && a.done.fixed_in
           ? this._t("Good news: this is fixed in version {version}.", { version: a.done.fixed_in })
           : a.done.status === "planned"
-            ? this._t("A fix for this is already planned.")
-            : this._t("We read every request and build the most wanted fixes first.");
+            ? this._t("We are already working on this.")
+            : this._t("We read every request. You may get a new button that fixes it, or clear steps to solve it yourself.");
       return `<div class="scrim" data-act="askclose"></div>
         <div class="sheet asksheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
           <div class="askdone">${mark("good")}<div><div class="stitle">${esc(this._t("Thank you. Your request was received."))}</div><div class="stext">${esc(more)}</div></div></div>
@@ -2305,6 +2315,7 @@ class HomeCheckupPanel extends HTMLElement {
       <div class="sheet asksheet" role="dialog" aria-modal="true" aria-label="${esc(title)}">
         <div class="stitle">${esc(title)}</div>
         <div class="stext">${esc(this._t("This goes to the makers of Home Checkup. Only what you see here is sent, and only when you press Send."))}</div>
+        <div class="stext">${esc(this._t("We read every request. You may get a new button that fixes it, or clear steps to solve it yourself."))}</div>
         <dl class="askfacts">${facts.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
         <label class="asklabel" for="asktext">${esc(this._t("The error text. Remove anything you do not want to share."))}</label>
         <textarea id="asktext" data-ask="text" maxlength="600" rows="3" ${a.busy ? "disabled" : ""}>${esc(a.text)}</textarea>
@@ -2406,7 +2417,7 @@ class HomeCheckupPanel extends HTMLElement {
 
   _render() {
     const root = this.shadowRoot;
-    // While someone types in the "Ask for a fix" sheet, a background refresh must not wipe the words or the cursor.
+    // While someone types in the "Ask for help" sheet, a background refresh must not wipe the words or the cursor.
     if (this._ask && !this._ask.paint && root.querySelector(".asksheet")) {
       this._ask.stale = true;
       return;
@@ -2560,7 +2571,7 @@ class HomeCheckupPanel extends HTMLElement {
       const help = [
         this._t("Open a line to see what you can do."),
         this._t("Ignore means this is fine. It will not show again."),
-        canAsk ? this._t("Ask sends us a request for a fix. You read it first.") : "",
+        canAsk ? this._t("Ask sends us a request for help. You read it first.") : "",
         findings.some((f) => f.kind === "log_errors" || f.kind === "log_warnings") ? this._t("Log errors are grouped by cause, from the last 24 hours.") : "",
       ].filter(Boolean).join(" ");
       html += `<div class="keephint foot">${esc(help)}</div>`;
