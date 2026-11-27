@@ -6,6 +6,7 @@ const WORDS = {
   en: {},
   fr: {
     "\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.": "« Demander un correctif » devient « Demander de l’aide ». Vous recevrez peut-être un nouveau bouton qui règle le problème, ou des étapes claires pour le résoudre vous-même.",
+    "\"What fills the history\" now keeps counting when Home Assistant restarts.": "« Ce qui remplit l’historique » continue maintenant de compter quand Home Assistant redémarre.",
     "It was asked to stop something that was not running. Usually harmless.": "On lui a demandé d’arrêter quelque chose qui ne tournait pas. Généralement sans gravité.",
     "Settings": "Réglages",
     "Could not load the settings.": "Impossible de charger les réglages.",
@@ -412,6 +413,7 @@ const WORDS = {
   },
   de: {
     "\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.": "„Um eine Lösung bitten“ heißt jetzt „Um Hilfe bitten“. Sie bekommen vielleicht eine neue Schaltfläche, die es behebt, oder klare Schritte, um es selbst zu lösen.",
+    "\"What fills the history\" now keeps counting when Home Assistant restarts.": "„Was den Verlauf füllt“ zählt jetzt weiter, wenn Home Assistant neu startet.",
     "It was asked to stop something that was not running. Usually harmless.": "Es sollte etwas stoppen, das nicht lief. Meist harmlos.",
     "Settings": "Einstellungen",
     "Could not load the settings.": "Die Einstellungen konnten nicht geladen werden.",
@@ -818,6 +820,7 @@ const WORDS = {
   },
   es: {
     "\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.": "«Pedir una solución» ahora es «Pedir ayuda». Puede recibir un botón nuevo que lo arregla, o pasos claros para resolverlo usted mismo.",
+    "\"What fills the history\" now keeps counting when Home Assistant restarts.": "«Qué llena el historial» ahora sigue contando cuando Home Assistant se reinicia.",
     "It was asked to stop something that was not running. Usually harmless.": "Se le pidió detener algo que no estaba en marcha. Normalmente inofensivo.",
     "Settings": "Ajustes",
     "Could not load the settings.": "No se pudieron cargar los ajustes.",
@@ -1227,6 +1230,9 @@ const WORDS = {
 /** What is new, newest first. It travels inside the version: nothing is fetched. Each line: the words, the card it
  *  jumps to, and what to say when this home has nothing for it. */
 const NEWS = [
+  ["0.6.25", [
+    ["\"What fills the history\" now keeps counting when Home Assistant restarts.", "history", "Nothing fills your history very fast."],
+  ]],
   ["0.6.24", [
     ["\"Ask for a fix\" is now \"Ask for help\". You may get a new button that fixes it, or clear steps to solve it yourself.", "", ""],
   ]],

@@ -1784,7 +1784,12 @@ def check_storage(
 
 
 class ChangeCounter:
-    """Counts how often each entity changes, in memory only. Two half-day windows, so the picture stays fresh."""
+    """Counts how often each entity changes. Two half-day windows, so the picture stays fresh.
+
+    Only counts are kept, never values. `dump` and `load` carry the counts over a restart of Home Assistant.
+    """
+
+    KEPT = 300  # the busiest entities per window that are saved; the calm ones do not matter here
 
     def __init__(self) -> None:
         self.now: dict[str, int] = {}
@@ -1802,6 +1807,28 @@ class ChangeCounter:
 
     def hours(self, now: float) -> float:
         return (now - self.started) / 3600
+
+    def dump(self, now: float) -> dict[str, Any]:
+        def top(counts: dict[str, int]) -> dict[str, int]:
+            return dict(sorted(counts.items(), key=lambda kv: -kv[1])[: self.KEPT])
+
+        return {"now": top(self.now), "before": top(self.before), "started": self.started, "turned": self.turned, "saved": now}
+
+    def load(self, data: dict[str, Any] | None, now: float) -> None:
+        """Take over the counts from before a restart. The time Home Assistant was off is not counted."""
+        try:
+            saved = float(data["saved"])
+            started, turned = float(data["started"]), float(data["turned"])
+            counts = [{str(k): int(v) for k, v in data[name].items()} for name in ("now", "before")]
+        except (KeyError, TypeError, ValueError, AttributeError):
+            return
+        off = now - saved
+        if off < 0 or off > 12 * 3600 or not started <= turned <= saved:
+            return  # off for too long (or a changed clock): the old counts say little about today
+        for entity_id, count in counts[0].items():
+            self.now[entity_id] = self.now.get(entity_id, 0) + count
+        self.before = counts[1]
+        self.started, self.turned = started + off, turned + off
 
     def per_day(self, now: float) -> dict[str, float]:
         hours = self.hours(now)

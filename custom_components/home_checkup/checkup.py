@@ -17,7 +17,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_call_later, async_track_time_change, async_track_time_interval
 from homeassistant.helpers.storage import Store
@@ -163,7 +163,7 @@ class Checkup:
         self.storage: dict[str, float] | None = None  # sizes only; read with the full check
         self._disk: list[list[float]] = []  # [when, used bytes], one per half day; outlives restarts
         self._weak: dict[str, float] = {}  # entity id -> weak signal since; outlives restarts
-        self.changes = ChangeCounter()  # how often each entity changes; in memory only, only counts
+        self.changes = ChangeCounter()  # how often each entity changes; only counts, saved so a restart keeps them
         # The weekly letter: what was open at the last letter (key -> name), and the last letter itself.
         self.checks_off: set[str] = set()  # checks the person turned off behind the gear
         self.daily_hour = DAILY_HOUR
@@ -204,7 +204,9 @@ class Checkup:
         self._weak = seen.get("weak", {})
         self._week = seen.get("week", {})
         self.letter = seen.get("letter")
+        self.changes.load(seen.get("changes"), time.time())
         self._unsubs.append(self.hass.bus.async_listen(EVENT_STATE_CHANGED, self._count_change))
+        self._unsubs.append(self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, self._on_stop))
         log = await self._log_store.async_load() or {}
         self.watching_since = float(log.get("since") or time.time())
         self._acted = log.get("acted", {})
@@ -319,6 +321,10 @@ class Checkup:
     def _count_change(self, event: Event) -> None:
         self.changes.add(event.data["entity_id"])
 
+    async def _on_stop(self, _event: Event) -> None:
+        """Home Assistant stops: keep the counts, so the next run goes on where this one ended."""
+        await self._seen_store.async_save(self._seen_data())
+
     @callback
     def async_stop(self) -> None:
         logging.getLogger().removeHandler(self.watch)
@@ -344,6 +350,7 @@ class Checkup:
     @callback
     def _hourly(self, _now: Any = None) -> None:
         self.refresh()
+        self._save_seen()  # also keeps the change counts, so a hard stop loses one hour at most
 
     async def _daily(self, _now: Any = None) -> None:
         await self.async_full_scan()
@@ -411,6 +418,7 @@ class Checkup:
         return {
             "seen": self._seen, "since": self._seen_since, "offline": self._offline, "drops": self._drops,
             "disk": self._disk, "weak": self._weak, "week": self._week, "letter": self.letter,
+            "changes": self.changes.dump(time.time()),
         }
 
     def _save_seen(self) -> None:
